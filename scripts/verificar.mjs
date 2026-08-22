@@ -118,7 +118,7 @@ const vite = await createServer({
 
 const React = await import("react");
 const { createRoot } = await import("react-dom/client");
-const { MenuSuspenso, CartaoDeDecisao, ControlesDeDecisao, RodapeDaDecisao } =
+const { MenuSuspenso, CartaoDeDecisao, InterruptorDeDecisao, RodapeDaDecisao } =
   await vite.ssrLoadModule("/src/lib/index.ts");
 const { Galeria } = await vite.ssrLoadModule("/src/demo/Galeria.tsx");
 const { act } = React;
@@ -250,7 +250,7 @@ function Tarefa({ inicial }) {
   return React.createElement(
     CartaoDeDecisao,
     { resultado, aoDecidir: setResultado, detalhe: "Decidida agora" },
-    React.createElement(ControlesDeDecisao, null),
+    React.createElement(InterruptorDeDecisao, null),
     React.createElement(RodapeDaDecisao, null),
   );
 }
@@ -275,7 +275,8 @@ await esperar(60);
 
 const cartoes = () => [...doc.querySelectorAll(".cui-decisao")];
 const parte = (i, sel) => cartoes()[i]?.querySelector(sel);
-const botao = (i, tipo) => parte(i, `.cui-decisao__botao[data-tipo="${tipo}"]`);
+const botao = (i, tipo) => parte(i, `.cui-interruptor__lado[data-tipo="${tipo}"]`);
+const knob = (i) => parte(i, ".cui-interruptor__knob");
 
 checar("os três cartões montaram", cartoes().length === 3);
 checar(
@@ -291,15 +292,28 @@ checar("cartão em aberto não tem camada nenhuma", !parte(2, ".cui-decisao__con
 /* O intervalo entre o clique e a confirmação: o estado é anunciado na hora, o
    visual espera a volta fechar. */
 await clicar(botao(2, "reprovada"));
-checar("o estado já é anunciado no clique", botao(2, "reprovada")?.getAttribute("aria-pressed") === "true");
+checar("o estado já é anunciado no clique", botao(2, "reprovada")?.getAttribute("aria-checked") === "true");
 checar(
-  "…mas o visual AGUARDA a volta fechar",
-  botao(2, "reprovada")?.getAttribute("data-cheio") === "false" &&
-    botao(2, "reprovada")?.getAttribute("data-aguardando") === "true",
+  "…mas a cor AGUARDA a volta fechar",
+  botao(2, "reprovada")?.getAttribute("data-aceso") === "false",
 );
 
 await esperar(900);
-checar("ao fechar a volta, o botão confirma", botao(2, "reprovada")?.getAttribute("data-cheio") === "true");
+checar("ao fechar a volta, o lado acende", botao(2, "reprovada")?.getAttribute("data-aceso") === "true");
+/*
+  ⚠️ **Com tolerância, e de propósito.** Uma mola para por limiar de energia, não
+  no valor exato: o repouso fica em `-0.018%` em vez de `0%`. São dois centésimos
+  de pixel — comparar por igualdade aqui seria um teste que falha por um defeito
+  que não existe.
+*/
+const naParada = (i, esperado) =>
+  Math.abs(parseFloat(knob(i)?.style.left ?? "NaN") - esperado) < 0.5;
+
+checar(
+  "o knob deslizou para o lado escolhido",
+  naParada(2, 0),
+  `left="${knob(2)?.style.left}"`,
+);
 checar("reprovar tinge o cartão de vermelho", cartoes()[2]?.dataset.resultado === "reprovada");
 checar("a malha apareceu", Number(parte(2, ".cui-decisao__malha")?.style.opacity) === 1);
 checar("o rodapé anuncia a decisão por escrito", Boolean(parte(2, ".cui-decisao__rodape")));
@@ -308,11 +322,25 @@ checar("o rodapé anuncia a decisão por escrito", Boolean(parte(2, ".cui-decisa
 await clicar(botao(2, "aprovada"));
 await esperar(900);
 checar("trocar de lado troca o tom", cartoes()[2]?.dataset.resultado === "aprovada");
-checar("o lado anterior deixou de estar pressionado", botao(2, "reprovada")?.getAttribute("aria-pressed") === "false");
+checar("o lado anterior deixou de estar marcado", botao(2, "reprovada")?.getAttribute("aria-checked") === "false");
+checar("o knob atravessou para o outro lobo", naParada(2, 100), `left="${knob(2)?.style.left}"`);
 
 await clicar(botao(2, "aprovada"));
-await esperar(200);
+/* A mola do knob leva mais que os 200ms de um fade — esperar de menos aqui mede
+   a animação no meio do caminho, e o teste falha por impaciência. */
+await esperar(900);
 checar("clicar de novo no lado ativo desfaz", cartoes()[2]?.dataset.resultado === "aberta");
+checar(
+  "sem decisão, o knob volta à CINTURA — o estado que um switch de dois lados não sabe dizer",
+  parte(2, ".cui-interruptor")?.dataset.resultado === "aberta" && naParada(2, 50),
+  `left="${knob(2)?.style.left}"`,
+);
+checar(
+  "o grupo é um radiogroup, e nenhum rádio fica marcado em aberto",
+  parte(2, '[role="radiogroup"]') &&
+    [...(parte(2, '[role="radiogroup"]')?.querySelectorAll('[role="radio"]') ?? [])]
+      .every((r) => r.getAttribute("aria-checked") === "false"),
+);
 checar("desfazer remove contorno, malha e lavagem",
   !parte(2, ".cui-decisao__contorno") && !parte(2, ".cui-decisao__malha") && !parte(2, ".cui-decisao__vidro"));
 

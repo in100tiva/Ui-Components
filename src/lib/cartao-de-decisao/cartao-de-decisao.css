@@ -159,101 +159,6 @@
   z-index: 1;
 }
 
-/* --- Os controles -------------------------------------------------------- */
-
-.cui-decisao__controles {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-/*
-  Alvo de 44px com desenho de 24px. A margem negativa devolve ao cartão o espaço
-  extra, para os círculos alinharem com a primeira linha de texto em vez de
-  esticá-la. O alvo grande vale para o dedo; o desenho pequeno, para o olho.
-*/
-.cui-decisao__botao {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: var(--cui-alvo-de-toque);
-  height: var(--cui-alvo-de-toque);
-  margin: calc((var(--cui-alvo-de-toque) - var(--cui-check-tamanho)) / -2);
-  padding: 0;
-  border: none;
-  border-radius: var(--cui-raio-busca);
-  background: none;
-  cursor: pointer;
-  outline: none;
-}
-
-.cui-decisao__botao[data-pendente="true"] {
-  cursor: progress;
-}
-
-.cui-decisao__botao:focus-visible {
-  box-shadow: 0 0 0 3px var(--cui-anel-foco);
-}
-
-/* Cada botão carrega a PRÓPRIA família de cor, e não a do cartão: o de reprovar
-   precisa ser vermelho mesmo num cartão ainda em aberto. */
-.cui-decisao__botao[data-tipo="aprovada"] {
-  --botao-tom: var(--cui-sucesso);
-}
-.cui-decisao__botao[data-tipo="reprovada"] {
-  --botao-tom: var(--cui-perigo);
-}
-
-.cui-decisao__circulo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--cui-check-tamanho);
-  height: var(--cui-check-tamanho);
-  border: 1px solid var(--cui-contorno);
-  border-radius: 50%;
-  color: transparent;
-  transition:
-    background-color var(--cui-transicao-estado) ease,
-    border-color var(--cui-transicao-estado) ease,
-    color var(--cui-transicao-estado) ease;
-}
-
-.cui-decisao__circulo svg {
-  width: 14px;
-  height: 14px;
-}
-
-/* A prévia no hover: o ícone aparece apagado, e é o que impede o círculo vazio
-   de parecer decoração. */
-.cui-decisao__botao:hover .cui-decisao__circulo {
-  border-color: var(--botao-tom);
-  color: var(--cui-texto-tenue);
-}
-
-/* ⭐ AGUARDANDO: a volta ainda está sendo percorrida. O círculo já é da cor da
-   decisão, mas não preenche — diz "está acontecendo" sem afirmar que acabou. */
-.cui-decisao__botao[data-aguardando="true"] .cui-decisao__circulo {
-  border-color: var(--botao-tom);
-  color: color-mix(in oklab, var(--botao-tom) 45%, transparent);
-}
-
-/*
-  CHEIO: círculo preenchido com o ícone em `--cui-fundo` — branco no claro,
-  quase-preto no escuro. Nos dois temas o par rende ≥3:1, o piso de AA para
-  elemento gráfico.
-
-  ⚠️ O seletor é `data-cheio`, e NÃO `aria-pressed`. O primeiro é o estado
-  visual, que espera a volta fechar; o segundo é o anunciado, que muda no
-  clique. Pintar por `aria-pressed` desfaria a sequência inteira.
-*/
-.cui-decisao__botao[data-cheio="true"] .cui-decisao__circulo {
-  border-color: var(--botao-tom);
-  background: var(--botao-tom);
-  color: var(--cui-fundo);
-}
-
 /* --- Rodapé -------------------------------------------------------------- */
 
 /*
@@ -271,6 +176,131 @@
 @media (prefers-reduced-motion: reduce) {
   .cui-decisao,
   .cui-decisao__circulo {
+    transition-duration: 1ms;
+  }
+}
+
+/* ==========================================================================
+   O interruptor — dois lobos ligados por uma cintura.
+   ========================================================================== */
+
+.cui-interruptor {
+  position: relative;
+  flex-shrink: 0;
+  width: var(--cui-interruptor-largura);
+  height: var(--cui-interruptor-altura);
+}
+
+/*
+  ⭐ **A cintura é um `<path>`, não dois círculos que se tocam.** Dois círculos
+  sobrepostos deixam um vinco em V no encontro; a curva côncava entre eles é o
+  que faz a forma ler como UMA peça. Ela é estática — o que se move é o knob.
+*/
+.cui-interruptor__trilho {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: var(--cui-abafado);
+}
+
+/*
+  O knob. `left` em porcentagem ajusta o percurso à largura real do controle: 0%
+  encosta no lobo esquerdo, 100% no direito, e 50% o deixa na cintura — a posição
+  de "em aberto".
+
+  ⚠️ **O `left` daqui é só o valor de partida — quem manda nele é o JavaScript**,
+  do primeiro quadro ao último. Não há regra de CSS por `data-resultado` de
+  propósito: duas fontes disputando a mesma propriedade é como o knob acabaria
+  num lugar em repouso e noutro durante a animação. Ver a nota em
+  `InterruptorDeDecisao`.
+
+  ⚠️ A margem lateral é o raio do knob: sem ela, `left: 0%` alinharia a BORDA do
+  knob com a borda do controle, e ele ficaria deslocado meio corpo para dentro.
+*/
+.cui-interruptor__knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  width: var(--cui-interruptor-knob);
+  height: var(--cui-interruptor-knob);
+  margin: calc(var(--cui-interruptor-knob) / -2)
+    calc(var(--cui-interruptor-altura) / 2 - var(--cui-interruptor-knob) / 2);
+  border-radius: 50%;
+  background: var(--cui-superficie);
+  box-shadow: var(--cui-relevo-raso);
+  pointer-events: none;
+  transition: background-color var(--cui-transicao-estado) ease;
+}
+
+/*
+  ⛔ **O alvo é um retângulo, e não o círculo que se vê.** Cada lado cobre metade
+  da largura e a altura inteira: o desenho tem 38px, a área de acerto tem 54×44.
+  Alvo do tamanho do desenho é o erro clássico do switch bonito — bonito e
+  difícil de acertar.
+*/
+.cui-interruptor__lado {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: var(--cui-raio-pilula);
+  background: none;
+  cursor: pointer;
+  outline: none;
+  /* Cinza sobre o trilho: é o lado que NÃO está escolhido. */
+  color: var(--cui-texto-suave);
+  transition: color var(--cui-transicao-estado) ease;
+}
+
+.cui-interruptor__lado[data-tipo="reprovada"] { left: 0; }
+.cui-interruptor__lado[data-tipo="aprovada"] { right: 0; }
+
+.cui-interruptor__lado svg {
+  width: 17px;
+  height: 17px;
+}
+
+.cui-interruptor__lado:focus-visible {
+  box-shadow: 0 0 0 3px var(--cui-anel-foco);
+}
+
+.cui-interruptor__lado[aria-busy="true"] {
+  cursor: progress;
+}
+
+/*
+  ⭐ **A cor só acende quando a volta FECHA.** `data-aceso` é o estado visual;
+  `aria-checked` é o anunciado, e muda no clique. Enquanto o contorno percorre, o
+  ícone já está sobre o knob branco mas ainda em cinza — o mesmo intervalo de
+  "está acontecendo" que o resto do cartão respeita.
+*/
+.cui-interruptor__lado[data-aceso="true"][data-tipo="aprovada"] {
+  color: var(--cui-sucesso);
+}
+
+.cui-interruptor__lado[data-aceso="true"][data-tipo="reprovada"] {
+  color: var(--cui-perigo);
+}
+
+/* Prévia no hover, só no lado que ainda não está escolhido. */
+.cui-interruptor__lado[data-aceso="false"]:hover[data-tipo="aprovada"] {
+  color: color-mix(in oklab, var(--cui-sucesso) 55%, var(--cui-texto-suave));
+}
+.cui-interruptor__lado[data-aceso="false"]:hover[data-tipo="reprovada"] {
+  color: color-mix(in oklab, var(--cui-perigo) 55%, var(--cui-texto-suave));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cui-interruptor__knob,
+  .cui-interruptor__lado {
     transition-duration: 1ms;
   }
 }

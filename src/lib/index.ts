@@ -29,13 +29,11 @@ export type { NomeDeTema } from "./tokens/tokens";
 /* Cartão de decisão — o contorno que se desenha ao aprovar ou reprovar. */
 export {
   CartaoDeDecisao,
-  ControlesDeDecisao,
   RodapeDaDecisao,
 } from "./cartao-de-decisao/CartaoDeDecisao";
-export type {
-  PropsDoCartaoDeDecisao,
-  Resultado,
-} from "./cartao-de-decisao/CartaoDeDecisao";
+export { InterruptorDeDecisao } from "./cartao-de-decisao/InterruptorDeDecisao";
+export type { PropsDoCartaoDeDecisao } from "./cartao-de-decisao/CartaoDeDecisao";
+export type { Resultado } from "./cartao-de-decisao/contexto";
 
 /* A casca do app: moldura, coluna lateral e cartão central. */
 export { Casca } from "./casca/Casca";

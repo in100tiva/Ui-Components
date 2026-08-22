@@ -132,6 +132,9 @@ export const formas = {
   "alvoDeToque": 44,
   "malhaPasso": 6,
   "malhaPonto": 1,
+  "interruptorAltura": 44,
+  "interruptorLargura": 108,
+  "interruptorKnob": 38,
   "molduraRespiro": 8,
   "molduraRespiroLg": 12,
   "lateralLargura": 248,
@@ -213,6 +216,12 @@ export const molas = {
     "mass": 1,
     "stiffness": 420,
     "damping": 18,
+    "velocity": 0
+  },
+  "interruptor": {
+    "mass": 1,
+    "stiffness": 210,
+    "damping": 17,
     "velocity": 0
   }
 } as const;

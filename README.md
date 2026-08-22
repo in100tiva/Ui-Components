@@ -172,10 +172,34 @@ aprovada, vermelho para reprovada — **o mesmo desenho, só a família de cor m
 | `pendente` | `boolean` | `false` | Em `aria-busy`, recusa cliques, cursor de progresso. |
 | `detalhe` | `string \| null` | `null` | "Aprovada por Ana em 03/08" — vira `title` e rodapé. |
 
-**Dois botões, não um interruptor.** Aprovar e reprovar são escolhas opostas, e
-um `switch` obrigaria a passar por um estado para chegar ao outro — além de não
-ter como representar "ainda não decidi". Com dois botões, o estado aberto é
-simplesmente nenhum pressionado, e clicar de novo no lado ativo desfaz.
+**O `InterruptorDeDecisao`** são dois lobos ligados por uma cintura, com o knob
+deslizando entre eles.
+
+⭐ **Ele tem TRÊS paradas, e a do meio é a razão do desenho.** Um interruptor de
+duas posições sempre afirma um dos lados — pousado à esquerda, diz "reprovada"
+numa tarefa que ninguém olhou ainda. A cintura é a única forma honesta de
+desenhar "em aberto".
+
+⭐ **É um `radiogroup`, não um `switch`.** Um switch tem dois estados e nenhum
+jeito de dizer "ainda não decidi"; um grupo de rádios tem exatamente isso —
+nenhuma opção marcada. De quebra vem o teclado certo: as setas percorrem, e só o
+lado marcado fica na ordem de tabulação.
+
+⛔ **Os alvos são retângulos, não os círculos que se vê.** Cada metade do
+controle é clicável: o desenho tem 38px, a área de acerto tem 54×44. Alvo do
+tamanho do desenho é o erro clássico do switch bonito — bonito e difícil de
+acertar.
+
+A cintura é um `<path>`, não dois círculos que se tocam: dois círculos
+sobrepostos deixam um vinco em V no encontro, e a curva côncava é o que faz a
+forma ler como uma peça só. Ela é estática — o que se move é o knob.
+
+⚠️ **A mola para por limiar, não no valor exato.** O knob assenta em `-0,018%`
+em vez de `0%` — dois centésimos de pixel. Tentei cravar o destino em
+`onComplete` (o anime.js escreve o render final depois dele) e devolver a
+posição ao CSS (mesmo problema); a conclusão foi que a briga não valia. O
+JavaScript é o dono da posição, e o resíduo está documentado em vez de
+combatido.
 
 **A sequência**: a malha varre (620ms), o contorno percorre (700ms), e **só
 quando a volta fecha** o botão preenche e estala. Preencher no clique afirmaria o
