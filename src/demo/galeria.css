@@ -374,3 +374,63 @@
     transition: none;
   }
 }
+
+.fund-molas {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fund-mola {
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 4px;
+  border: none;
+  border-radius: var(--cui-raio-item);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+}
+
+.fund-mola:hover {
+  background: var(--cui-acento-9);
+}
+
+.fund-mola:focus-visible {
+  box-shadow: 0 0 0 3px var(--cui-anel-foco);
+}
+
+.fund-mola__nome {
+  color: var(--cui-texto-rotulo);
+  font-weight: var(--cui-peso-medio);
+}
+
+.fund-mola__trilho {
+  position: relative;
+  height: 22px;
+  border-radius: var(--cui-raio-pilula);
+  background: var(--cui-abafado);
+}
+
+.fund-mola__bola {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--cui-acento);
+}
+
+.fund-mola__valor {
+  color: var(--cui-texto-tenue);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+}

@@ -1,214 +1,278 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 
-import { contagens, curvas, tempos } from "../tokens/tokens";
+import {
+  coreografar,
+  createTimeline,
+  devolverAoCss,
+  mola,
+  ondaDeItens,
+  preferemenosMovimento,
+  utils,
+} from "../movimento/movimento";
+import type { Timeline } from "../movimento/movimento";
+import { curvas, tempos } from "../tokens/tokens";
 import type { Lado } from "./usar-ancoragem";
 
 export type EstadoDaCoreografia = "fechado" | "aberto" | "fechando";
 
-/*
-  ⭐ **Nenhum número de tempo é escrito aqui.** Todos vêm de `tokens/tokens.json`
-  pelo arquivo gerado — os mesmos que o CSS lê como custom properties. Antes
-  disso, ajustar o ritmo da coreografia exigia mudar o valor em dois lugares e
-  lembrar dos dois; o sintoma de esquecer um era a entrada e a saída ficarem em
-  cadências diferentes, que é o tipo de defeito que se sente sem se enxergar.
-*/
-const bezier = (b: readonly number[]) => `cubic-bezier(${b.join(",")})`;
-
-function atrasoEscalonado(posicao: number): number {
-  return Math.min(posicao, contagens.tetoEscalonado) * tempos.passoItem;
-}
-
-function prefereMenosMovimento(): boolean {
-  return (
-    typeof matchMedia !== "undefined" &&
-    matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
-}
+const bezier = (b: readonly number[]) => `cubicBezier(${b.join(",")})`;
 
 /**
- * **A coreografia de saída do design** — e a montagem que sobrevive a ela.
+ * **A coreografia do menu** — entrada e saída, num lugar só.
  *
- * A entrada é CSS puro (o painel cresce, os itens entram escalonados). A SAÍDA
- * é Web Animations API, e precisa ser: ela anima `maxHeight` a partir da altura
- * MEDIDA de cada item, e altura medida não existe em folha de estilo.
+ * ⭐ **Molas na chegada, curvas na partida.** Não é preferência estética, é
+ * semântica: uma coisa que CHEGA tem massa e assenta — física descreve isso, e
+ * é por isso que a entrada usa `spring`. Uma coisa que PARTE é uma decisão já
+ * tomada; ela deve sair com convicção e não "assentar" em lugar nenhum. Mola na
+ * saída faz o painel hesitar na porta.
  *
  * ## O que acontece, em ordem
  *
- * 1. Cada item **colapsa**: `maxHeight` da altura real até zero, padding junto,
- *    opacidade já em zero na metade do caminho, e um empurrão de 4px na direção
- *    do gatilho. O item não some — ele se **retrai**, e a lista encolhe com ele.
- * 2. O escalonamento parte do item **mais longe de quem abriu o menu**: com o
- *    painel para baixo, o último item sai primeiro; para cima, o primeiro. A
- *    lista se recolhe *em direção ao campo*, e não de cima para baixo.
- * 3. Só depois de tudo recolhido — mais `pausaAntesDoPainel` — o painel
- *    recua 10px na direção do gatilho, encolhe para 0.965 e sai.
+ * **Abrindo** — o painel cresce de `0.965` com a mola `painel`, e os itens
+ * sobem 6px numa onda que parte de quem está mais perto do gatilho. As duas
+ * coisas ao mesmo tempo, não em sequência: a lista já está se desenhando
+ * enquanto a caixa chega.
  *
- * ## Três armadilhas que estão resolvidas aqui
+ * **Fechando** — cada item COLAPSA (`maxHeight` da altura medida até zero,
+ * padding junto, opacidade em zero na metade do caminho), na onda invertida.
+ * Só depois de tudo recolhido, mais `pausaAntesDoPainel`, o painel recua na
+ * direção do gatilho e sai. A pausa é o que faz a saída ser lida como duas
+ * coisas em sequência em vez de uma massa sumindo.
  *
- * ⛔ **`fill: "forwards"` + reabertura.** Animação criada por script vence CSS
- * na cascata. Reabrir no meio do fechamento — um duplo clique no gatilho basta —
- * deixaria as animações antigas prendendo os mesmos nós em `opacity: 0`: o menu
- * "abre" invisível. Pior, o `onfinish` da saída ainda dispararia e desmontaria o
- * menu que a pessoa acabou de reabrir. `cancel()` desfaz as duas coisas: remove
- * o fill e dispara `oncancel`, nunca `onfinish`.
+ * ## Por que isto deixou de ser CSS
  *
- * ⛔ **Lista vazia daria atraso NEGATIVO.** O escalonamento do painel parte de
- * `total - 1`, e a Web Animations API não ignora um delay negativo: ela começa a
- * animação já adiantada, e o painel sairia com um salto. Com a barra de filtrar,
- * "nada corresponde" é exatamente uma lista de zero itens.
+ * A entrada era CSS e a saída era Web Animations API — duas linguagens para uma
+ * coreografia só, e o número que as unia (`passoItem`) escrito de dois jeitos.
+ * Com o anime.js as duas metades falam a mesma língua, e a entrada ganha o que
+ * nenhuma das duas oferecia: **mola de verdade.** `cubic-bezier` é uma curva
+ * fixa que finge inércia; `spring` calcula a duração a partir de massa, rigidez
+ * e amortecimento — o movimento para quando a energia acaba, não quando o
+ * relógio marca.
  *
- * ⛔ **`onfinish` não dispara em aba de segundo plano.** Sem o timer de
- * segurança, o painel ficaria montado e invisível, capturando cliques para
- * sempre.
+ * ## As armadilhas que continuam resolvidas
+ *
+ * ⛔ **Reabrir no meio do fechamento.** As animações em voo são canceladas e os
+ * nós restaurados com `utils.set` — sem isso os itens continuariam presos em
+ * `maxHeight: 0` e o menu "abriria" com a lista de altura zero.
+ *
+ * ⛔ **Lista vazia.** A onda de zero itens não gera atraso negativo (o stagger
+ * do anime.js resolve isso sozinho), e a timeline do painel simplesmente começa
+ * no zero.
+ *
+ * ⛔ **`prefers-reduced-motion`.** Tratado em `coreografar`, indo ao ÚLTIMO
+ * quadro — nunca "não animando", o que deixaria os nós nos valores iniciais.
  */
 export function usarCoreografia({
   painelRef,
   listaRef,
   direcaoRef,
+  /** Só depois da medição o painel tem onde ser desenhado — animar antes é
+   *  animar um nó em (0,0), com o salto visível até o lugar certo. */
+  pronto,
 }: {
   painelRef: RefObject<HTMLElement | null>;
-  /** Onde estão os itens quando a barra de busca os agrupa. */
   listaRef: RefObject<HTMLElement | null>;
-  /**
-   * Para que lado o painel abriu, por REF e não por valor.
-   *
-   * Duas razões, e as duas importam. A primeira é de dependência: o lado só é
-   * conhecido depois da medição, que por sua vez só acontece depois de o painel
-   * montar — e quem decide se ele monta é este hook. Passar o valor fecharia o
-   * ciclo. A segunda é de estabilidade: o lado é remedido a cada rolagem, e um
-   * valor nas dependências de `fechar` recriaria o callback — e com ele o efeito
-   * de clique fora — dezenas de vezes por segundo num trackpad.
-   */
   direcaoRef: RefObject<Lado>;
+  pronto: boolean;
 }) {
   const [estado, setEstado] = useState<EstadoDaCoreografia>("fechado");
 
+  const linhaRef = useRef<Timeline | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const animacoesRef = useRef<Animation[]>([]);
+  const revelou = useRef(false);
+
+  const itensDo = useCallback(
+    (painel: HTMLElement) =>
+      Array.from((listaRef.current ?? painel).children) as HTMLElement[],
+    [listaRef],
+  );
 
   const encerrar = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = null;
-    animacoesRef.current = [];
+    linhaRef.current = null;
     setEstado("fechado");
   }, []);
 
-  const cancelarEmVoo = useCallback(() => {
-    for (const animacao of animacoesRef.current) animacao.cancel();
-    animacoesRef.current = [];
+  /** Cancela o que estiver em voo e devolve os nós ao estado neutro. */
+  const limpar = useCallback(() => {
+    linhaRef.current?.cancel();
+    linhaRef.current = null;
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = null;
-  }, []);
+
+    const painel = painelRef.current;
+    if (!painel) return;
+
+    devolverAoCss(painel);
+    devolverAoCss(itensDo(painel));
+  }, [painelRef, itensDo]);
 
   const abrir = useCallback(() => {
-    cancelarEmVoo();
+    limpar();
+    revelou.current = false;
     setEstado("aberto");
-  }, [cancelarEmVoo]);
+  }, [limpar]);
 
-  /**
-   * Fecha com a coreografia.
-   *
-   * `imediato` existe para os caminhos em que ela NÃO deve rodar: escolha pelo
-   * teclado (o foco tem de voltar ao gatilho agora, não em meio segundo), Escape,
-   * Tab, desmontagem, e `prefers-reduced-motion`.
-   */
+  /* --- Entrada ----------------------------------------------------------- */
+
+  useLayoutEffect(() => {
+    if (estado !== "aberto" || !pronto || revelou.current) return;
+
+    const painel = painelRef.current;
+    if (!painel) return;
+
+    revelou.current = true;
+    const itens = itensDo(painel);
+    const paraCima = direcaoRef.current === "cima";
+    const sentido = paraCima ? 1 : -1;
+
+    /*
+      Os valores iniciais entram ANTES da timeline, no mesmo quadro de layout.
+      Deixar que a animação os aplique no primeiro tick expõe um quadro do painel
+      já opaco e no lugar — o flash que se vê como um "pisca" na abertura.
+    */
+    utils.set(painel, { opacity: 0, scale: 0.965, translateY: -sentido * 10 });
+    utils.set(itens, { opacity: 0, translateY: -sentido * 6 });
+
+    linhaRef.current = coreografar(() => {
+      const linha = createTimeline({
+        defaults: { composition: "replace" },
+        onComplete: () => {
+          linhaRef.current = null;
+          /* Sair limpo: sem isto o `opacity: 1` inline da animação venceria o
+             `:hover` de cada item para sempre. */
+          devolverAoCss(painel);
+          devolverAoCss(itens);
+        },
+      });
+
+      linha.add(painel, { opacity: 1, scale: 1, translateY: 0, ease: mola("painel") }, 0);
+
+      if (itens.length > 0) {
+        linha.add(
+          itens,
+          {
+            opacity: 1,
+            translateY: 0,
+            ease: mola("item"),
+            delay: ondaDeItens(paraCima ? "last" : "first", itens.length),
+          },
+          0,
+        );
+      }
+
+      return linha;
+    });
+  }, [estado, pronto, painelRef, direcaoRef, itensDo]);
+
+  /* --- Saída ------------------------------------------------------------- */
+
   const fechar = useCallback(
     (imediato = false) => {
       const painel = painelRef.current;
 
-      if (imediato || !painel || prefereMenosMovimento()) {
-        cancelarEmVoo();
+      if (imediato || !painel || preferemenosMovimento()) {
+        limpar();
         encerrar();
         return;
       }
 
       /* Já fechando: deixa a coreografia em voo terminar em vez de empilhar uma
-         segunda por cima dos mesmos nós. */
-      if (animacoesRef.current.length > 0) return;
+         segunda sobre os mesmos nós. */
+      if (estado === "fechando") return;
 
       setEstado("fechando");
 
-      const itens = Array.from(
-        (listaRef.current ?? painel).children,
-      ) as HTMLElement[];
-      const total = itens.length;
-      const ultimo = Math.max(total - 1, 0);
-
-      /* O painel recolhe NA DIREÇÃO DO GATILHO: para baixo ele sobe (−Y), para
-         cima ele desce (+Y). O sinal também inverte a ordem do escalonamento. */
+      const itens = itensDo(painel);
       const paraCima = direcaoRef.current === "cima";
       const sentido = paraCima ? 1 : -1;
 
-      const animacoes = itens.map((item, i) => {
-        const estilo = getComputedStyle(item);
-        /* Sem `overflow: hidden` o conteúdo transborda a caixa que encolhe, e o
-           texto continua desenhado sobre um item de altura zero. */
-        item.style.overflow = "hidden";
+      /*
+        ⭐ **A altura medida vira ponto de partida ANTES da timeline, e não um
+        `from` calculado por índice dentro dela.**
 
-        return item.animate(
-          [
-            {
-              opacity: 1,
-              maxHeight: `${item.offsetHeight}px`,
-              paddingTop: estilo.paddingTop,
-              paddingBottom: estilo.paddingBottom,
-              transform: "translateY(0)",
-            },
-            /* A opacidade chega a zero na METADE do colapso: o item termina de
-               se recolher já invisível, e o que se vê é a lista encurtando, não
-               texto espremido. */
-            { opacity: 0, offset: 0.5 },
+        `maxHeight` é `none` por padrão, e "de `none` até 0" não é interpolável —
+        alguém precisa dizer de onde. Fixando o valor medido no próprio elemento,
+        a timeline anima do estado atual até zero, sem função por índice e sem
+        guardar array nenhum. Medir agora também é obrigatório: depois do
+        primeiro quadro de colapso, `offsetHeight` já não é a altura real de
+        ninguém.
+      */
+      for (const item of itens) {
+        /* Sem `overflow: hidden` o texto continua desenhado sobre um item de
+           altura zero. */
+        item.style.overflow = "hidden";
+        utils.set(item, { maxHeight: `${item.offsetHeight}px` });
+      }
+
+      linhaRef.current = coreografar(
+        () => {
+          const linha = createTimeline({ onComplete: encerrar });
+
+          if (itens.length > 0) {
+            linha.add(
+              itens,
+              {
+                /* A opacidade some na METADE do colapso: o item termina de se
+                   recolher já invisível, e o que se vê é a lista encurtando —
+                   não texto sendo espremido. */
+                opacity: { to: 0, duration: tempos.saidaItem * 0.5 },
+                maxHeight: 0,
+                paddingTop: 0,
+                paddingBottom: 0,
+                translateY: sentido * 4,
+                duration: tempos.saidaItem,
+                ease: bezier(curvas.colapso),
+                delay: ondaDeItens(paraCima ? "first" : "last", itens.length),
+              },
+              0,
+            );
+          }
+
+          linha.add(
+            painel,
             {
               opacity: 0,
-              maxHeight: "0px",
-              paddingTop: "0px",
-              paddingBottom: "0px",
-              transform: `translateY(${sentido * 4}px)`,
+              translateY: sentido * 10,
+              scale: 0.965,
+              duration: tempos.saidaPainel,
+              ease: bezier(curvas.saida),
             },
-          ],
-          {
-            duration: tempos.saidaItem,
-            delay: atrasoEscalonado(paraCima ? i : total - 1 - i),
-            easing: bezier(curvas.colapso),
-            fill: "forwards",
-          },
-        );
-      });
+            /* Depois de tudo recolhido, mais a pausa. É o que separa "duas
+               coisas em sequência" de "uma massa sumindo". */
+            `+=${tempos.pausaAntesDoPainel}`,
+          );
 
-      const saida = painel.animate(
-        [
-          { opacity: 1, transform: "translateY(0) scale(1)" },
-          {
-            opacity: 0,
-            transform: `translateY(${sentido * 10}px) scale(0.965)`,
-          },
-        ],
-        {
-          duration: tempos.saidaPainel,
-          delay: atrasoEscalonado(ultimo) + tempos.pausaAntesDoPainel,
-          easing: bezier(curvas.saida),
-          fill: "forwards",
+          return linha;
         },
+        /* `prefers-reduced-motion` pula a coreografia — e o menu tem de fechar
+           assim mesmo, senão ele fica montado e invisível para sempre. */
+        encerrar,
       );
 
-      saida.onfinish = encerrar;
-      animacoesRef.current = [...animacoes, saida];
-
+      /*
+        Rede de segurança: o relógio do anime.js é o `requestAnimationFrame`, que
+        NÃO roda em aba de segundo plano. Sem este timer, trocar de aba no meio
+        do fechamento deixaria o painel montado capturando cliques até a pessoa
+        voltar.
+      */
       timerRef.current = setTimeout(
         encerrar,
-        atrasoEscalonado(ultimo) +
+        tempos.passoItem * 8 +
+          tempos.saidaItem +
           tempos.pausaAntesDoPainel +
           tempos.saidaPainel +
           tempos.folgaDoTimer,
       );
     },
-    [painelRef, listaRef, encerrar, cancelarEmVoo],
+    [painelRef, itensDo, direcaoRef, estado, encerrar, limpar],
   );
 
-  /* Desmontar com animações em voo deixa `onfinish` chamando setState em
+  /* Desmontar com timeline em voo deixa `onComplete` chamando setState em
      componente morto. */
-  useEffect(() => cancelarEmVoo, [cancelarEmVoo]);
+  useEffect(() => limpar, [limpar]);
 
   return {
     estado,

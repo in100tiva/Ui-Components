@@ -5,9 +5,16 @@ projeto **Processual** e reescrita para ser copiável para qualquer projeto.
 
 ## Princípio de portabilidade
 
-**Zero dependência de runtime além do React.** Sem Tailwind, sem Radix, sem
+**Duas dependências de runtime: React e anime.js.** Sem Tailwind, sem Radix, sem
 lucide, sem biblioteca de posicionamento. Um componente é uma pasta: os `.tsx`,
 o `.css` e nada mais. Cai em Next, Vite ou CRA sem configurar nada.
+
+O anime.js (~17 KB gzip) entrou por uma razão só, e ela não é conveniência:
+**mola de verdade não existe em CSS nem na Web Animations API.** `cubic-bezier`
+é uma curva fixa que finge inércia; `spring` calcula a duração a partir de
+massa, rigidez e amortecimento — o movimento para quando a energia acaba, não
+quando o relógio marca. E interromper uma mola no meio continua de onde estava,
+com a velocidade que tinha, em vez de saltar para o começo.
 
 O que viaja junto é **um arquivo**: `tokens/tokens.json`. Dele saem as três
 camadas do design — ver *Tokens* abaixo.
@@ -226,9 +233,27 @@ ninguém consegue agarrar. Não há trilho, não há setas, e o polegar só ganh
 corpo quando o ponteiro entra no painel: em repouso ele informa *quanto falta*
 sem disputar atenção com o texto que está sendo lido.
 
-**Coreografia** — `passo-item`, `entrada-painel`, `entrada-item`, `saida-item`,
-`saida-painel`, `pausa-antes-do-painel`, `teto-escalonado`. Lidos ao mesmo tempo
-pelo CSS (entrada) e pelo JS (saída), do mesmo JSON.
+**Movimento**
+
+| Mola | Física | Onde |
+|---|---|---|
+| `painel` | r 190 · a 22 | O painel chegando. Amortecida quase até o crítico: assenta com um respiro, sem quicar |
+| `item` | r 240 · a 26 | Cada opção. Mais rígida — o item percorre 6px, e mola mole nessa distância só parece atraso |
+| `chevron` | r 160 · a 12 | ⭐ A única com quique de verdade. A seta passa do ponto e volta |
+| `pulso` | r 420 · a 18 | A troca do rótulo no campo. ~130ms — se der para perceber a duração, está errado |
+
+⚠️ **As molas não existem no `tokens.css`**, e não é esquecimento: CSS não tem
+spring. Uma mola não tem duração, e isso não é representável em
+`animation-duration`. Elas saem no `tokens.ts` — que é também o formato que o
+`Animated.spring` do React Native recebe, campo por campo.
+
+Curvas (`saida`, `colapso`) continuam existindo, e são usadas onde devem:
+**molas na chegada, curvas na partida.** Uma coisa que chega tem massa e
+assenta; uma coisa que parte é uma decisão já tomada, e deve sair com convicção.
+Mola na saída faz o painel hesitar na porta.
+
+Tempos: `passo-item`, `saida-item`, `saida-painel`, `pausa-antes-do-painel`,
+`teto-escalonado`.
 
 ## Decisões que valem para todo componente novo
 
@@ -249,6 +274,11 @@ pelo CSS (entrada) e pelo JS (saída), do mesmo JSON.
    consulta a media query sozinha.
 7. **Nada de tempo ou cor escrito duas vezes.** Se o CSS e o JS precisam do
    mesmo número, ele nasce em `tokens.json` e os dois o leem.
+8. **Nenhum componente importa `animejs` direto.** Tudo passa por
+   `lib/movimento/`, que traduz as molas do design para a API da biblioteca.
+   Números de física espalhados por vinte arquivos são vinte dialetos de
+   movimento — é assim que uma interface ganha cinco personalidades sem ninguém
+   decidir isso. E se o anime.js sair um dia, sai de um arquivo só.
 
 ## Estrutura
 
@@ -265,11 +295,13 @@ src/
     index.ts            ← ponto único de entrada
     tokens/
       tokens.ts         ← 🤖 gerado
+    movimento/
+      movimento.ts      ← a única porta para o anime.js
     menu-suspenso/
       MenuSuspenso.tsx
       menu-suspenso.css
       usar-ancoragem.ts    ← onde o painel cabe (medição + flip)
-      usar-coreografia.ts  ← a saída medida, e a montagem que sobrevive a ela
+      usar-coreografia.ts  ← entrada e saída, num lugar só
       usar-clique-fora.ts  ← fecha fora, contando o portal como dentro
       filtrar-opcoes.ts    ← busca sem acento
       tipos.ts

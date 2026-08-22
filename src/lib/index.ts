@@ -32,5 +32,10 @@ export type { PropsDaCasca } from "./casca/Casca";
 export { NavegacaoLateral } from "./casca/NavegacaoLateral";
 export type { ItemDeNavegacao, GrupoDeNavegacao } from "./casca/NavegacaoLateral";
 
+/* A camada de movimento — o anime.js falando a língua do design. */
+export { animate, mola, ondaDeItens, coreografar, devolverAoCss } from "./movimento/movimento";
+export type { NomeDeMola } from "./movimento/movimento";
+export { molas } from "./tokens/tokens";
+
 export { usarTema } from "./tema/usar-tema";
 export type { Tema, TemaEfetivo } from "./tema/usar-tema";

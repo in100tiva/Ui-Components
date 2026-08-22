@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { contagens } from "../tokens/tokens";
+import { animate, mola, preferemenosMovimento, utils } from "../movimento/movimento";
 import { filtrarOpcoes, normalizar } from "./filtrar-opcoes";
 import { usarAncoragem } from "./usar-ancoragem";
 import type { Lado } from "./usar-ancoragem";
@@ -112,22 +112,14 @@ export function MenuSuspenso<T extends string>({
   const [indiceFoco, setIndiceFoco] = useState(0);
   const [consulta, setConsulta] = useState("");
 
-  /**
-   * Se a lista já foi filtrada nesta abertura.
-   *
-   * A entrada escalonada é da ABERTURA, não de toda mudança de lista: sem esta
-   * trava, cada tecla digitada no filtro faria os itens sobreviventes entrarem
-   * de novo, um a um, escalonados. A lista pisca a cada letra e fica ilegível
-   * justamente enquanto a pessoa está lendo para escolher.
-   */
-  const [jaFiltrou, setJaFiltrou] = useState(false);
-
   const containerRef = useRef<HTMLDivElement>(null);
   const gatilhoRef = useRef<HTMLButtonElement>(null);
   const painelRef = useRef<HTMLDivElement>(null);
   const listaRef = useRef<HTMLDivElement>(null);
   const buscaRef = useRef<HTMLInputElement>(null);
   const itensRef = useRef<(HTMLDivElement | null)[]>([]);
+  const chevronRef = useRef<SVGSVGElement>(null);
+  const rotuloRef = useRef<HTMLSpanElement>(null);
 
   const ids = useId();
   const idPainel = `${ids}-painel`;
@@ -137,8 +129,10 @@ export function MenuSuspenso<T extends string>({
      medição do lado só existe depois disso — ver a nota em `usarCoreografia`. */
   const direcaoRef = useRef<Lado>("baixo");
 
+  const [ancoragemPronta, setAncoragemPronta] = useState(false);
+
   const { estado, aberto, montado, abrir: abrirPainel, fechar } =
-    usarCoreografia({ painelRef, listaRef, direcaoRef });
+    usarCoreografia({ painelRef, listaRef, direcaoRef, pronto: ancoragemPronta });
 
   const ancoragem = usarAncoragem({
     gatilhoRef,
@@ -156,6 +150,72 @@ export function MenuSuspenso<T extends string>({
     direcaoRef.current = lado;
   }, [lado]);
 
+  /* A coreografia de entrada espera a medição: animar antes é animar um nó em
+     (0,0), com o salto visível até o lugar certo. */
+  useEffect(() => {
+    setAncoragemPronta(ancoragem !== null);
+  }, [ancoragem]);
+
+  /* --- Micro-interações do campo ----------------------------------------- */
+
+  /**
+   * ⭐ **A seta gira com QUIQUE.** É a mola `chevron` (damping 12, a mais solta
+   * do sistema): ela passa alguns graus do ponto e volta. Não é enfeite gratuito
+   * — o quique é o que responde ao clique no instante do clique, antes de o
+   * painel ter chegado. Sem ele, os 200ms até a lista aparecer são 200ms em que
+   * a interface não disse nada.
+   *
+   * ⛔ Isto NÃO cabe em `transition: transform`. Uma curva de Bézier pode passar
+   * do ponto (`cubic-bezier` com y > 1), mas o retorno é sempre o mesmo desenho,
+   * independente de onde o giro começou. A mola parte da posição e da VELOCIDADE
+   * atuais: interromper o giro no meio — clicar duas vezes rápido — continua de
+   * onde estava, em vez de saltar para o começo.
+   */
+  const girou = useRef(false);
+  useEffect(() => {
+    const seta = chevronRef.current;
+    if (!seta) return;
+
+    const angulo = aberto ? 0 : 180;
+
+    /* O primeiro quadro é estado, não gesto: a seta nasce apontando para baixo
+       sem girar até lá na frente da pessoa. */
+    if (!girou.current) {
+      girou.current = true;
+      utils.set(seta, { rotate: angulo });
+      return;
+    }
+
+    animate(seta, { rotate: angulo, ease: mola("chevron") });
+  }, [aberto]);
+
+  /**
+   * ⭐ **O rótulo do campo TROCA, e a troca é vista.**
+   *
+   * Escolher uma opção muda o texto do gatilho no mesmo quadro — enquanto o
+   * painel ainda está se recolhendo, do outro lado da tela. Sem marcar essa
+   * troca, o valor novo simplesmente já está lá quando a pessoa volta a olhar, e
+   * a única confirmação de que a escolha pegou é o painel ter fechado.
+   *
+   * Um deslocamento de 4px com a mola `pulso` (rígida, ~130ms) resolve: rápido
+   * demais para atrasar qualquer coisa, longo o bastante para o olho registrar
+   * que aquele campo mudou.
+   */
+  const rotuloAnterior = useRef(valor);
+  useEffect(() => {
+    if (rotuloAnterior.current === valor) return;
+    rotuloAnterior.current = valor;
+
+    const alvo = rotuloRef.current;
+    if (!alvo || preferemenosMovimento()) return;
+
+    animate(alvo, {
+      translateY: [6, 0],
+      opacity: [0, 1],
+      ease: mola("pulso"),
+    });
+  }, [valor]);
+
   const indiceSelecionado = opcoes.findIndex((o) => o.valor === valor);
   const rotuloAtual =
     indiceSelecionado >= 0 ? opcoes[indiceSelecionado]!.rotulo : placeholder;
@@ -172,7 +232,6 @@ export function MenuSuspenso<T extends string>({
   const abrir = useCallback(() => {
     if (desabilitado) return;
     setConsulta("");
-    setJaFiltrou(false);
     /* Abrir com o foco no que já está escolhido: a seta seguinte anda a partir
        dali, e não do topo de uma lista de 12 meses. */
     setIndiceFoco(indiceSelecionado >= 0 ? indiceSelecionado : 0);
@@ -399,26 +458,13 @@ export function MenuSuspenso<T extends string>({
   itensRef.current.length = visiveis.length;
 
   /*
-    A ordem da coreografia de ENTRADA, contada em LINHAS do painel — a barra de
-    busca é uma delas.
-
-    A regra é uma só, e vale nos dois sentidos: **quem entra primeiro é quem está
-    mais perto do gatilho**. Com o painel para baixo isso é o topo da lista; para
-    cima, é o fim dela. Sem esta inversão, um menu que abre para cima começa a se
-    desenhar pela borda mais distante e parece vir de lugar nenhum.
-
-    O teto vem de `contagens.tetoEscalonado`, o mesmo da saída: acima dele tudo
-    entra junto, e o menu não fica mais lento por ter mais opções.
+    ⭐ **A ordem da entrada não é calculada aqui — e antes era.** Havia neste
+    lugar uma conta de "linhas do painel", com deslocamento pela barra de busca,
+    inversão pelo lado e teto de escalonamento, servida ao CSS por uma custom
+    property. O `stagger` do anime.js faz exatamente isso com `from: "first" |
+    "last"`, sobre os nós reais — ver `ondaDeItens`. Vinte linhas a menos, e a
+    regra passa a estar escrita num lugar só, valendo para entrada e saída.
   */
-  const linhasDeLista = comBusca && visiveis.length === 0 ? 1 : visiveis.length;
-  const totalDeLinhas = comBusca ? linhasDeLista + 1 : visiveis.length;
-  const deslocamento = comBusca && !barraEmbaixo ? 1 : 0;
-
-  function ordemDaLinha(linha: number): number {
-    const posicao = lado === "cima" ? totalDeLinhas - 1 - linha : linha;
-    return Math.min(Math.max(posicao, 0), contagens.tetoEscalonado);
-  }
-
   const itens = visiveis.map((opcao, i) => (
     <div
       key={opcao.valor}
@@ -442,7 +488,6 @@ export function MenuSuspenso<T extends string>({
         comBusca && !opcao.desabilitada ? () => setIndiceFoco(i) : undefined
       }
       className="cui-menu__item"
-      style={{ "--cui-i": ordemDaLinha(i + deslocamento) } as React.CSSProperties}
     >
       <span className="cui-menu__item-texto">
         <span className="cui-menu__item-rotulo">{opcao.rotulo}</span>
@@ -465,9 +510,6 @@ export function MenuSuspenso<T extends string>({
       data-alinhamento={alinhamento}
       data-com-busca={comBusca ? "true" : "false"}
       data-medido={ancoragem ? "true" : "false"}
-      /* Desliga a entrada escalonada depois da primeira filtragem — a
-         coreografia é da abertura, não de cada tecla. */
-      data-anima={jaFiltrou ? "false" : "true"}
       className="cui-menu__painel"
       /*
         ⛔ **Sem `onKeyDown` aqui, e isso não é esquecimento.** O painel está num
@@ -489,13 +531,6 @@ export function MenuSuspenso<T extends string>({
         <div
           className="cui-menu__barra"
           data-posicao={barraEmbaixo ? "base" : "topo"}
-          /* A barra entra junto com a linha que ocupa: no topo é a primeira,
-             embaixo é a última — nos dois casos, a mais perto do gatilho. */
-          style={
-            {
-              "--cui-i": ordemDaLinha(barraEmbaixo ? linhasDeLista : 0),
-            } as React.CSSProperties
-          }
         >
           <div className="cui-menu__busca-caixa">
             <IconeLupa />
@@ -516,7 +551,6 @@ export function MenuSuspenso<T extends string>({
               value={consulta}
               onChange={(e) => {
                 setConsulta(e.target.value);
-                setJaFiltrou(true);
                 setIndiceFoco(0);
               }}
               placeholder={placeholderBusca}
@@ -576,10 +610,12 @@ export function MenuSuspenso<T extends string>({
         data-vazio={indiceSelecionado < 0 ? "true" : "false"}
         className="cui-menu__gatilho"
       >
-        <span className="cui-menu__rotulo">{rotuloAtual}</span>
+        <span ref={rotuloRef} className="cui-menu__rotulo">
+          {rotuloAtual}
+        </span>
       </button>
 
-      <IconeChevron />
+      <IconeChevron ref={chevronRef} />
 
       {/* `document` só existe no cliente: em SSR o painel simplesmente não sai —
           e não precisa sair, já que só existe depois de um gesto. */}
@@ -603,9 +639,10 @@ function ehLetra(evento: React.KeyboardEvent): boolean {
 
 /* Ícones inline: uma dependência a menos, e são três caminhos SVG. */
 
-function IconeChevron() {
+function IconeChevron({ ref }: { ref: React.Ref<SVGSVGElement> }) {
   return (
     <svg
+      ref={ref}
       aria-hidden="true"
       viewBox="0 0 24 24"
       fill="none"

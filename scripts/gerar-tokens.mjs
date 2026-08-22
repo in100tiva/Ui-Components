@@ -301,6 +301,22 @@ function gerarTs() {
       .filter(([, d]) => d.ms !== undefined)
       .map(([n, d]) => [camel(n), d.ms]),
   );
+  /* As chaves de nota (`_nota`, `nota`) descrevem a fonte, não o token — elas
+     ficam no JSON e não viajam para o código. */
+  const molas = Object.fromEntries(
+    Object.entries(fonte.molas)
+      .filter(([nome]) => !nome.startsWith("_"))
+      .map(([nome, def]) => [
+        camel(nome),
+        {
+          mass: def.mass,
+          stiffness: def.stiffness,
+          damping: def.damping,
+          velocity: def.velocity,
+        },
+      ]),
+  );
+
   const numeros = (obj) =>
     Object.fromEntries(
       Object.entries(obj).map(([n, d]) => [camel(n), d.px ?? d.valor]),
@@ -349,6 +365,16 @@ export const camadas = ${j(camadas)} as const;
 /** Beziers como tupla — pronto para \`Easing.bezier(...curvas.mola)\` no RN. */
 export const curvas = ${j(curvas)} as const;
 
+/**
+ * As molas do design — física, não curva.
+ *
+ * ⚠️ **Não existem no \`tokens.css\`, e não é esquecimento:** CSS não tem spring.
+ * Uma mola não tem duração — ela para quando a energia acaba — e isso não é
+ * representável em \`animation-duration\`. Quem as consome é o anime.js, na web e
+ * no React Native (onde \`Animated.spring\` recebe exatamente estes campos).
+ */
+export const molas = ${j(molas)} as const;
+
 /** Durações e atrasos, em milissegundos. */
 export const tempos = ${j(tempos)} as const;
 
@@ -378,7 +404,8 @@ console.log(
   `tokens: ${conta(fonte.cores)} cores × ${TEMAS.length} temas, ` +
     `${conta(fonte.alfas)} derivados, ${conta(fonte.formas)} formas, ` +
     `${conta(fonte.tipografia)} de tipografia, ${conta(fonte.camadas)} camadas, ` +
-    `${conta(fonte.curvas)} curvas, ${conta(fonte.coreografia)} de coreografia`,
+    `${conta(fonte.curvas)} curvas, ${conta(fonte.molas) - 1} molas, ` +
+    `${conta(fonte.coreografia)} de coreografia`,
 );
 console.log(`  → src/estilos/tokens.css`);
 console.log(`  → src/lib/tokens/tokens.ts`);

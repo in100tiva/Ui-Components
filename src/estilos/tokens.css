@@ -182,8 +182,6 @@
   /* Coreografia */
   /* Intervalo entre um item e o seguinte. */
   --cui-passo-item: 45ms;
-  --cui-entrada-painel: 420ms;
-  --cui-entrada-item: 380ms;
   /* O colapso de um item. */
   --cui-saida-item: 300ms;
   --cui-saida-painel: 240ms;
@@ -195,8 +193,6 @@
   --cui-transicao-estado: 160ms;
   /* O fundo de um item de lista acendendo. */
   --cui-transicao-item: 180ms;
-  /* A seta do campo virando 180°. */
-  --cui-giro-chevron: 200ms;
   /* ⭐ A pílula do item ativo DESLIZA de um item ao outro em vez de piscar no destino. É o movimento que amarra a coluna — e o único da casca. */
   --cui-deslize-pilula: 320ms;
 }

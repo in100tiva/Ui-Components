@@ -142,18 +142,50 @@ export const curvas = {
   ]
 } as const;
 
+/**
+ * As molas do design — física, não curva.
+ *
+ * ⚠️ **Não existem no `tokens.css`, e não é esquecimento:** CSS não tem spring.
+ * Uma mola não tem duração — ela para quando a energia acaba — e isso não é
+ * representável em `animation-duration`. Quem as consome é o anime.js, na web e
+ * no React Native (onde `Animated.spring` recebe exatamente estes campos).
+ */
+export const molas = {
+  "painel": {
+    "mass": 1,
+    "stiffness": 190,
+    "damping": 22,
+    "velocity": 0
+  },
+  "item": {
+    "mass": 1,
+    "stiffness": 240,
+    "damping": 26,
+    "velocity": 0
+  },
+  "chevron": {
+    "mass": 1,
+    "stiffness": 160,
+    "damping": 12,
+    "velocity": 0
+  },
+  "pulso": {
+    "mass": 1,
+    "stiffness": 420,
+    "damping": 18,
+    "velocity": 0
+  }
+} as const;
+
 /** Durações e atrasos, em milissegundos. */
 export const tempos = {
   "passoItem": 45,
-  "entradaPainel": 420,
-  "entradaItem": 380,
   "saidaItem": 300,
   "saidaPainel": 240,
   "pausaAntesDoPainel": 200,
   "folgaDoTimer": 80,
   "transicaoEstado": 160,
   "transicaoItem": 180,
-  "giroChevron": 200,
   "deslizePilula": 320
 } as const;
 

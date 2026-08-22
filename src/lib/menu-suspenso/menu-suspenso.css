@@ -85,13 +85,13 @@
   margin-top: -6.5px;
   color: var(--cui-acento);
   pointer-events: none;
-  transform: rotate(180deg);
-  transition: transform var(--cui-giro-chevron) var(--cui-mola);
 }
 
-.cui-menu__gatilho[aria-expanded="true"] ~ .cui-menu__chevron {
-  transform: rotate(0deg);
-}
+/*
+  ⛔ **A rotação NÃO está aqui.** Ela é uma mola em `MenuSuspenso.tsx`, e um
+  `transform` de CSS neste seletor brigaria com o inline que o anime.js escreve
+  — o resultado é uma seta que trava no ângulo errado, sem erro nenhum.
+*/
 
 .cui-menu__gatilho:disabled ~ .cui-menu__chevron {
   color: var(--cui-texto-suave);
@@ -119,7 +119,6 @@
   padding: var(--cui-painel-respiro);
   overflow-y: auto;
   overscroll-behavior: contain;
-  animation: cui-painel-entra var(--cui-entrada-painel) var(--cui-mola) both;
 }
 
 /* --- Barra de rolagem ----------------------------------------------------- */
@@ -209,6 +208,11 @@
   `transform-origin` acompanha o lado: o `scale(0.965)` da entrada tem de crescer
   a partir da borda que ENCOSTA no gatilho. Crescendo do lado errado, o painel
   nasce se afastando do campo que a pessoa acabou de clicar.
+
+  ⭐ **Isto é a única coisa da coreografia que ficou no CSS, e por um bom
+  motivo:** `transform-origin` não é o que se anima — é o PONTO sobre o qual a
+  animação acontece. Ele pertence ao estado do painel (que lado ele abriu), não
+  ao movimento. O anime.js lê daqui e nem precisa saber que existe.
 */
 .cui-menu__painel[data-lado="baixo"] {
   transform-origin: top;
@@ -228,21 +232,16 @@
 }
 
 /*
-  ⛔ **A SAÍDA não está aqui, e isso é deliberado.** Ela é feita em
-  `usar-coreografia.ts` com a Web Animations API, porque anima `maxHeight` a
-  partir da altura MEDIDA de cada item — e altura medida não existe em folha de
-  estilo. O que o CSS faz na saída é só uma coisa: parar de aceitar cliques, e
-  desligar a animação de ENTRADA, que senão brigaria com a de script pelos
-  mesmos nós.
+  ⛔ **A COREOGRAFIA INTEIRA saiu deste arquivo.** Entrada e saída vivem em
+  `usar-coreografia.ts`, no anime.js — a entrada porque o CSS não tem mola de
+  verdade, e a saída porque ela anima `maxHeight` a partir da altura MEDIDA de
+  cada item, que não existe em folha de estilo. Antes eram duas linguagens para
+  uma coreografia só, com o passo do escalonamento escrito de dois jeitos.
+
+  O que sobrou para o CSS na saída é uma coisa só: parar de aceitar cliques.
 */
 .cui-menu__painel[data-estado="fechando"] {
   pointer-events: none;
-  animation: none;
-}
-
-.cui-menu__painel[data-estado="fechando"] .cui-menu__item,
-.cui-menu__painel[data-estado="fechando"] .cui-menu__barra {
-  animation: none;
 }
 
 /* Antes da primeira medição não há onde desenhar — invisível, mas montado, para
@@ -268,22 +267,6 @@
   cursor: pointer;
   outline: none;
   transition: background-color var(--cui-transicao-item) ease;
-  animation: cui-item-entra var(--cui-entrada-item) var(--cui-mola) both;
-  /* O escalonamento vem do índice, injetado como custom property pelo React. */
-  animation-delay: calc(var(--cui-i, 0) * var(--cui-passo-item));
-}
-
-.cui-menu__painel[data-lado="cima"] .cui-menu__item {
-  animation-name: cui-item-entra-cima;
-}
-
-/*
-  Filtrou uma vez, a entrada escalonada acaba. A coreografia pertence à ABERTURA:
-  re-encená-la a cada tecla faria a lista piscar item por item justamente
-  enquanto a pessoa lê para escolher.
-*/
-.cui-menu__painel[data-anima="false"] .cui-menu__item {
-  animation: none;
 }
 
 .cui-menu__item:hover {
@@ -363,12 +346,6 @@
   margin-inline: calc(var(--cui-painel-respiro) * -1);
   padding: var(--cui-painel-respiro) var(--cui-painel-respiro) 4px;
   background: var(--cui-flutuante);
-  animation: cui-item-entra var(--cui-entrada-item) var(--cui-mola) both;
-  animation-delay: calc(var(--cui-i, 0) * var(--cui-passo-item));
-}
-
-.cui-menu__painel[data-lado="cima"] .cui-menu__barra {
-  animation-name: cui-item-entra-cima;
 }
 
 .cui-menu__painel[data-lado="baixo"][data-com-busca="true"] {
@@ -453,75 +430,24 @@
   padding: 0;
 }
 
-/* --- Coreografia --------------------------------------------------------- */
-
-@keyframes cui-painel-entra {
-  0% {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.965);
-  }
-  60% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes cui-painel-entra-cima {
-  0% {
-    opacity: 0;
-    transform: translateY(10px) scale(0.965);
-  }
-  60% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* A saída não tem keyframes: ela é medida e roda por script — ver
-   `usar-coreografia.ts`. */
-
-@keyframes cui-item-entra {
-  0% {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes cui-item-entra-cima {
-  0% {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+/* --- Movimento ----------------------------------------------------------- */
 
 /*
-  Quem pede menos movimento continua recebendo o menu — só sem a coreografia.
-  Encurtar a animação em vez de desligá-la mantém o `both` fazendo o seu
-  trabalho: sem isso, os itens ficariam presos no `opacity: 0` do frame inicial.
+  Não há `@keyframes` neste arquivo. Os que existiam — `cui-painel-entra`,
+  `cui-item-entra` e os pares "-cima" — foram substituídos pelas molas de
+  `tokens.json`, que o CSS não sabe expressar. O único movimento que sobrou aqui
+  é a transição de cor dos estados, declarada em cada seletor.
+*/
+
+/*
+  A coreografia respeita `prefers-reduced-motion` no JavaScript — ver
+  `coreografar`, que pula para o último quadro em vez de não animar. O que
+  resta ao CSS é a transição de cor, que fica.
 */
 @media (prefers-reduced-motion: reduce) {
-  .cui-menu__painel,
   .cui-menu__item,
-  .cui-menu__barra {
-    animation-duration: 1ms;
-    animation-delay: 0ms;
-  }
-
-  .cui-menu__chevron {
+  .cui-menu__gatilho,
+  .cui-menu__busca {
     transition-duration: 1ms;
   }
 }

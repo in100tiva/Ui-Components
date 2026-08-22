@@ -1,4 +1,18 @@
-import { camadas, cores, curvas, formas, tempos, tipografia, usarTema } from "../../lib";
+import { useRef } from "react";
+
+import {
+  animate,
+  camadas,
+  cores,
+  curvas,
+  formas,
+  mola,
+  molas,
+  tempos,
+  tipografia,
+  usarTema,
+} from "../../lib";
+import type { NomeDeMola } from "../../lib";
 import { Bancada } from "../pecas";
 
 /*
@@ -110,6 +124,17 @@ export function DemoDosFundamentos() {
       </Bancada>
 
       <Bancada
+        titulo="Molas"
+        apoio="Clique para disparar. A mola não tem duração — ela para quando a energia acaba, e é por isso que nenhuma curva de Bézier a imita."
+      >
+        <div className="fund-molas">
+          {(Object.keys(molas) as NomeDeMola[]).map((nome) => (
+            <LinhaDeMola key={nome} nome={nome} />
+          ))}
+        </div>
+      </Bancada>
+
+      <Bancada
         titulo="Coreografia"
         apoio="Lidos ao mesmo tempo pelo CSS (entrada) e pelo JavaScript (saída), do mesmo JSON."
       >
@@ -123,5 +148,48 @@ export function DemoDosFundamentos() {
         </ul>
       </Bancada>
     </>
+  );
+}
+
+/**
+ * Uma mola em exame: o mesmo percurso, disparado por clique.
+ *
+ * A comparação que interessa está nos números ao lado — `stiffness` alto chega
+ * rápido, `damping` baixo quica. A mola `chevron` (damping 12) é a única do
+ * sistema que passa do ponto e volta, e é fácil ver por quê: ela anima uma seta
+ * de 13px, onde um quique é personalidade; nas outras, seria uma interface que
+ * não assenta.
+ */
+function LinhaDeMola({ nome }: { nome: NomeDeMola }) {
+  const bolaRef = useRef<HTMLSpanElement>(null);
+  const idaRef = useRef(false);
+  const fisica = molas[nome];
+
+  function tocar() {
+    const bola = bolaRef.current;
+    const trilho = bola?.parentElement;
+    if (!bola || !trilho) return;
+
+    idaRef.current = !idaRef.current;
+    /* O percurso é medido, não fixo: a bancada muda de largura com a janela, e
+       um `translateX` em px levaria a bola para fora do trilho no celular. */
+    const percurso = trilho.clientWidth - bola.offsetWidth - 6;
+
+    animate(bola, {
+      translateX: idaRef.current ? percurso : 0,
+      ease: mola(nome),
+    });
+  }
+
+  return (
+    <button type="button" onClick={tocar} className="fund-mola">
+      <span className="fund-mola__nome">{nome}</span>
+      <span className="fund-mola__trilho">
+        <span ref={bolaRef} className="fund-mola__bola" />
+      </span>
+      <code className="fund-mola__valor">
+        r {fisica.stiffness} · a {fisica.damping}
+      </code>
+    </button>
   );
 }
