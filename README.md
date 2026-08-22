@@ -140,8 +140,8 @@ cada item **colapsa** — `maxHeight` da altura medida até zero, padding junto,
 opacidade já em zero na metade do caminho — escalonado a partir do item mais
 longe do gatilho, de modo que a lista se recolhe *em direção ao campo*. Só
 depois de tudo retraído, mais uma pausa de 200ms, o painel recua e sai. É por
-isso que ela roda em Web Animations API e não em CSS: altura medida não existe
-em folha de estilo. A entrada obedece à mesma regra de direção — quem aparece
+isso que ela roda em JavaScript e não em CSS: altura medida não existe em folha
+de estilo. A entrada obedece à mesma regra de direção — quem aparece
 primeiro é quem está mais perto do gatilho, e um menu que abre para cima
 escalona ao contrário.
 
