@@ -63,6 +63,14 @@
   --cui-sucesso-superficie: oklch(0.965 0.02 155);
   /* ⭐ O TRILHO do contorno: a borda fraca de 1px que já mostra o estado antes de o traço forte percorrer o cartão. Sem ela, o contorno se desenha sobre o nada e o cartão pisca de sem-borda para com-borda. */
   --cui-sucesso-borda: oklch(0.88 0.05 155);
+  /* ⭐ Vermelho de recusa — o par simétrico de `sucesso`. Mesma função em tudo: preenche o círculo, desenha o contorno e tinge a malha do cartão recusado. ⚠️ A matiz vira 25→22 no escuro porque o vermelho puro escurece para marrom sobre fundo escuro; os três graus a menos o mantêm vermelho. */
+  --cui-perigo: oklch(0.55 0.19 25);
+  /* Texto sobre a superfície de recusa. */
+  --cui-perigo-texto: oklch(0.45 0.15 25);
+  /* Fundo tênue do estado recusado. ⚠️ Croma 0.014 e não 0.02: acima disso a cor sai do gamut sRGB, e o valor gerado para mobile viraria uma aproximação clampada — diferente do que a web mostra. O gerador avisa quando isso acontece. */
+  --cui-perigo-superficie: oklch(0.97 0.014 25);
+  /* O TRILHO do contorno de recusa — o irmão de `sucesso-borda`. */
+  --cui-perigo-borda: oklch(0.89 0.055 25);
   /* Elevação de campo. No claro há uma luz superior — no escuro ela não existe: superfície clara sobre fundo escuro já se separa sozinha. */
   --cui-relevo-raso: -1px -1px 3px #fafbff, 1px 2px 4px rgb(22 27 29 / 6%);
   /* Elevação de popover. */
@@ -121,6 +129,14 @@
   --cui-sucesso-superficie: oklch(0.3 0.05 155);
   /* ⭐ O TRILHO do contorno: a borda fraca de 1px que já mostra o estado antes de o traço forte percorrer o cartão. Sem ela, o contorno se desenha sobre o nada e o cartão pisca de sem-borda para com-borda. */
   --cui-sucesso-borda: oklch(0.42 0.07 155);
+  /* ⭐ Vermelho de recusa — o par simétrico de `sucesso`. Mesma função em tudo: preenche o círculo, desenha o contorno e tinge a malha do cartão recusado. ⚠️ A matiz vira 25→22 no escuro porque o vermelho puro escurece para marrom sobre fundo escuro; os três graus a menos o mantêm vermelho. */
+  --cui-perigo: oklch(0.7 0.19 22);
+  /* Texto sobre a superfície de recusa. */
+  --cui-perigo-texto: oklch(0.82 0.1 22);
+  /* Fundo tênue do estado recusado. ⚠️ Croma 0.014 e não 0.02: acima disso a cor sai do gamut sRGB, e o valor gerado para mobile viraria uma aproximação clampada — diferente do que a web mostra. O gerador avisa quando isso acontece. */
+  --cui-perigo-superficie: oklch(0.3 0.06 22);
+  /* O TRILHO do contorno de recusa — o irmão de `sucesso-borda`. */
+  --cui-perigo-borda: oklch(0.42 0.09 22);
   /* Elevação de campo. No claro há uma luz superior — no escuro ela não existe: superfície clara sobre fundo escuro já se separa sozinha. */
   --cui-relevo-raso: 1px 2px 4px rgb(0 0 0 / 40%);
   /* Elevação de popover. */
@@ -148,6 +164,12 @@
   --cui-sucesso-malha: color-mix(in oklab, var(--cui-sucesso) 16%, transparent);
   /* O piso da variação. Blocos com pesos diferentes entre este e `sucesso-malha` é o que dá o aspecto de pixels acendendo em vez de um retângulo chapado. */
   --cui-sucesso-malha-tenue: color-mix(in oklab, var(--cui-sucesso) 5%, transparent);
+  /* O teto de opacidade da malha em cartão recusado. */
+  --cui-perigo-malha: color-mix(in oklab, var(--cui-perigo) 16%, transparent);
+  --cui-perigo-malha-tenue: color-mix(in oklab, var(--cui-perigo) 5%, transparent);
+  /* ⭐ O degradê de fundo do cartão resolvido — a lavagem de cor que a malha de pontos flutua por cima. Muito baixo: ele é o que faz o cartão parecer TINGIDO, não pintado. Acima de ~10% o texto perde contraste contra o próprio fundo. */
+  --cui-sucesso-vidro: color-mix(in oklab, var(--cui-sucesso) 7%, transparent);
+  --cui-perigo-vidro: color-mix(in oklab, var(--cui-perigo) 7%, transparent);
 
   /* Formas */
   --cui-raio-campo: 14px;
@@ -170,6 +192,8 @@
   --cui-contorno-espessura: 3px;
   --cui-check-tamanho: 24px;
   --cui-alvo-de-toque: 44px;
+  --cui-malha-passo: 6px;
+  --cui-malha-ponto: 1px;
   --cui-moldura-respiro: 8px;
   --cui-moldura-respiro-lg: 12px;
   --cui-lateral-largura: 248px;
@@ -223,15 +247,11 @@
   --cui-deslize-pilula: 320ms;
   /* ⭐ Longo de propósito, e fora da faixa dos outros tempos do sistema. Os 160–420ms daqui são para mudança de estado, onde o olho só precisa perceber QUE mudou. Aqui ele precisa VER o percurso — o contorno é a recompensa do gesto, e uma recompensa que passa em 200ms não é vista. Nada muda de lugar durante ela, então não há custo de layout. */
   --cui-desenho-do-contorno: 700ms;
-  /* ⭐ Mais curta que o contorno (700ms) de propósito: a malha é o AMBIENTE acendendo, e ela deve assentar antes de o traço fechar a volta. Invertido, o cartão termina de se contornar e só então o fundo se ilumina — a recompensa chega depois do fim, e parece atraso. */
-  --cui-acender-da-malha: 520ms;
-  /* O intervalo entre um bloco e o vizinho na onda. Curto: com 70 blocos, qualquer valor acima de ~20ms faz a última coluna acender depois de a animação inteira ter acabado. */
-  --cui-passo-da-malha: 14ms;
+  /* ⭐ A varredura que revela a malha de pontos. Fica logo abaixo dos 700ms do contorno: os pontos terminam de aparecer pouco antes de o traço fechar a volta, e o cartão assenta em vez de ter duas coisas acabando no mesmo instante. */
+  --cui-acender-da-malha: 620ms;
 
   /* Contagens */
   --cui-teto-escalonado: 8;
-  --cui-malha-colunas: 14;
-  --cui-malha-linhas: 5;
 }
 
 /*

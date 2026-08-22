@@ -151,77 +151,70 @@ escalona ao contrário.
 vira `combobox` com `aria-activedescendant`, que é o padrão correto quando o
 foco do sistema precisa ficar no campo de texto.
 
-### `CartaoConcluivel`
+### `CartaoDeDecisao`
 
-Cartão de tarefa cujo contorno **se desenha** ao redor quando alguém marca a
-conclusão. Não é um fade de cor: é um traço sendo percorrido, e a diferença é o
-que transforma "o estado mudou" em "eu fiz isso".
+Cartão de tarefa que se **contorna** ao ser aprovado ou reprovado. Três camadas
+entram juntas: uma lavagem de cor toma o fundo, uma malha de pontos finos
+aparece em varredura, e a borda percorre o cartão de ponta a ponta. Verde para
+aprovada, vermelho para reprovada — **o mesmo desenho, só a família de cor muda**.
 
 ```tsx
-<CartaoConcluivel concluido={feita} aoAlternar={setFeita} detalhe="Concluída por Ana">
-  <div><CheckDeConclusao /> <strong>Protocolar contestação</strong></div>
-  <RodapeDeConclusao />
-</CartaoConcluivel>
+<CartaoDeDecisao resultado={r} aoDecidir={setR} detalhe="Aprovada por Ana">
+  <div><ControlesDeDecisao /> <strong>Protocolar contestação</strong></div>
+  <RodapeDaDecisao />
+</CartaoDeDecisao>
 ```
 
 | Prop | Tipo | Padrão | O que faz |
 |---|---|---|---|
-| `concluido` | `boolean` | — | O estado. Controlado. |
-| `aoAlternar` | `(v: boolean) => void` | — | O valor pedido pelo gesto. |
+| `resultado` | `"aprovada" \| "reprovada" \| null` | — | O estado. `null` = em aberto. |
+| `aoDecidir` | `(r) => void` | — | Recebe `null` quando o lado ativo é clicado de novo. |
 | `pendente` | `boolean` | `false` | Em `aria-busy`, recusa cliques, cursor de progresso. |
-| `rotuloDoCheck` | `string` | "Conclusão da tarefa" | Nome acessível — **estável**. |
-| `detalhe` | `string \| null` | `null` | "Concluída por Ana em 03/08" — vira `title` e rodapé. |
+| `detalhe` | `string \| null` | `null` | "Aprovada por Ana em 03/08" — vira `title` e rodapé. |
 
-**A sequência**, ao marcar: a malha de pixels acende em onda diagonal (520ms),
-o contorno percorre o cartão (700ms), e **só quando a volta fecha** o check
-preenche. Preencher o círculo no clique afirmaria o fim antes de ele existir, e
-a animação viraria enfeite rodando depois do fato.
+**Dois botões, não um interruptor.** Aprovar e reprovar são escolhas opostas, e
+um `switch` obrigaria a passar por um estado para chegar ao outro — além de não
+ter como representar "ainda não decidi". Com dois botões, o estado aberto é
+simplesmente nenhum pressionado, e clicar de novo no lado ativo desfaz.
+
+**A sequência**: a malha varre (620ms), o contorno percorre (700ms), e **só
+quando a volta fecha** o botão preenche e estala. Preencher no clique afirmaria o
+fim antes de ele existir.
 
 ⚠️ **Só o visual espera.** `aria-pressed` acompanha o estado desde o clique —
-adiar o que é *anunciado* faria o leitor de tela mentir por 700ms sobre o que a
-pessoa acabou de fazer. O CSS pinta por `data-confirmado`, nunca por
-`aria-pressed`.
+adiar o que é *anunciado* faria o leitor de tela mentir por 700ms. O CSS pinta
+por `data-cheio`, nunca por `aria-pressed`.
 
-**A malha** são 70 blocos (14×5) com degradê verde e peso individual — cada um
-recebe uma opacidade determinística entre 5% e 16%, o que a faz ler como pixels
-acendendo em vez de uma mancha. Três coisas a mantêm no lugar de atmosfera:
-teto de opacidade baixo, uma máscara que a apaga na área de leitura, e
-`pointer-events: none`. Ela só existe no estado concluído e some ao desmarcar —
-70 nós por cartão é um custo real numa lista longa, e está declarado no token.
+**A malha é UM elemento.** Os pontos são um `background-image` de gradientes
+radiais em ladrilho de 6px, e o degradê de densidade vem de uma máscara de duas
+camadas: uma que varre (animada por `--cui-varredura`) e outra permanente, que
+faz os pontos rarearem na direção da leitura. Uma versão anterior usava um
+`<span>` por ponto — com pontos de 1px seriam mais de quinhentos por cartão, e
+uma lista de tarefas resolvidas viraria dezenas de milhares de nós.
 
-**As três decisões que fazem isto funcionar:**
+⛔ `--cui-varredura` precisa de `@property`. Sem o registro, o navegador trata a
+custom property como string opaca: a animação salta de 0 a 1 num quadro e a onda
+não existe.
 
-⭐ **`pathLength={100}` normaliza o perímetro.** É o que permite a MESMA
-animação servir a um cartão de três linhas e a um de trinta: seja qual for o
-tamanho real, o contorno tem "comprimento 100". Sem isso, cada altura precisaria
-do próprio `strokeDasharray` medido — e cartões diferentes desenhariam em
-velocidades diferentes.
+**As decisões herdadas do original:**
 
-⭐ **São duas camadas de borda.** A borda CSS de 1px é o **trilho**, fraca e já
-presente; o `<rect>` SVG por cima é a borda de verdade. Com uma só, o traço se
-desenha sobre o nada e o cartão pisca de sem-borda para com-borda antes de
-começar.
+⭐ `pathLength={100}` normaliza o perímetro — a mesma animação serve a um cartão
+de três linhas e a um de trinta. ⭐ Duas camadas de borda: a de 1px em CSS é o
+**trilho**, o `<rect>` SVG é a borda de verdade; com uma só, o traço se desenha
+sobre o nada. ⛔ A animação pertence ao **gesto**: cartão que já chega decidido
+renderiza tudo pronto, senão uma lista de vinte e cinco dispara vinte e cinco
+coreografias em coro.
 
-⛔ **A animação pertence ao GESTO, não ao estado.** Um cartão que já chega
-concluído renderiza o traço pronto. Sem essa distinção, abrir uma lista de vinte
-e cinco tarefas concluídas desenha vinte e cinco contornos em coro — circo, não
-retorno. Desmarcar também não anima: só marcar é conquista.
-
-O tempo é `desenho-do-contorno`, 700ms — deliberadamente **fora** da faixa dos
-outros tempos do sistema. Os 160–420ms daqui são para mudança de estado, onde o
-olho só precisa perceber *que* mudou; aqui ele precisa **ver** o percurso.
-
-Contraste medido (mínimo 3:1 para elemento gráfico, 4,5:1 para texto):
+Contraste medido (mínimo 3:1 gráfico, 4,5:1 texto):
 
 | | claro | escuro |
 |---|---|---|
-| contorno e círculo sobre o cartão | 4,61:1 | 6,41:1 |
-| check dentro do círculo cheio | 4,33:1 | 6,84:1 |
-| texto do rodapé | 8,87:1 | 9,74:1 |
+| verde sobre o cartão | 4,61:1 | 6,41:1 |
+| vermelho sobre o cartão | 5,33:1 | 5,62:1 |
+| texto do rodapé | 8,05–8,87:1 | 8,61–9,74:1 |
 
-E o estado é **legível, não só colorido**: o `RodapeDeConclusao` escreve a
-conclusão em texto. Contorno verde comunica por cor e forma, e nenhum dos dois
-chega a quem usa leitor de tela ou não distingue verde.
+E o estado é **legível, não só colorido** — `RodapeDaDecisao` escreve a decisão.
+Verde e vermelho é exatamente o par mais comum de daltonismo.
 
 ### `Casca` e `NavegacaoLateral`
 
@@ -401,9 +394,9 @@ src/
       tokens.ts         ← 🤖 gerado
     movimento/
       movimento.ts      ← a única porta para o anime.js
-    cartao-concluivel/
-      CartaoConcluivel.tsx ← o contorno que percorre o cartão
-      cartao-concluivel.css
+    cartao-de-decisao/
+      CartaoDeDecisao.tsx  ← o contorno que percorre o cartão
+      cartao-de-decisao.css
     menu-suspenso/
       MenuSuspenso.tsx
       menu-suspenso.css

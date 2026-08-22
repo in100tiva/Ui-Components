@@ -118,7 +118,7 @@ const vite = await createServer({
 
 const React = await import("react");
 const { createRoot } = await import("react-dom/client");
-const { MenuSuspenso, CartaoConcluivel, CheckDeConclusao, RodapeDeConclusao } =
+const { MenuSuspenso, CartaoDeDecisao, ControlesDeDecisao, RodapeDaDecisao } =
   await vite.ssrLoadModule("/src/lib/index.ts");
 const { Galeria } = await vite.ssrLoadModule("/src/demo/Galeria.tsx");
 const { act } = React;
@@ -241,100 +241,80 @@ checar("teto preservado na reabertura", Boolean(painel()?.style.maxHeight));
 checar("itens sem maxHeight residual", itens.every((i) => i.style.maxHeight === ""));
 checar("itens sem opacity zerada", itens.every((i) => i.style.opacity !== "0"));
 
-/* --- Cartão concluível --------------------------------------------------- */
+/* --- Cartão de decisão --------------------------------------------------- */
 
-console.log("\nCartão Concluível");
+console.log("\nCartão de Decisão");
 
 function Tarefa({ inicial }) {
-  const [feito, setFeito] = React.useState(inicial);
+  const [resultado, setResultado] = React.useState(inicial);
   return React.createElement(
-    CartaoConcluivel,
-    { concluido: feito, aoAlternar: setFeito, detalhe: "Concluída agora" },
-    React.createElement(CheckDeConclusao, null),
-    React.createElement(RodapeDeConclusao, null),
+    CartaoDeDecisao,
+    { resultado, aoDecidir: setResultado, detalhe: "Decidida agora" },
+    React.createElement(ControlesDeDecisao, null),
+    React.createElement(RodapeDaDecisao, null),
   );
 }
 
 /*
-  Dois cartões no mesmo render: um que CHEGA concluído e um que será marcado por
-  gesto. A regra que isto protege é a que separa retorno de circo — o que já
-  vem pronto do servidor não desenha nada, e só o gesto anima.
+  Três cartões: um que CHEGA aprovado, um que chega reprovado, e um em aberto
+  para ser decidido por gesto. A regra que isto protege é a que separa retorno de
+  circo — o que vem pronto do servidor não anima nada.
 */
 await act(async () => {
   raiz.render(
     React.createElement(
       "div",
       null,
-      React.createElement(Tarefa, { inicial: true, key: "pronta" }),
-      React.createElement(Tarefa, { inicial: false, key: "aberta" }),
+      React.createElement(Tarefa, { inicial: "aprovada", key: "ok" }),
+      React.createElement(Tarefa, { inicial: "reprovada", key: "nao" }),
+      React.createElement(Tarefa, { inicial: null, key: "aberta" }),
     ),
   );
 });
 await esperar(60);
 
-const cartoes = () => [...doc.querySelectorAll(".cui-cartao")];
-const contornoDe = (i) => cartoes()[i]?.querySelector("rect");
+const cartoes = () => [...doc.querySelectorAll(".cui-decisao")];
+const parte = (i, sel) => cartoes()[i]?.querySelector(sel);
+const botao = (i, tipo) => parte(i, `.cui-decisao__botao[data-tipo="${tipo}"]`);
 
-checar("os dois cartões montaram", cartoes().length === 2);
+checar("os três cartões montaram", cartoes().length === 3);
 checar(
-  "cartão que JÁ chega concluído tem contorno pronto",
-  contornoDe(0)?.style.strokeDashoffset === "0",
-  `strokeDashoffset="${contornoDe(0)?.style.strokeDashoffset}"`,
+  "aprovada e reprovada usam o MESMO desenho, só o tom muda",
+  parte(0, ".cui-decisao__contorno") && parte(1, ".cui-decisao__contorno") &&
+    cartoes()[0]?.dataset.resultado === "aprovada" &&
+    cartoes()[1]?.dataset.resultado === "reprovada",
 );
-checar("cartão em aberto não tem contorno nenhum", !contornoDe(1));
+checar("cartão decidido tem contorno pronto", parte(0, "rect")?.style.strokeDashoffset === "0");
+checar("cartão decidido tem malha e lavagem", Boolean(parte(1, ".cui-decisao__malha") && parte(1, ".cui-decisao__vidro")));
+checar("cartão em aberto não tem camada nenhuma", !parte(2, ".cui-decisao__contorno") && !parte(2, ".cui-decisao__malha"));
 
-const check = () => cartoes()[1]?.querySelector(".cui-cartao__check");
-const malhaDe = (i) => cartoes()[i]?.querySelector(".cui-cartao__malha");
-
+/* O intervalo entre o clique e a confirmação: o estado é anunciado na hora, o
+   visual espera a volta fechar. */
+await clicar(botao(2, "reprovada"));
+checar("o estado já é anunciado no clique", botao(2, "reprovada")?.getAttribute("aria-pressed") === "true");
 checar(
-  "cartão que já chega concluído tem a malha acesa",
-  [...(malhaDe(0)?.children ?? [])].every((b) => b.style.opacity === "1"),
-  `${malhaDe(0)?.children.length ?? 0} blocos`,
-);
-
-await clicar(check());
-
-/*
-  ⭐ **O intervalo entre o clique e a confirmação.** O estado muda no clique
-  (`aria-pressed`), mas o check só PREENCHE quando o contorno fecha a volta. Se
-  alguém trocar o seletor do CSS de `data-confirmado` para `aria-pressed`, a
-  sequência inteira desaparece sem quebrar nada — daí o check aqui.
-*/
-checar(
-  "logo após o clique o estado já é anunciado",
-  check()?.getAttribute("aria-pressed") === "true",
-);
-checar(
-  "…mas o visual ainda AGUARDA a volta fechar",
-  check()?.getAttribute("data-confirmado") === "false" &&
-    check()?.getAttribute("data-aguardando") === "true",
-  `confirmado="${check()?.getAttribute("data-confirmado")}"`,
+  "…mas o visual AGUARDA a volta fechar",
+  botao(2, "reprovada")?.getAttribute("data-cheio") === "false" &&
+    botao(2, "reprovada")?.getAttribute("data-aguardando") === "true",
 );
 
 await esperar(900);
-checar(
-  "ao fechar a volta, o check confirma",
-  check()?.getAttribute("data-confirmado") === "true",
-);
-checar(
-  "a malha acendeu por gesto",
-  [...(malhaDe(1)?.children ?? [])].every((b) => Number(b.style.opacity) > 0.9),
-  `${malhaDe(1)?.children.length ?? 0} blocos`,
-);
-checar("marcar por gesto desenha o contorno", Boolean(contornoDe(1)));
-checar(
-  "o contorno terminou o percurso",
-  contornoDe(1)?.style.strokeDashoffset === "0",
-  `strokeDashoffset="${contornoDe(1)?.style.strokeDashoffset}"`,
-);
-checar("aria-pressed acompanha o estado", check()?.getAttribute("aria-pressed") === "true");
-checar("o rodapé anuncia a conclusão por escrito", Boolean(cartoes()[1]?.querySelector(".cui-cartao__rodape")));
+checar("ao fechar a volta, o botão confirma", botao(2, "reprovada")?.getAttribute("data-cheio") === "true");
+checar("reprovar tinge o cartão de vermelho", cartoes()[2]?.dataset.resultado === "reprovada");
+checar("a malha apareceu", Number(parte(2, ".cui-decisao__malha")?.style.opacity) === 1);
+checar("o rodapé anuncia a decisão por escrito", Boolean(parte(2, ".cui-decisao__rodape")));
 
-await clicar(check());
+/* Trocar de lado, e depois desfazer. */
+await clicar(botao(2, "aprovada"));
+await esperar(900);
+checar("trocar de lado troca o tom", cartoes()[2]?.dataset.resultado === "aprovada");
+checar("o lado anterior deixou de estar pressionado", botao(2, "reprovada")?.getAttribute("aria-pressed") === "false");
+
+await clicar(botao(2, "aprovada"));
 await esperar(200);
-checar("desmarcar remove o contorno", !contornoDe(1));
-checar("desmarcar remove o rodapé", !cartoes()[1]?.querySelector(".cui-cartao__rodape"));
-checar("desmarcar remove a malha (e os 70 nós dela)", !malhaDe(1));
+checar("clicar de novo no lado ativo desfaz", cartoes()[2]?.dataset.resultado === "aberta");
+checar("desfazer remove contorno, malha e lavagem",
+  !parte(2, ".cui-decisao__contorno") && !parte(2, ".cui-decisao__malha") && !parte(2, ".cui-decisao__vidro"));
 
 /* --- Galeria ------------------------------------------------------------- */
 
@@ -349,7 +329,7 @@ const navItens = () => [...doc.querySelectorAll(".cui-nav__item")];
 checar("a coluna lista os componentes do registro", navItens().length >= 3, navItens().map((i) => i.textContent).join(" | "));
 checar("abre com o primeiro item ativo", Boolean(doc.querySelector('[aria-current="page"]')));
 
-for (const alvo of ["Menu Suspenso", "Cartão Concluível", "Cores e tokens"]) {
+for (const alvo of ["Menu Suspenso", "Cartão de Decisão", "Cores e tokens"]) {
   const botao = navItens().find((i) => i.textContent?.includes(alvo));
   if (!botao) {
     checar(`item "${alvo}" existe`, false);

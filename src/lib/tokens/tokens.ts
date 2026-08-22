@@ -47,6 +47,10 @@ export const cores = {
     "sucessoTexto": "#115531",
     "sucessoSuperficie": "#eaf8ee",
     "sucessoBorda": "#bee2c9",
+    "perigo": "#c92f33",
+    "perigoTexto": "#972527",
+    "perigoSuperficie": "#fff2f0",
+    "perigoBorda": "#fdcdc9",
     "acento9": "rgba(131, 118, 213, 0.09)",
     "acento14": "rgba(131, 118, 213, 0.14)",
     "acento60": "rgba(131, 118, 213, 0.6)",
@@ -54,7 +58,11 @@ export const cores = {
     "scrollPolegar": "rgba(131, 118, 213, 0.22)",
     "scrollPolegarForte": "rgba(131, 118, 213, 0.42)",
     "sucessoMalha": "rgba(49, 132, 84, 0.16)",
-    "sucessoMalhaTenue": "rgba(49, 132, 84, 0.05)"
+    "sucessoMalhaTenue": "rgba(49, 132, 84, 0.05)",
+    "perigoMalha": "rgba(201, 47, 51, 0.16)",
+    "perigoMalhaTenue": "rgba(201, 47, 51, 0.05)",
+    "sucessoVidro": "rgba(49, 132, 84, 0.07)",
+    "perigoVidro": "rgba(201, 47, 51, 0.07)"
   },
   "escuro": {
     "fundo": "#181a1f",
@@ -81,6 +89,10 @@ export const cores = {
     "sucessoTexto": "#8ed8a8",
     "sucessoSuperficie": "#173523",
     "sucessoBorda": "#2a583c",
+    "perigo": "#ff6367",
+    "perigoTexto": "#ffaaa7",
+    "perigoSuperficie": "#472020",
+    "perigoBorda": "#773736",
     "acento9": "rgba(161, 152, 235, 0.09)",
     "acento14": "rgba(161, 152, 235, 0.14)",
     "acento60": "rgba(161, 152, 235, 0.6)",
@@ -88,7 +100,11 @@ export const cores = {
     "scrollPolegar": "rgba(161, 152, 235, 0.22)",
     "scrollPolegarForte": "rgba(161, 152, 235, 0.42)",
     "sucessoMalha": "rgba(89, 180, 125, 0.16)",
-    "sucessoMalhaTenue": "rgba(89, 180, 125, 0.05)"
+    "sucessoMalhaTenue": "rgba(89, 180, 125, 0.05)",
+    "perigoMalha": "rgba(255, 99, 103, 0.16)",
+    "perigoMalhaTenue": "rgba(255, 99, 103, 0.05)",
+    "sucessoVidro": "rgba(89, 180, 125, 0.07)",
+    "perigoVidro": "rgba(255, 99, 103, 0.07)"
   }
 } as const;
 
@@ -114,6 +130,8 @@ export const formas = {
   "contornoEspessura": 3,
   "checkTamanho": 24,
   "alvoDeToque": 44,
+  "malhaPasso": 6,
+  "malhaPonto": 1,
   "molduraRespiro": 8,
   "molduraRespiroLg": 12,
   "lateralLargura": 248,
@@ -210,14 +228,11 @@ export const tempos = {
   "transicaoItem": 180,
   "deslizePilula": 320,
   "desenhoDoContorno": 700,
-  "acenderDaMalha": 520,
-  "passoDaMalha": 14
+  "acenderDaMalha": 620
 } as const;
 
 export const contagens = {
-  "tetoEscalonado": 8,
-  "malhaColunas": 14,
-  "malhaLinhas": 5
+  "tetoEscalonado": 8
 } as const;
 
 /** Atalho: os tokens de cor de um tema. */

@@ -184,7 +184,7 @@
   max-width: 440px;
 }
 
-.demo-bancada__palco:has(.cui-cartao) {
+.demo-bancada__palco:has(.cui-decisao) {
   max-width: 620px;
 }
 

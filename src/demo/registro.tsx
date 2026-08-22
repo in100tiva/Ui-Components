@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import type { GrupoDeNavegacao } from "../lib";
-import { DemoDoCartaoConcluivel } from "./demos/cartao-concluivel";
+import { DemoDoCartaoDeDecisao } from "./demos/cartao-de-decisao";
 import { DemoDosFundamentos } from "./demos/fundamentos";
 import { DemoDoMenuSuspenso } from "./demos/menu-suspenso";
 
@@ -54,13 +54,13 @@ export const REGISTRO: readonly EntradaDoRegistro[] = [
     Demo: DemoDoMenuSuspenso,
   },
   {
-    id: "cartao-concluivel",
-    nome: "Cartão Concluível",
+    id: "cartao-de-decisao",
+    nome: "Cartão de Decisão",
     grupo: "Componentes",
     resumo:
-      "Cartão de tarefa cujo contorno se desenha ao redor quando alguém marca a conclusão.",
+      "Cartão de tarefa que se contorna ao ser aprovado ou reprovado — malha de pontos, lavagem de cor e o traço percorrendo a borda.",
     estado: "pronto",
-    Demo: DemoDoCartaoConcluivel,
+    Demo: DemoDoCartaoDeDecisao,
   },
 ];
 

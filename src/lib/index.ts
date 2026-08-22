@@ -26,13 +26,16 @@ export {
 } from "./tokens/tokens";
 export type { NomeDeTema } from "./tokens/tokens";
 
-/* Cartão com conclusão — o contorno que se desenha ao marcar. */
+/* Cartão de decisão — o contorno que se desenha ao aprovar ou reprovar. */
 export {
-  CartaoConcluivel,
-  CheckDeConclusao,
-  RodapeDeConclusao,
-} from "./cartao-concluivel/CartaoConcluivel";
-export type { PropsDoCartaoConcluivel } from "./cartao-concluivel/CartaoConcluivel";
+  CartaoDeDecisao,
+  ControlesDeDecisao,
+  RodapeDaDecisao,
+} from "./cartao-de-decisao/CartaoDeDecisao";
+export type {
+  PropsDoCartaoDeDecisao,
+  Resultado,
+} from "./cartao-de-decisao/CartaoDeDecisao";
 
 /* A casca do app: moldura, coluna lateral e cartão central. */
 export { Casca } from "./casca/Casca";

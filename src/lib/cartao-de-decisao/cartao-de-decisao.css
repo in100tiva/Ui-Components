@@ -1,0 +1,276 @@
+/* ==========================================================================
+   Cartão de decisão — o contorno que se desenha ao aprovar ou reprovar.
+   ========================================================================== */
+
+/*
+  ⭐ **A família de cor é escolhida UMA vez, aqui.** Todo o resto do arquivo lê
+  `--tom`, `--tom-borda`, `--tom-vidro`… e não sabe se está pintando aprovação
+  ou recusa. Sem esse apelido, cada regra abaixo existiria duas vezes — e a
+  segunda cópia é a que alguém esquece de atualizar.
+*/
+.cui-decisao[data-resultado="aprovada"] {
+  --tom: var(--cui-sucesso);
+  --tom-texto: var(--cui-sucesso-texto);
+  --tom-borda: var(--cui-sucesso-borda);
+  --tom-vidro: var(--cui-sucesso-vidro);
+  --tom-malha: var(--cui-sucesso-malha);
+}
+
+.cui-decisao[data-resultado="reprovada"] {
+  --tom: var(--cui-perigo);
+  --tom-texto: var(--cui-perigo-texto);
+  --tom-borda: var(--cui-perigo-borda);
+  --tom-vidro: var(--cui-perigo-vidro);
+  --tom-malha: var(--cui-perigo-malha);
+}
+
+.cui-decisao {
+  position: relative;
+  /* Recorta o contorno nos cantos: o `<rect>` encosta na borda, e sem recorte o
+     stroke arredondado vaza meio pixel nas curvas. */
+  overflow: hidden;
+  padding: 18px;
+  border: 1px solid var(--cui-borda);
+  border-radius: var(--cui-raio-cartao);
+  background: var(--cui-superficie);
+  box-shadow: var(--cui-relevo-raso);
+  transition: border-color var(--cui-transicao-estado) ease;
+}
+
+/* ⭐ O TRILHO: a borda fraca que já mostra o estado desde o primeiro quadro,
+   antes de o traço forte percorrer o cartão. */
+.cui-decisao[data-resultado="aprovada"],
+.cui-decisao[data-resultado="reprovada"] {
+  border-color: var(--tom-borda);
+}
+
+/* --- A lavagem de cor ---------------------------------------------------- */
+
+/*
+  ⭐ **O degradê que tinge o cartão.** Diagonal, forte no canto inferior direito
+  e desaparecendo antes de chegar ao texto — o mesmo eixo da malha, porque as
+  duas camadas contam o mesmo movimento.
+
+  ⛔ Um irmão absoluto, e não o `background` do cartão: ele precisa de opacidade
+  própria para entrar suave, e mexer na opacidade do cartão levaria o texto
+  junto.
+*/
+.cui-decisao__vidro {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to top left,
+    var(--tom-vidro) 0%,
+    transparent 62%
+  );
+}
+
+/* --- A malha de pontos --------------------------------------------------- */
+
+/*
+  ⭐ **Pontos de 1px em ladrilho de 6px, num elemento só.**
+
+  Uma versão anterior desenhava cada ponto como um `<span>` de um grid. Com o
+  tamanho pedido seriam mais de quinhentos por cartão, e uma lista de tarefas
+  resolvidas viraria dezenas de milhares de nós. Aqui o padrão inteiro é um
+  `background-image` de gradiente radial ladrilhado: um nó, qualquer densidade.
+
+  ⚠️ `background-size` define o PASSO da grade e o raio do gradiente define o
+  ponto. Mexer só no passo muda o espaçamento; mexer só no raio, a espessura.
+*/
+.cui-decisao__malha {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
+  background-image: radial-gradient(
+    circle at center,
+    var(--tom-malha) var(--cui-malha-ponto),
+    transparent var(--cui-malha-ponto)
+  );
+  background-size: var(--cui-malha-passo) var(--cui-malha-passo);
+
+  /*
+    ⭐ **A varredura.** `--cui-varredura` vai de 0 a 1 e empurra o gradiente da
+    máscara: os pontos aparecem em frente, do canto oposto ao texto na direção
+    dele. É o que dá o efeito de onda sem animar ponto nenhum — a máscara é uma
+    propriedade só.
+
+    O segundo gradiente é o degradê PERMANENTE de densidade: mesmo depois da
+    varredura, os pontos rareiam na direção da leitura. É ele que faz a malha
+    "formar e desaparecer" em vez de terminar como um retângulo pontilhado.
+  */
+  mask-image:
+    linear-gradient(
+      to top left,
+      rgb(0 0 0 / 100%) calc(var(--cui-varredura, 1) * 100% - 40%),
+      rgb(0 0 0 / 0%) calc(var(--cui-varredura, 1) * 100%)
+    ),
+    linear-gradient(to top left, rgb(0 0 0 / 100%) 0%, rgb(0 0 0 / 0%) 72%);
+  mask-composite: intersect;
+  -webkit-mask-composite: source-in;
+}
+
+/*
+  ⛔ **`@property` é obrigatório para a varredura animar.** Sem o registro, o
+  navegador trata `--cui-varredura` como uma string opaca: a animação salta de 0
+  para 1 num quadro só, e a onda simplesmente não existe. Com ele, o valor é um
+  número e interpola.
+*/
+@property --cui-varredura {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
+}
+
+/*
+  Sem `mask-composite` as duas máscaras não se multiplicam e a de cima vence
+  sozinha — a malha ficaria cheia sobre o texto. Onde a propriedade não existe,
+  é mais seguro não ter malha do que ter uma sem degradê.
+*/
+@supports not (mask-composite: intersect) {
+  .cui-decisao__malha {
+    display: none;
+  }
+}
+
+/* --- O contorno ---------------------------------------------------------- */
+
+.cui-decisao__contorno {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--tom);
+  pointer-events: none;
+}
+
+/* --- Conteúdo ------------------------------------------------------------ */
+
+/*
+  ⛔ Tudo que é conteúdo sobe acima das camadas de fundo. Sem `position` +
+  `z-index`, a lavagem e a malha seriam pintadas POR CIMA do texto.
+*/
+.cui-decisao > *:not([aria-hidden="true"]) {
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Os controles -------------------------------------------------------- */
+
+.cui-decisao__controles {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/*
+  Alvo de 44px com desenho de 24px. A margem negativa devolve ao cartão o espaço
+  extra, para os círculos alinharem com a primeira linha de texto em vez de
+  esticá-la. O alvo grande vale para o dedo; o desenho pequeno, para o olho.
+*/
+.cui-decisao__botao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--cui-alvo-de-toque);
+  height: var(--cui-alvo-de-toque);
+  margin: calc((var(--cui-alvo-de-toque) - var(--cui-check-tamanho)) / -2);
+  padding: 0;
+  border: none;
+  border-radius: var(--cui-raio-busca);
+  background: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.cui-decisao__botao[data-pendente="true"] {
+  cursor: progress;
+}
+
+.cui-decisao__botao:focus-visible {
+  box-shadow: 0 0 0 3px var(--cui-anel-foco);
+}
+
+/* Cada botão carrega a PRÓPRIA família de cor, e não a do cartão: o de reprovar
+   precisa ser vermelho mesmo num cartão ainda em aberto. */
+.cui-decisao__botao[data-tipo="aprovada"] {
+  --botao-tom: var(--cui-sucesso);
+}
+.cui-decisao__botao[data-tipo="reprovada"] {
+  --botao-tom: var(--cui-perigo);
+}
+
+.cui-decisao__circulo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cui-check-tamanho);
+  height: var(--cui-check-tamanho);
+  border: 1px solid var(--cui-contorno);
+  border-radius: 50%;
+  color: transparent;
+  transition:
+    background-color var(--cui-transicao-estado) ease,
+    border-color var(--cui-transicao-estado) ease,
+    color var(--cui-transicao-estado) ease;
+}
+
+.cui-decisao__circulo svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* A prévia no hover: o ícone aparece apagado, e é o que impede o círculo vazio
+   de parecer decoração. */
+.cui-decisao__botao:hover .cui-decisao__circulo {
+  border-color: var(--botao-tom);
+  color: var(--cui-texto-tenue);
+}
+
+/* ⭐ AGUARDANDO: a volta ainda está sendo percorrida. O círculo já é da cor da
+   decisão, mas não preenche — diz "está acontecendo" sem afirmar que acabou. */
+.cui-decisao__botao[data-aguardando="true"] .cui-decisao__circulo {
+  border-color: var(--botao-tom);
+  color: color-mix(in oklab, var(--botao-tom) 45%, transparent);
+}
+
+/*
+  CHEIO: círculo preenchido com o ícone em `--cui-fundo` — branco no claro,
+  quase-preto no escuro. Nos dois temas o par rende ≥3:1, o piso de AA para
+  elemento gráfico.
+
+  ⚠️ O seletor é `data-cheio`, e NÃO `aria-pressed`. O primeiro é o estado
+  visual, que espera a volta fechar; o segundo é o anunciado, que muda no
+  clique. Pintar por `aria-pressed` desfaria a sequência inteira.
+*/
+.cui-decisao__botao[data-cheio="true"] .cui-decisao__circulo {
+  border-color: var(--botao-tom);
+  background: var(--botao-tom);
+  color: var(--cui-fundo);
+}
+
+/* --- Rodapé -------------------------------------------------------------- */
+
+/*
+  ⭐ O estado precisa ser LEGÍVEL, não só colorido. Verde e vermelho é
+  exatamente o par mais comum de daltonismo, e nenhuma cor chega a quem usa
+  leitor de tela. Esta frase chega.
+*/
+.cui-decisao__rodape {
+  margin: 12px 0 0;
+  color: var(--tom-texto);
+  font-size: var(--cui-texto-apoio);
+  font-weight: var(--cui-peso-medio);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cui-decisao,
+  .cui-decisao__circulo {
+    transition-duration: 1ms;
+  }
+}
