@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Componentes-UI — Menu Suspenso</title>
+    <script>
+      /* Aplica o tema antes da primeira pintura: sem isto a tela pisca branco
+         antes de o React montar e trocar o atributo. */
+      (function () {
+        try {
+          var t = localStorage.getItem("componentes-ui:tema");
+          if (!t || t === "sistema") {
+            t = matchMedia("(prefers-color-scheme: dark)").matches ? "escuro" : "claro";
+          }
+          document.documentElement.dataset.tema = t;
+        } catch (_) {
+          document.documentElement.dataset.tema = "claro";
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="raiz"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

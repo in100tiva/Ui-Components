@@ -1,0 +1,445 @@
+/* ==========================================================================
+   Menu Suspenso — estilo autocontido, sobre os tokens de `estilos/tokens.css`.
+   Nenhuma classe utilitária, nenhum framework: cai em qualquer projeto React.
+   ========================================================================== */
+
+.cui-menu {
+  position: relative;
+  display: block;
+}
+
+/* --- Gatilho ------------------------------------------------------------- */
+
+.cui-menu__gatilho {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 44px;
+  padding: 0 40px 0 16px;
+  border: 1px solid var(--cui-acento-borda);
+  border-radius: var(--cui-raio-campo);
+  background: var(--cui-superficie);
+  box-shadow: var(--cui-relevo-raso);
+  color: var(--cui-acento-texto);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+.cui-menu__gatilho[data-tamanho="lg"] {
+  height: 46px;
+}
+
+/* O rótulo trunca; o chevron nunca é empurrado para fora do campo. */
+.cui-menu__rotulo {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cui-menu__gatilho[data-vazio="true"] {
+  color: var(--cui-acento-placeholder);
+  font-weight: 450;
+}
+
+.cui-menu__gatilho:hover:not(:disabled) {
+  border-color: var(--cui-acento-60);
+}
+
+/*
+  `:focus-visible`, não `:focus`: o anel tem de aparecer para quem chega pelo
+  teclado e sumir para quem chegou pelo mouse — senão todo clique deixa o campo
+  aceso, e o anel deixa de significar "é aqui que a sua tecla vai cair".
+*/
+.cui-menu__gatilho:focus-visible {
+  border-color: var(--cui-acento);
+  box-shadow: 0 0 0 3px var(--cui-anel-foco);
+}
+
+.cui-menu__gatilho[aria-expanded="true"] {
+  border-color: var(--cui-acento);
+}
+
+.cui-menu__gatilho:disabled {
+  background: var(--cui-abafado);
+  border-color: var(--cui-borda);
+  box-shadow: none;
+  color: var(--cui-texto-suave);
+  cursor: not-allowed;
+}
+
+.cui-menu__chevron {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  width: 13px;
+  height: 13px;
+  margin-top: -6.5px;
+  color: var(--cui-acento);
+  pointer-events: none;
+  transform: rotate(180deg);
+  transition: transform 200ms var(--cui-mola);
+}
+
+.cui-menu__gatilho[aria-expanded="true"] ~ .cui-menu__chevron {
+  transform: rotate(0deg);
+}
+
+.cui-menu__gatilho:disabled ~ .cui-menu__chevron {
+  color: var(--cui-texto-suave);
+}
+
+/* --- Painel -------------------------------------------------------------- */
+
+/*
+  `fixed`: o painel vive num portal no `<body>` e é posicionado contra a JANELA,
+  então nenhum `overflow` de ancestral o recorta. As coordenadas vêm medidas de
+  `usar-ancoragem`, nunca do CSS.
+
+  A rolagem é do PAINEL e não de uma caixa interna — a barra de busca `sticky`
+  precisa que o contexto de rolagem seja o mesmo do conteúdo, senão ela não gruda.
+*/
+.cui-menu__painel {
+  position: fixed;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  border: 1px solid var(--cui-borda);
+  border-radius: var(--cui-raio-painel);
+  background: var(--cui-flutuante);
+  box-shadow: var(--cui-sombra-painel);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: cui-painel-entra 420ms var(--cui-mola) both;
+}
+
+/*
+  `transform-origin` acompanha o lado: o `scale(0.965)` da entrada tem de crescer
+  a partir da borda que ENCOSTA no gatilho. Crescendo do lado errado, o painel
+  nasce se afastando do campo que a pessoa acabou de clicar.
+*/
+.cui-menu__painel[data-lado="baixo"] {
+  transform-origin: top;
+}
+.cui-menu__painel[data-lado="cima"] {
+  transform-origin: bottom;
+}
+.cui-menu__painel[data-lado="baixo"][data-alinhamento="fim"] {
+  transform-origin: top right;
+}
+.cui-menu__painel[data-lado="cima"][data-alinhamento="fim"] {
+  transform-origin: bottom right;
+}
+
+.cui-menu__painel[data-lado="cima"] {
+  animation-name: cui-painel-entra-cima;
+}
+
+.cui-menu__painel[data-estado="fechando"] {
+  pointer-events: none;
+  animation: cui-painel-sai 200ms var(--cui-saida) both;
+}
+
+.cui-menu__painel[data-estado="fechando"][data-lado="cima"] {
+  animation-name: cui-painel-sai-cima;
+}
+
+/* Antes da primeira medição não há onde desenhar — invisível, mas montado, para
+   que o painel exista no mesmo frame em que é medido. */
+.cui-menu__painel[data-medido="false"] {
+  visibility: hidden;
+}
+
+/* --- Itens --------------------------------------------------------------- */
+
+.cui-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0; /* numa lista que rola, o flex encolheria os itens */
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: var(--cui-raio-item);
+  color: var(--cui-acento-texto);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 180ms ease;
+  animation: cui-item-entra 380ms var(--cui-mola) both;
+  /* O escalonamento vem do índice, injetado como custom property pelo React. */
+  animation-delay: calc(var(--cui-i, 0) * 45ms);
+}
+
+.cui-menu__painel[data-lado="cima"] .cui-menu__item {
+  animation-name: cui-item-entra-cima;
+}
+
+.cui-menu__painel[data-estado="fechando"] .cui-menu__item {
+  animation: none;
+}
+
+.cui-menu__item:hover {
+  background: var(--cui-acento-9);
+}
+
+/*
+  Dois caminhos para o MESMO destaque, porque há dois donos do foco:
+  - sem barra de busca, o item recebe foco de verdade → `:focus`;
+  - com barra, o foco fica no input e o destaque é pintado à mão → `data-focado`.
+  `:focus` e não `:focus-visible`: o foco aqui é sempre programático e sempre
+  intencional, e o navegador nem sempre o classifica como "visível".
+*/
+.cui-menu__item:focus,
+.cui-menu__item[data-focado="true"] {
+  background: var(--cui-acento-14);
+}
+
+.cui-menu__item[aria-selected="true"] {
+  background: var(--cui-acento-9);
+}
+
+.cui-menu__item[aria-disabled="true"] {
+  color: var(--cui-texto-suave);
+  cursor: not-allowed;
+  background: none;
+}
+
+.cui-menu__item-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.cui-menu__item-rotulo {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cui-menu__item-apoio {
+  color: var(--cui-texto-tenue);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/*
+  A marca do selecionado ocupa lugar SEMPRE (`visibility`, não `display`): com
+  `display: none` os rótulos dançam 24px para a esquerda ao trocar de seleção.
+*/
+.cui-menu__marca {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--cui-acento);
+  visibility: hidden;
+}
+
+.cui-menu__item[aria-selected="true"] .cui-menu__marca {
+  visibility: visible;
+}
+
+/* --- Barra de busca ------------------------------------------------------ */
+
+/*
+  `sticky` mede a caixa de MARGEM, então o padding do painel viraria uma fresta
+  descoberta por onde as opções passariam por cima do campo de digitar. A saída
+  é a barra devolver o padding por conta própria enquanto o painel o remove do
+  lado dela — ver `data-com-busca` no painel.
+*/
+.cui-menu__barra {
+  position: sticky;
+  z-index: 10;
+  flex-shrink: 0;
+  margin: 0 -8px;
+  padding: 8px 8px 4px;
+  background: var(--cui-flutuante);
+  animation: cui-item-entra 380ms var(--cui-mola) both;
+}
+
+.cui-menu__painel[data-lado="baixo"][data-com-busca="true"] {
+  padding-top: 0;
+}
+.cui-menu__painel[data-lado="cima"][data-com-busca="true"] {
+  padding-bottom: 0;
+}
+
+.cui-menu__barra[data-posicao="topo"] {
+  top: 0;
+  margin-bottom: 4px;
+}
+
+/*
+  `order`, e não a ordem no JSX. O lado do painel é remedido a cada `resize` — e
+  no celular abrir o teclado É um resize, disparado pelo foco que este campo
+  acabou de receber. Trocar a posição na árvore desmontaria o input: o foco
+  cairia no `body` e o teclado se fecharia sozinho, no primeiro toque.
+*/
+.cui-menu__barra[data-posicao="base"] {
+  order: 99;
+  bottom: 0;
+  margin-top: 4px;
+  padding: 4px 8px 8px;
+}
+
+.cui-menu__busca-caixa {
+  position: relative;
+}
+
+.cui-menu__lupa {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  width: 15px;
+  height: 15px;
+  margin-top: -7.5px;
+  color: var(--cui-texto-tenue);
+  pointer-events: none;
+}
+
+.cui-menu__busca {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px 0 34px;
+  border: 1px solid var(--cui-borda);
+  border-radius: 11px;
+  background: var(--cui-campo-fundo);
+  color: var(--cui-texto);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.cui-menu__busca::placeholder {
+  color: var(--cui-texto-tenue);
+}
+
+.cui-menu__busca:focus {
+  border-color: var(--cui-acento);
+  box-shadow: 0 0 0 3px var(--cui-anel-foco);
+}
+
+.cui-menu__lista {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.cui-menu__vazio {
+  padding: 10px 14px;
+  color: var(--cui-acento-placeholder);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.cui-menu__vazio:empty {
+  padding: 0;
+}
+
+/* --- Coreografia --------------------------------------------------------- */
+
+@keyframes cui-painel-entra {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.965);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes cui-painel-entra-cima {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.965);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes cui-painel-sai {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.965);
+  }
+}
+
+@keyframes cui-painel-sai-cima {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.965);
+  }
+}
+
+@keyframes cui-item-entra {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cui-item-entra-cima {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/*
+  Quem pede menos movimento continua recebendo o menu — só sem a coreografia.
+  Encurtar a animação em vez de desligá-la mantém o `both` fazendo o seu
+  trabalho: sem isso, os itens ficariam presos no `opacity: 0` do frame inicial.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .cui-menu__painel,
+  .cui-menu__painel[data-estado="fechando"],
+  .cui-menu__item,
+  .cui-menu__barra {
+    animation-duration: 1ms;
+    animation-delay: 0ms;
+  }
+
+  .cui-menu__chevron {
+    transition-duration: 1ms;
+  }
+}

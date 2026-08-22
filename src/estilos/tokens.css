@@ -1,0 +1,112 @@
+/*
+ * Design tokens — a única coisa que precisa ser copiada junto com um componente.
+ *
+ * O tema é um ATRIBUTO na raiz (`data-tema="claro" | "escuro"`), não uma classe:
+ * atributo não colide com o `dark:` de Tailwind nem com o `.dark` do next-themes
+ * se o projeto de destino já tiver um deles, então a biblioteca convive com o
+ * que já existe em vez de disputar o mesmo seletor.
+ *
+ * Todo token de cor tem par nos dois temas. Um token definido só no claro é um
+ * componente invisível no escuro — é a falha mais cara e a mais silenciosa.
+ */
+
+:root,
+[data-tema="claro"] {
+  /* Superfícies */
+  --cui-fundo: #f7f8fa;
+  --cui-superficie: #ffffff;
+  --cui-flutuante: #ffffff;
+  --cui-abafado: #eef1f6;
+  --cui-campo-fundo: #fcfdfe;
+
+  /* Texto — a escada inteira passa em AA sobre `--cui-superficie` */
+  --cui-texto: #0f1417;
+  --cui-texto-rotulo: #414852;
+  --cui-texto-suave: #5a626d;
+  --cui-texto-tenue: #5f6873;
+
+  /* Traços */
+  --cui-borda: #d9e0ea;
+  --cui-contorno: oklch(0.62 0.02 258);
+
+  /* Acento do menu — a identidade violeta do design */
+  --cui-acento: oklch(0.62 0.14 288);
+  --cui-acento-texto: oklch(0.44 0.11 288);
+  --cui-acento-borda: #ecebf3;
+  --cui-acento-placeholder: #6b6f89;
+
+  /* Foco: um anel só, herdado por todo componente da biblioteca */
+  --cui-foco: oklch(0.52 0.15 258);
+
+  /* Profundidade */
+  --cui-luz: #fafbff;
+  --cui-relevo-raso: -1px -1px 3px var(--cui-luz), 1px 2px 4px rgb(22 27 29 / 6%);
+  --cui-sombra-painel: 0 12px 32px -12px rgb(16 22 58 / 22%);
+
+  color-scheme: light;
+}
+
+[data-tema="escuro"] {
+  --cui-fundo: oklch(0.218 0.011 264);
+  --cui-superficie: oklch(0.243 0.012 264);
+  --cui-flutuante: oklch(0.243 0.012 264);
+  --cui-abafado: oklch(0.288 0.012 264);
+  --cui-campo-fundo: oklch(1 0 0 / 2%);
+
+  --cui-texto: oklch(0.97 0.005 100);
+  --cui-texto-rotulo: oklch(0.86 0.012 250);
+  --cui-texto-suave: oklch(0.74 0.012 250);
+  --cui-texto-tenue: oklch(0.68 0.012 250);
+
+  --cui-borda: oklch(1 0 0 / 9%);
+  --cui-contorno: oklch(0.57 0.02 258);
+
+  --cui-acento: oklch(0.72 0.12 288);
+  --cui-acento-texto: oklch(0.86 0.06 288);
+  --cui-acento-borda: oklch(1 0 0 / 8%);
+  --cui-acento-placeholder: oklch(0.68 0.04 288);
+
+  --cui-foco: oklch(0.7 0.13 258);
+
+  --cui-relevo-raso: 1px 2px 4px rgb(0 0 0 / 40%);
+  --cui-sombra-painel: 0 12px 32px -12px rgb(0 0 0 / 55%);
+
+  color-scheme: dark;
+}
+
+/*
+ * Derivados — calculados a partir do acento, e por isso trocar `--cui-acento`
+ * por outra matiz repinta hover, seleção e anel de foco de uma vez. É o que
+ * torna o tema "próprio": um token muda, o sistema inteiro acompanha.
+ */
+:root {
+  --cui-acento-9: color-mix(in oklab, var(--cui-acento) 9%, transparent);
+  --cui-acento-14: color-mix(in oklab, var(--cui-acento) 14%, transparent);
+  --cui-acento-60: color-mix(in oklab, var(--cui-acento) 60%, transparent);
+  --cui-anel-foco: color-mix(in oklab, var(--cui-foco) 28%, transparent);
+
+  /* Curvas — uma saída expressiva na entrada, uma seca na saída */
+  --cui-mola: cubic-bezier(0.16, 1, 0.3, 1);
+  --cui-saida: cubic-bezier(0.7, 0, 0.84, 0);
+  --cui-raio-campo: 14px;
+  --cui-raio-painel: 18px;
+  --cui-raio-item: 12px;
+}
+
+/*
+ * A transição de tema fica na RAIZ e é desligada para quem pede menos
+ * movimento. Sem o `:where`, a especificidade zero se perderia e o seletor
+ * passaria a competir com os estados de cada componente.
+ */
+:where([data-tema-transicao]) * {
+  transition:
+    background-color 260ms ease,
+    border-color 260ms ease,
+    color 260ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where([data-tema-transicao]) * {
+    transition: none;
+  }
+}
