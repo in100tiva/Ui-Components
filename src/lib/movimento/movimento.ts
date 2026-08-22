@@ -90,6 +90,27 @@ function passoDaOnda(quantidade: number): number {
 }
 
 /**
+ * A onda que atravessa uma MALHA, e não uma lista.
+ *
+ * ⭐ **`grid` muda o que "vizinho" significa.** Num stagger linear, o atraso
+ * cresce com o índice: o bloco 15 espera quinze passos, mesmo estando logo
+ * abaixo do bloco 1. Com `grid`, o anime.js calcula a distância em DUAS
+ * dimensões a partir da origem — então a onda avança como uma frente, em
+ * diagonal, e não como uma varredura de texto.
+ *
+ * `from: "last"` põe a origem no canto inferior direito: a luz entra pelo canto
+ * oposto ao texto e caminha na direção dele, o que deixa a área de leitura
+ * acender por último.
+ */
+export function ondaEmMalha(
+  colunas: number,
+  linhas: number,
+  passo: number,
+): StaggerFunction<number> {
+  return stagger(passo, { grid: [colunas, linhas], from: "last" });
+}
+
+/**
  * Quando o ÚLTIMO item da onda começa a se mover.
  *
  * ⭐ **Serve para encaixar o que vem depois, e a distinção entre "começa" e

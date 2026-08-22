@@ -144,6 +144,10 @@
   --cui-scroll-polegar: color-mix(in oklab, var(--cui-acento) 22%, transparent);
   /* O mesmo polegar quando o ponteiro está sobre o painel — aí ele virou alvo, e alvo precisa ser visto. */
   --cui-scroll-polegar-forte: color-mix(in oklab, var(--cui-acento) 42%, transparent);
+  /* ⭐ O teto de opacidade dos blocos da malha — e ele é BAIXO de propósito. A malha é textura de fundo atrás de texto que precisa continuar legível; passando de ~0.2 ela deixa de ser atmosfera e vira ruído sobre a frase que a pessoa está lendo. */
+  --cui-sucesso-malha: color-mix(in oklab, var(--cui-sucesso) 16%, transparent);
+  /* O piso da variação. Blocos com pesos diferentes entre este e `sucesso-malha` é o que dá o aspecto de pixels acendendo em vez de um retângulo chapado. */
+  --cui-sucesso-malha-tenue: color-mix(in oklab, var(--cui-sucesso) 5%, transparent);
 
   /* Formas */
   --cui-raio-campo: 14px;
@@ -219,6 +223,15 @@
   --cui-deslize-pilula: 320ms;
   /* ⭐ Longo de propósito, e fora da faixa dos outros tempos do sistema. Os 160–420ms daqui são para mudança de estado, onde o olho só precisa perceber QUE mudou. Aqui ele precisa VER o percurso — o contorno é a recompensa do gesto, e uma recompensa que passa em 200ms não é vista. Nada muda de lugar durante ela, então não há custo de layout. */
   --cui-desenho-do-contorno: 700ms;
+  /* ⭐ Mais curta que o contorno (700ms) de propósito: a malha é o AMBIENTE acendendo, e ela deve assentar antes de o traço fechar a volta. Invertido, o cartão termina de se contornar e só então o fundo se ilumina — a recompensa chega depois do fim, e parece atraso. */
+  --cui-acender-da-malha: 520ms;
+  /* O intervalo entre um bloco e o vizinho na onda. Curto: com 70 blocos, qualquer valor acima de ~20ms faz a última coluna acender depois de a animação inteira ter acabado. */
+  --cui-passo-da-malha: 14ms;
+
+  /* Contagens */
+  --cui-teto-escalonado: 8;
+  --cui-malha-colunas: 14;
+  --cui-malha-linhas: 5;
 }
 
 /*

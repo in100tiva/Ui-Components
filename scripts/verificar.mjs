@@ -284,8 +284,43 @@ checar(
 checar("cartão em aberto não tem contorno nenhum", !contornoDe(1));
 
 const check = () => cartoes()[1]?.querySelector(".cui-cartao__check");
+const malhaDe = (i) => cartoes()[i]?.querySelector(".cui-cartao__malha");
+
+checar(
+  "cartão que já chega concluído tem a malha acesa",
+  [...(malhaDe(0)?.children ?? [])].every((b) => b.style.opacity === "1"),
+  `${malhaDe(0)?.children.length ?? 0} blocos`,
+);
+
 await clicar(check());
+
+/*
+  ⭐ **O intervalo entre o clique e a confirmação.** O estado muda no clique
+  (`aria-pressed`), mas o check só PREENCHE quando o contorno fecha a volta. Se
+  alguém trocar o seletor do CSS de `data-confirmado` para `aria-pressed`, a
+  sequência inteira desaparece sem quebrar nada — daí o check aqui.
+*/
+checar(
+  "logo após o clique o estado já é anunciado",
+  check()?.getAttribute("aria-pressed") === "true",
+);
+checar(
+  "…mas o visual ainda AGUARDA a volta fechar",
+  check()?.getAttribute("data-confirmado") === "false" &&
+    check()?.getAttribute("data-aguardando") === "true",
+  `confirmado="${check()?.getAttribute("data-confirmado")}"`,
+);
+
 await esperar(900);
+checar(
+  "ao fechar a volta, o check confirma",
+  check()?.getAttribute("data-confirmado") === "true",
+);
+checar(
+  "a malha acendeu por gesto",
+  [...(malhaDe(1)?.children ?? [])].every((b) => Number(b.style.opacity) > 0.9),
+  `${malhaDe(1)?.children.length ?? 0} blocos`,
+);
 checar("marcar por gesto desenha o contorno", Boolean(contornoDe(1)));
 checar(
   "o contorno terminou o percurso",
@@ -299,6 +334,7 @@ await clicar(check());
 await esperar(200);
 checar("desmarcar remove o contorno", !contornoDe(1));
 checar("desmarcar remove o rodapé", !cartoes()[1]?.querySelector(".cui-cartao__rodape"));
+checar("desmarcar remove a malha (e os 70 nós dela)", !malhaDe(1));
 
 /* --- Galeria ------------------------------------------------------------- */
 

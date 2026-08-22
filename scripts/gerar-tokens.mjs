@@ -215,6 +215,14 @@ function gerarCss() {
     })
     .join("\n");
 
+  /* As contagens também saem no CSS: `malha-colunas` vira um
+     `grid-template-columns`, e um número que o JS conhece e o CSS não é a
+     receita exata para os dois discordarem sobre a mesma grade. */
+  const contagensCss = Object.entries(fonte.coreografia)
+    .filter(([, def]) => def.itens !== undefined)
+    .map(([nome, def]) => `  --${p}-${nome}: ${def.itens};`)
+    .join("\n");
+
   return `${AVISO_GERADO("tokens/tokens.json")}
 
 /*
@@ -253,6 +261,9 @@ ${curvas}
 
   /* Coreografia */
 ${tempos}
+
+  /* Contagens */
+${contagensCss}
 }
 
 /*

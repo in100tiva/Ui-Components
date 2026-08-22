@@ -5,28 +5,62 @@ import {
   useContext,
   useEffect,
   useId,
+  useMemo,
   useRef,
+  useState,
 } from "react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import {
   animate,
   curva,
   mola,
+  ondaEmMalha,
   preferemenosMovimento,
   utils,
 } from "../movimento/movimento";
-import { curvas, tempos } from "../tokens/tokens";
+import { contagens, curvas, tempos } from "../tokens/tokens";
 
 import "./cartao-concluivel.css";
 
 type EstadoDoCartao = {
   concluido: boolean;
+  /**
+   * Se a coreografia já terminou.
+   *
+   * ⭐ **Diferente de `concluido`, e a diferença é o desenho da sequência.** O
+   * estado muda no clique; a CONFIRMAÇÃO chega quando o contorno fecha a volta.
+   * O check preenche só aí — antes disso ele mostra que algo está acontecendo,
+   * sem afirmar que acabou.
+   *
+   * ⚠️ Isto é visual e só visual: `aria-pressed` acompanha `concluido`, não
+   * isto. Adiar o estado ANUNCIADO faria o leitor de tela mentir por 700ms.
+   */
+  confirmado: boolean;
   pendente: boolean;
   alternar: () => void;
   rotulo: string;
   detalhe: string | null;
 };
+
+/** Blocos da malha, na ordem em que o grid os desenha. */
+const COLUNAS = contagens.malhaColunas;
+const LINHAS = contagens.malhaLinhas;
+const TOTAL_DE_BLOCOS = COLUNAS * LINHAS;
+
+/**
+ * O peso de cada bloco — entre 0 e 1, e sempre o MESMO para o mesmo índice.
+ *
+ * ⛔ **Determinístico, nunca `Math.random()`.** Sorteio no render dá pesos
+ * diferentes a cada repintura: a malha "ferve" ao rolar a lista, e em SSR o
+ * servidor sorteia um valor e o cliente outro — erro de hidratação garantido.
+ * Esta é a função de ruído mais barata que existe: seno multiplicado por um
+ * primo grande, com a parte inteira descartada.
+ */
+function pesoDoBloco(indice: number): number {
+  const bruto = Math.sin(indice * 12.9898) * 43758.5453;
+  return bruto - Math.floor(bruto);
+}
 
 const Contexto = createContext<EstadoDoCartao | null>(null);
 
@@ -97,6 +131,7 @@ export function CartaoConcluivel({
   className,
 }: PropsDoCartaoConcluivel) {
   const contornoRef = useRef<SVGRectElement>(null);
+  const malhaRef = useRef<HTMLDivElement>(null);
 
   /*
     Marca que a próxima mudança de `concluido` veio de um clique AQUI. É o que
@@ -105,11 +140,24 @@ export function CartaoConcluivel({
   */
   const veioDeGesto = useRef(false);
 
+  /* A confirmação VISUAL, que chega quando a coreografia fecha a volta. */
+  const [confirmado, setConfirmado] = useState(concluido);
+
   function alternar() {
     if (pendente) return;
     veioDeGesto.current = true;
     aoAlternar(!concluido);
   }
+
+  /* Os blocos da malha são estáveis: mesmo array, mesmos pesos, sempre. */
+  const blocos = useMemo(
+    () =>
+      Array.from({ length: TOTAL_DE_BLOCOS }, (_, i) => ({
+        chave: i,
+        peso: pesoDoBloco(i),
+      })),
+    [],
+  );
 
   useEffect(() => {
     const contorno = contornoRef.current;
@@ -117,32 +165,98 @@ export function CartaoConcluivel({
 
     if (!concluido) {
       veioDeGesto.current = false;
+      setConfirmado(false);
       return;
     }
 
-    /* Chegou concluído (ou o pai reverteu para concluído sem gesto): o traço
-       entra pronto, sem percurso. */
+    const pixels = malhaRef.current
+      ? (Array.from(malhaRef.current.children) as HTMLElement[])
+      : [];
+
+    /*
+      Chegou concluído sem gesto (ou a pessoa pediu menos movimento): tudo entra
+      PRONTO — traço fechado, malha acesa, check preenchido. Nada percorre nada.
+    */
     if (!veioDeGesto.current || preferemenosMovimento()) {
       utils.set(contorno, { strokeDashoffset: 0 });
+      for (const pixel of pixels) pixel.style.opacity = "1";
+      setConfirmado(true);
       return;
     }
 
     veioDeGesto.current = false;
+
+    /*
+      ⭐ **A malha acende ANTES de o contorno fechar** — 520ms contra 700ms. É o
+      ambiente se iluminando enquanto o traço ainda percorre; invertido, o cartão
+      termina de se contornar e só então o fundo acende, e a recompensa chega
+      depois do fim.
+    */
+    if (pixels.length > 0) {
+      animate(pixels, {
+        opacity: [0, 1],
+        duration: tempos.acenderDaMalha,
+        delay: ondaEmMalha(COLUNAS, LINHAS, tempos.passoDaMalha),
+        ease: curva(curvas.percurso),
+      });
+    }
+
     animate(contorno, {
       strokeDashoffset: [100, 0],
       duration: tempos.desenhoDoContorno,
       ease: curva(curvas.percurso),
+      /*
+        ⭐ **O check só confirma quando a volta FECHA.** Preencher o círculo no
+        clique afirma o fim antes de ele existir, e a animação vira enfeite
+        rodando depois do fato. Adiando, a sequência conta uma história: o traço
+        percorre, a malha acende, e o check confirma no instante em que as duas
+        coisas se encontram.
+
+        ⚠️ Só o VISUAL espera. `aria-pressed` acompanha `concluido` desde o
+        clique — adiar o estado anunciado faria o leitor de tela mentir por
+        700ms sobre o que a pessoa acabou de fazer.
+      */
+      onComplete: () => setConfirmado(true),
     });
   }, [concluido]);
 
   return (
     <Contexto.Provider
-      value={{ concluido, pendente, alternar, rotulo: rotuloDoCheck, detalhe }}
+      value={{
+        concluido,
+        confirmado,
+        pendente,
+        alternar,
+        rotulo: rotuloDoCheck,
+        detalhe,
+      }}
     >
       <article
         data-concluido={concluido ? "true" : "false"}
         className={["cui-cartao", className].filter(Boolean).join(" ")}
       >
+        {/*
+          ⭐ **A malha de pixels.** Blocos quadrados com degradê verde que acendem
+          em onda diagonal, do canto inferior direito na direção do texto. Ela é
+          ATMOSFERA: o teto de opacidade é baixo e uma máscara a apaga na área de
+          leitura, porque textura sobre a frase que a pessoa está lendo deixa de
+          ser efeito e vira ruído.
+
+          ⚠️ Só existe no estado concluído — são 70 nós por cartão, e numa lista
+          longa de tarefas já concluídas isso conta. É o custo consciente do
+          efeito, e some inteiro ao desmarcar.
+        */}
+        {concluido ? (
+          <div ref={malhaRef} aria-hidden="true" className="cui-cartao__malha">
+            {blocos.map((bloco) => (
+              <span
+                key={bloco.chave}
+                style={{ "--cui-peso": bloco.peso } as CSSProperties}
+              />
+            ))}
+          </div>
+        ) : null}
+
         {concluido ? (
           <svg
             aria-hidden="true"
@@ -194,7 +308,8 @@ export function CartaoConcluivel({
  * de 24px é justamente o tamanho em que errar o clique é comum.
  */
 export function CheckDeConclusao({ className }: { className?: string }) {
-  const { concluido, pendente, alternar, rotulo, detalhe } = usarCartao();
+  const { concluido, confirmado, pendente, alternar, rotulo, detalhe } =
+    usarCartao();
   const circuloRef = useRef<HTMLSpanElement>(null);
   const primeiroRender = useRef(true);
 
@@ -211,10 +326,12 @@ export function CheckDeConclusao({ className }: { className?: string }) {
       return;
     }
     const circulo = circuloRef.current;
-    if (!circulo || !concluido || preferemenosMovimento()) return;
+    if (!circulo || !confirmado || preferemenosMovimento()) return;
 
+    /* O estalo acompanha a CONFIRMAÇÃO, não o clique: é o instante em que o
+       contorno fecha a volta, e o círculo pousa junto com ele. */
     animate(circulo, { scale: [0.82, 1], ease: mola("pulso") });
-  }, [concluido]);
+  }, [confirmado]);
 
   return (
     <button
@@ -226,6 +343,11 @@ export function CheckDeConclusao({ className }: { className?: string }) {
       aria-busy={pendente || undefined}
       title={concluido ? (detalhe ?? "Concluída") : "Marcar como concluída"}
       data-pendente={pendente ? "true" : undefined}
+      /* O CSS pinta por `data-confirmado`, não por `aria-pressed`: o primeiro é
+         o estado visual (espera a volta fechar), o segundo é o anunciado (muda
+         no clique). Ver a nota de `confirmado`. */
+      data-confirmado={confirmado ? "true" : "false"}
+      data-aguardando={concluido && !confirmado ? "true" : undefined}
       className={["cui-cartao__check", className].filter(Boolean).join(" ")}
     >
       <span ref={circuloRef} aria-hidden="true" className="cui-cartao__circulo">

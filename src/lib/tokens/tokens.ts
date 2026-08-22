@@ -52,7 +52,9 @@ export const cores = {
     "acento60": "rgba(131, 118, 213, 0.6)",
     "anelFoco": "rgba(42, 103, 189, 0.28)",
     "scrollPolegar": "rgba(131, 118, 213, 0.22)",
-    "scrollPolegarForte": "rgba(131, 118, 213, 0.42)"
+    "scrollPolegarForte": "rgba(131, 118, 213, 0.42)",
+    "sucessoMalha": "rgba(49, 132, 84, 0.16)",
+    "sucessoMalhaTenue": "rgba(49, 132, 84, 0.05)"
   },
   "escuro": {
     "fundo": "#181a1f",
@@ -84,7 +86,9 @@ export const cores = {
     "acento60": "rgba(161, 152, 235, 0.6)",
     "anelFoco": "rgba(106, 159, 238, 0.28)",
     "scrollPolegar": "rgba(161, 152, 235, 0.22)",
-    "scrollPolegarForte": "rgba(161, 152, 235, 0.42)"
+    "scrollPolegarForte": "rgba(161, 152, 235, 0.42)",
+    "sucessoMalha": "rgba(89, 180, 125, 0.16)",
+    "sucessoMalhaTenue": "rgba(89, 180, 125, 0.05)"
   }
 } as const;
 
@@ -205,11 +209,15 @@ export const tempos = {
   "transicaoEstado": 160,
   "transicaoItem": 180,
   "deslizePilula": 320,
-  "desenhoDoContorno": 700
+  "desenhoDoContorno": 700,
+  "acenderDaMalha": 520,
+  "passoDaMalha": 14
 } as const;
 
 export const contagens = {
-  "tetoEscalonado": 8
+  "tetoEscalonado": 8,
+  "malhaColunas": 14,
+  "malhaLinhas": 5
 } as const;
 
 /** Atalho: os tokens de cor de um tema. */

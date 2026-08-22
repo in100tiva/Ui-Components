@@ -172,6 +172,23 @@ que transforma "o estado mudou" em "eu fiz isso".
 | `rotuloDoCheck` | `string` | "Conclusão da tarefa" | Nome acessível — **estável**. |
 | `detalhe` | `string \| null` | `null` | "Concluída por Ana em 03/08" — vira `title` e rodapé. |
 
+**A sequência**, ao marcar: a malha de pixels acende em onda diagonal (520ms),
+o contorno percorre o cartão (700ms), e **só quando a volta fecha** o check
+preenche. Preencher o círculo no clique afirmaria o fim antes de ele existir, e
+a animação viraria enfeite rodando depois do fato.
+
+⚠️ **Só o visual espera.** `aria-pressed` acompanha o estado desde o clique —
+adiar o que é *anunciado* faria o leitor de tela mentir por 700ms sobre o que a
+pessoa acabou de fazer. O CSS pinta por `data-confirmado`, nunca por
+`aria-pressed`.
+
+**A malha** são 70 blocos (14×5) com degradê verde e peso individual — cada um
+recebe uma opacidade determinística entre 5% e 16%, o que a faz ler como pixels
+acendendo em vez de uma mancha. Três coisas a mantêm no lugar de atmosfera:
+teto de opacidade baixo, uma máscara que a apaga na área de leitura, e
+`pointer-events: none`. Ela só existe no estado concluído e some ao desmarcar —
+70 nós por cartão é um custo real numa lista longa, e está declarado no token.
+
 **As três decisões que fazem isto funcionar:**
 
 ⭐ **`pathLength={100}` normaliza o perímetro.** É o que permite a MESMA
