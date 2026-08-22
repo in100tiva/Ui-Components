@@ -85,7 +85,6 @@ export const formas = {
   "raioCampo": 14,
   "raioPainel": 18,
   "raioItem": 12,
-  "raioBusca": 11,
   "painelRespiro": 8,
   "margemDaJanela": 12,
   "itemRespiroY": 11,

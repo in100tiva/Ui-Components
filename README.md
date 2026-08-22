@@ -219,6 +219,23 @@ componente futuro que compartilhe o token.
 | `texto-corpo` / `texto-apoio` | 14 / 12 | Rótulo e linha de apoio |
 | `transicao-item` | 180ms | O fundo acendendo |
 
+**Campo de busca**
+
+| Token | Padrão | O que controla |
+|---|---|---|
+| `altura-busca` | 36 | Altura do campo |
+| `borda` → `acento` | — | O divisor em repouso → com foco |
+
+⭐ **O campo não tem moldura, e o divisor é o indicador de foco.** O painel já é
+a superfície elevada; um input que desenha a própria caixa dentro dela é moldura
+sobre moldura. E como este campo recebe foco no instante em que o menu abre, um
+anel de foco não seria um estado — seria a aparência padrão do componente, acesa
+o tempo todo. O traço que separa a busca da lista já existe, já tem a largura
+certa e já está onde o olho procura a fronteira: ele trocar de cor resolve as
+duas coisas com um elemento só. Só a cor muda, nunca a espessura — engrossar
+empurraria a lista no exato momento em que a pessoa começa a ler. Medido:
+**3,81:1 no claro, 6,38:1 no escuro**, acima dos 3:1 que a WCAG 1.4.11 pede.
+
 **Barra de rolagem**
 
 | Token | Padrão | O que controla |

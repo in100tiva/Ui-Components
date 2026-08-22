@@ -31,7 +31,7 @@
   --cui-flutuante: #ffffff;
   /* Estado desabilitado. */
   --cui-abafado: #eef1f6;
-  /* Interior de campo de texto. */
+  /* Interior de campo de texto. ⚠️ SEM CONSUMIDOR hoje: a busca do menu suspenso passou a ser um campo cru sobre o painel. Fica no sistema porque um componente de entrada de texto vai precisar dele — se isso não acontecer, é candidato a remoção. */
   --cui-campo-fundo: #fcfdfe;
   /* Texto principal. */
   --cui-texto: #0f1417;
@@ -43,7 +43,7 @@
   --cui-texto-tenue: #5f6873;
   /* Traço de separação. */
   --cui-borda: #d9e0ea;
-  /* Traço de campo de formulário — mais presente que a borda. */
+  /* Traço de campo de formulário — mais presente que a borda. ⚠️ SEM CONSUMIDOR hoje; herdado do design de origem e reservado ao campo de texto. */
   --cui-contorno: oklch(0.62 0.02 258);
   /* ⭐ A identidade. Trocar a matiz (288) repinta hover, seleção, chevron e anel de foco de uma vez, porque todos derivam daqui. */
   --cui-acento: oklch(0.62 0.14 288);
@@ -81,7 +81,7 @@
   --cui-flutuante: oklch(0.243 0.012 264);
   /* Estado desabilitado. */
   --cui-abafado: oklch(0.288 0.012 264);
-  /* Interior de campo de texto. */
+  /* Interior de campo de texto. ⚠️ SEM CONSUMIDOR hoje: a busca do menu suspenso passou a ser um campo cru sobre o painel. Fica no sistema porque um componente de entrada de texto vai precisar dele — se isso não acontecer, é candidato a remoção. */
   --cui-campo-fundo: oklch(1 0 0 / 2%);
   /* Texto principal. */
   --cui-texto: oklch(0.97 0.005 100);
@@ -93,7 +93,7 @@
   --cui-texto-tenue: oklch(0.68 0.012 250);
   /* Traço de separação. */
   --cui-borda: oklch(1 0 0 / 9%);
-  /* Traço de campo de formulário — mais presente que a borda. */
+  /* Traço de campo de formulário — mais presente que a borda. ⚠️ SEM CONSUMIDOR hoje; herdado do design de origem e reservado ao campo de texto. */
   --cui-contorno: oklch(0.57 0.02 258);
   /* ⭐ A identidade. Trocar a matiz (288) repinta hover, seleção, chevron e anel de foco de uma vez, porque todos derivam daqui. */
   --cui-acento: oklch(0.72 0.12 288);
@@ -133,7 +133,6 @@
   --cui-raio-campo: 14px;
   --cui-raio-painel: 18px;
   --cui-raio-item: 12px;
-  --cui-raio-busca: 11px;
   --cui-painel-respiro: 8px;
   --cui-margem-da-janela: 12px;
   --cui-item-respiro-y: 11px;

@@ -383,6 +383,7 @@
   margin-inline: calc(var(--cui-painel-respiro) * -1);
   padding: var(--cui-painel-respiro) var(--cui-painel-respiro) 4px;
   background: var(--cui-flutuante);
+  transition: border-color var(--cui-transicao-estado) ease;
 }
 
 .cui-menu__painel[data-lado="baixo"][data-com-busca="true"] {
@@ -392,9 +393,23 @@
   padding-bottom: 0;
 }
 
+/*
+  ⭐ **O divisor da barra É o indicador de foco, e essa é a ideia inteira.**
+
+  A barra precisa de um divisor de qualquer jeito — sem ele, a primeira opção
+  encosta no campo de digitar. Ele já existe, já tem a largura certa e já está
+  onde o olho procura a fronteira. Fazer esse mesmo traço trocar de cor quando o
+  campo recebe foco resolve as duas coisas com um traço só, em vez de empilhar
+  um anel sobre uma borda sobre um divisor.
+
+  ⚠️ **Só a COR muda, nunca a espessura.** Engrossar de 1px para 2px no foco
+  empurraria a lista inteira um pixel para baixo — no exato momento em que a
+  pessoa começa a ler.
+*/
 .cui-menu__barra[data-posicao="topo"] {
   top: 0;
   margin-bottom: 4px;
+  border-bottom: 1.5px solid var(--cui-borda);
 }
 
 /*
@@ -408,6 +423,13 @@
   bottom: 0;
   margin-top: 4px;
   padding: 4px var(--cui-painel-respiro) var(--cui-painel-respiro);
+  border-top: 1.5px solid var(--cui-borda);
+}
+
+/* `:has` porque quem muda de cor é a BARRA, e quem recebe o foco é o input
+   dentro dela — o seletor de irmão não alcança um ancestral. */
+.cui-menu__barra:has(.cui-menu__busca:focus) {
+  border-color: var(--cui-acento);
 }
 
 .cui-menu__busca-caixa {
@@ -417,37 +439,45 @@
 .cui-menu__lupa {
   position: absolute;
   top: 50%;
-  left: 12px;
+  left: 8px;
   width: 15px;
   height: 15px;
   margin-top: -7.5px;
   color: var(--cui-texto-tenue);
   pointer-events: none;
+  transition: color var(--cui-transicao-estado) ease;
 }
 
 .cui-menu__busca {
+  /*
+    ⛔ **Sem borda, sem fundo, sem anel — e isso é o conserto, não descuido.**
+    O painel JÁ é a superfície elevada; um campo que desenha a própria caixa
+    dentro dela é moldura sobre moldura, e o olho lê duas coisas onde há uma. O
+    anel de 3px piorava: como este campo recebe o foco no instante em que o
+    menu abre, o anel não era um estado — era a aparência PADRÃO do componente,
+    aceso o tempo todo, e ainda por cima azul num componente violeta.
+  */
   width: 100%;
   height: var(--cui-altura-busca);
-  padding: 0 12px 0 34px;
-  border: 1px solid var(--cui-borda);
-  border-radius: var(--cui-raio-busca);
-  background: var(--cui-campo-fundo);
+  padding: 0 12px 0 30px;
+  border: none;
+  background: transparent;
   color: var(--cui-texto);
   font: inherit;
   font-size: var(--cui-texto-corpo);
   outline: none;
-  transition:
-    border-color var(--cui-transicao-estado) ease,
-    box-shadow var(--cui-transicao-estado) ease;
 }
 
 .cui-menu__busca::placeholder {
   color: var(--cui-texto-tenue);
 }
 
-.cui-menu__busca:focus {
-  border-color: var(--cui-acento);
-  box-shadow: 0 0 0 3px var(--cui-anel-foco);
+/*
+  A lupa acende junto com o divisor. Duas pistas para o mesmo estado, porque
+  mudança de cor num traço de 1,5px sozinha é pouco para quem enxerga pouco.
+*/
+.cui-menu__busca-caixa:has(.cui-menu__busca:focus) .cui-menu__lupa {
+  color: var(--cui-acento);
 }
 
 .cui-menu__lista {
