@@ -15,22 +15,22 @@
   align-items: center;
   width: 100%;
   height: var(--cui-altura-campo);
-  padding: 0 40px 0 16px;
+  padding: 0 40px 0 var(--cui-campo-respiro-x);
   border: 1px solid var(--cui-acento-borda);
   border-radius: var(--cui-raio-campo);
   background: var(--cui-superficie);
   box-shadow: var(--cui-relevo-raso);
   color: var(--cui-acento-texto);
   font: inherit;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: var(--cui-texto-corpo);
+  font-weight: var(--cui-peso-medio);
   text-align: left;
   cursor: pointer;
   outline: none;
   transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    background-color 160ms ease;
+    border-color var(--cui-transicao-estado) ease,
+    box-shadow var(--cui-transicao-estado) ease,
+    background-color var(--cui-transicao-estado) ease;
 }
 
 .cui-menu__gatilho[data-tamanho="lg"] {
@@ -47,7 +47,7 @@
 
 .cui-menu__gatilho[data-vazio="true"] {
   color: var(--cui-acento-placeholder);
-  font-weight: 450;
+  font-weight: var(--cui-peso-leve);
 }
 
 .cui-menu__gatilho:hover:not(:disabled) {
@@ -86,7 +86,7 @@
   color: var(--cui-acento);
   pointer-events: none;
   transform: rotate(180deg);
-  transition: transform 200ms var(--cui-mola);
+  transition: transform var(--cui-giro-chevron) var(--cui-mola);
 }
 
 .cui-menu__gatilho[aria-expanded="true"] ~ .cui-menu__chevron {
@@ -109,17 +109,100 @@
 */
 .cui-menu__painel {
   position: fixed;
-  z-index: 60;
+  z-index: var(--cui-z-painel);
   display: flex;
   flex-direction: column;
-  padding: 8px;
   border: 1px solid var(--cui-borda);
   border-radius: var(--cui-raio-painel);
   background: var(--cui-flutuante);
   box-shadow: var(--cui-sombra-painel);
+  padding: var(--cui-painel-respiro);
   overflow-y: auto;
   overscroll-behavior: contain;
   animation: cui-painel-entra var(--cui-entrada-painel) var(--cui-mola) both;
+}
+
+/* --- Barra de rolagem ----------------------------------------------------- */
+
+/*
+  A barra do sistema é um corpo estranho dentro de um painel desenhado: trilho
+  cinza, setas nas pontas, e uma cor que não pertence a lugar nenhum do tema. O
+  que fica aqui é só o polegar — uma pílula na família do acento, quase um
+  sussurro em repouso.
+
+  ⛔ **Os dois caminhos abaixo são mutuamente exclusivos, e isso não é
+  preferência de estilo.** Desde o Chrome 121, declarar `scrollbar-width` ou
+  `scrollbar-color` faz o motor IGNORAR os pseudo-elementos `::-webkit-*`
+  inteiros. Escrever os dois no mesmo bloco — o conselho que circula na internet
+  como "para cobrir todos os navegadores" — resulta no padrão de dois deles
+  ganhando e no controle fino sendo jogado fora justamente no navegador mais
+  usado. O `@supports` separa: quem tem os pseudo-elementos usa os
+  pseudo-elementos; quem não tem (Firefox) usa a propriedade padrão.
+*/
+
+/* Firefox — controle menor, mas o essencial: barra fina, trilho invisível. */
+@supports not selector(::-webkit-scrollbar) {
+  .cui-menu__painel {
+    scrollbar-width: thin;
+    scrollbar-color: var(--cui-scroll-polegar) transparent;
+  }
+}
+
+/* Chromium e WebKit — controle total. */
+@supports selector(::-webkit-scrollbar) {
+  .cui-menu__painel::-webkit-scrollbar {
+    width: var(--cui-scroll-largura);
+  }
+
+  /*
+    Sem trilho: o fundo do painel atravessa por baixo. E a margem alinha o
+    início da barra com o do primeiro item — de quebra, mantendo-a fora dos
+    cantos arredondados do painel, que a recortariam em bico.
+  */
+  .cui-menu__painel::-webkit-scrollbar-track {
+    background: transparent;
+    margin-block: var(--cui-painel-respiro);
+  }
+
+  /* Sem as setas das pontas. Elas são um alvo de 11px que ninguém acerta e
+     ninguém usa — quem rola, rola. */
+  .cui-menu__painel::-webkit-scrollbar-button {
+    display: none;
+  }
+
+  /*
+    ⭐ **O truque do respiro:** a borda transparente com `background-clip:
+    content-box` faz a pílula pintada ser mais ESTREITA que a área de arrasto.
+    Visualmente ela mede `largura − 2 × respiro` (aqui, 5px) e fica descolada da
+    borda do painel; para o ponteiro, ela continua com os 11px inteiros. Fino aos
+    olhos, generoso ao mouse — sem isso, uma barra de 5px é bonita e quase
+    impossível de agarrar.
+  */
+  .cui-menu__painel::-webkit-scrollbar-thumb {
+    background-color: var(--cui-scroll-polegar);
+    background-clip: content-box;
+    border: var(--cui-scroll-respiro) solid transparent;
+    border-radius: var(--cui-raio-pilula);
+  }
+
+  /* Só quando o ponteiro está no painel o polegar vira alvo — e aí aparece. */
+  .cui-menu__painel:hover::-webkit-scrollbar-thumb {
+    background-color: var(--cui-scroll-polegar-forte);
+  }
+
+  /* `:active` casa enquanto se arrasta: a barra não pode apagar sob o dedo
+     quando o ponteiro sai lateralmente do painel durante o arrasto. */
+  .cui-menu__painel::-webkit-scrollbar-thumb:hover,
+  .cui-menu__painel::-webkit-scrollbar-thumb:active {
+    background-color: var(--cui-scroll-polegar-forte);
+  }
+
+  /* O canto entre duas barras. Só aparece com rolagem nos dois eixos — o que
+     não acontece aqui — mas deixá-lo cinza é o detalhe que denuncia um painel
+     "quase" acabado no dia em que acontecer. */
+  .cui-menu__painel::-webkit-scrollbar-corner {
+    background: transparent;
+  }
 }
 
 /*
@@ -176,15 +259,15 @@
   gap: 10px;
   flex-shrink: 0; /* numa lista que rola, o flex encolheria os itens */
   width: 100%;
-  padding: 11px 14px;
+  padding: var(--cui-item-respiro-y) var(--cui-item-respiro-x);
   border-radius: var(--cui-raio-item);
   color: var(--cui-acento-texto);
-  font-size: 14px;
-  font-weight: 500;
+  font-size: var(--cui-texto-corpo);
+  font-weight: var(--cui-peso-medio);
   text-align: left;
   cursor: pointer;
   outline: none;
-  transition: background-color 180ms ease;
+  transition: background-color var(--cui-transicao-item) ease;
   animation: cui-item-entra var(--cui-entrada-item) var(--cui-mola) both;
   /* O escalonamento vem do índice, injetado como custom property pelo React. */
   animation-delay: calc(var(--cui-i, 0) * var(--cui-passo-item));
@@ -245,7 +328,7 @@
 
 .cui-menu__item-apoio {
   color: var(--cui-texto-tenue);
-  font-size: 12px;
+  font-size: var(--cui-texto-apoio);
   font-weight: 400;
 }
 
@@ -275,10 +358,10 @@
 */
 .cui-menu__barra {
   position: sticky;
-  z-index: 10;
+  z-index: var(--cui-z-barra-de-busca);
   flex-shrink: 0;
-  margin: 0 -8px;
-  padding: 8px 8px 4px;
+  margin-inline: calc(var(--cui-painel-respiro) * -1);
+  padding: var(--cui-painel-respiro) var(--cui-painel-respiro) 4px;
   background: var(--cui-flutuante);
   animation: cui-item-entra var(--cui-entrada-item) var(--cui-mola) both;
   animation-delay: calc(var(--cui-i, 0) * var(--cui-passo-item));
@@ -310,7 +393,7 @@
   order: 99;
   bottom: 0;
   margin-top: 4px;
-  padding: 4px 8px 8px;
+  padding: 4px var(--cui-painel-respiro) var(--cui-painel-respiro);
 }
 
 .cui-menu__busca-caixa {
@@ -337,11 +420,11 @@
   background: var(--cui-campo-fundo);
   color: var(--cui-texto);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--cui-texto-corpo);
   outline: none;
   transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease;
+    border-color var(--cui-transicao-estado) ease,
+    box-shadow var(--cui-transicao-estado) ease;
 }
 
 .cui-menu__busca::placeholder {
@@ -362,7 +445,7 @@
 .cui-menu__vazio {
   padding: 10px 14px;
   color: var(--cui-acento-placeholder);
-  font-size: 13px;
+  font-size: var(--cui-texto-apoio);
   line-height: 1.5;
 }
 

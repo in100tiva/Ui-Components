@@ -190,6 +190,23 @@ function gerarCss() {
     })
     .join("\n");
 
+  /*
+    Um grupo cujas entradas trazem `px` (vira dimensão) ou `valor` (vira número
+    puro — peso de fonte e z-index não têm unidade, e escrever `600px` num
+    `font-weight` é um erro que o CSS engole em silêncio).
+  */
+  const grupoMisto = (obj, prefixoNome = "") =>
+    Object.entries(obj)
+      .map(([nome, def]) => {
+        const v = def.px !== undefined ? `${def.px}px` : String(def.valor);
+        const nota = def.nota ? `  /* ${def.nota} */\n` : "";
+        return `${nota}  --${p}-${prefixoNome}${nome}: ${v};`;
+      })
+      .join("\n");
+
+  const tipografia = grupoMisto(fonte.tipografia);
+  const camadas = grupoMisto(fonte.camadas, "z-");
+
   const tempos = Object.entries(fonte.coreografia)
     .filter(([, def]) => def.ms !== undefined)
     .map(([nome, def]) => {
@@ -224,6 +241,12 @@ ${alfas}
 
   /* Formas */
 ${formas}
+
+  /* Tipografia */
+${tipografia}
+
+  /* Camadas */
+${camadas}
 
   /* Curvas */
 ${curvas}
@@ -278,6 +301,13 @@ function gerarTs() {
       .filter(([, d]) => d.ms !== undefined)
       .map(([n, d]) => [camel(n), d.ms]),
   );
+  const numeros = (obj) =>
+    Object.fromEntries(
+      Object.entries(obj).map(([n, d]) => [camel(n), d.px ?? d.valor]),
+    );
+  const tipografia = numeros(fonte.tipografia);
+  const camadas = numeros(fonte.camadas);
+
   const contagens = Object.fromEntries(
     Object.entries(fonte.coreografia)
       .filter(([, d]) => d.itens !== undefined)
@@ -310,6 +340,12 @@ export const cores = ${j(cores)} as const;
 /** Dimensões em NÚMERO, sem unidade: na web some o \`px\`, no RN é o que ele espera. */
 export const formas = ${j(formas)} as const;
 
+/** Tamanhos em px e pesos de fonte, todos como número. */
+export const tipografia = ${j(tipografia)} as const;
+
+/** Ordem de empilhamento. */
+export const camadas = ${j(camadas)} as const;
+
 /** Beziers como tupla — pronto para \`Easing.bezier(...curvas.mola)\` no RN. */
 export const curvas = ${j(curvas)} as const;
 
@@ -338,9 +374,12 @@ writeFileSync(SAIDA_CSS, css, "utf8");
 writeFileSync(SAIDA_TS, ts, "utf8");
 
 const conta = (o) => Object.keys(o).length;
-console.log(`tokens: ${conta(fonte.cores)} cores × ${TEMAS.length} temas, ` +
-  `${conta(fonte.alfas)} derivados, ${conta(fonte.formas)} formas, ` +
-  `${conta(fonte.curvas)} curvas, ${conta(fonte.coreografia)} de coreografia`);
+console.log(
+  `tokens: ${conta(fonte.cores)} cores × ${TEMAS.length} temas, ` +
+    `${conta(fonte.alfas)} derivados, ${conta(fonte.formas)} formas, ` +
+    `${conta(fonte.tipografia)} de tipografia, ${conta(fonte.camadas)} camadas, ` +
+    `${conta(fonte.curvas)} curvas, ${conta(fonte.coreografia)} de coreografia`,
+);
 console.log(`  → src/estilos/tokens.css`);
 console.log(`  → src/lib/tokens/tokens.ts`);
 

@@ -124,6 +124,64 @@ escalona ao contrário.
 vira `combobox` com `aria-activedescendant`, que é o padrão correto quando o
 foco do sistema precisa ficar no campo de texto.
 
+### Superfície de personalização
+
+Tudo que o `MenuSuspenso` desenha sai de um token. Nada de cor, medida ou tempo
+está escrito dentro do CSS do componente — mexer aqui muda o menu **e** todo
+componente futuro que compartilhe o token.
+
+**Campo (o gatilho)**
+
+| Token | Padrão | O que controla |
+|---|---|---|
+| `altura-campo` / `altura-campo-lg` | 44 / 46 | Altura nos dois tamanhos |
+| `campo-respiro-x` | 16 | Recuo do texto até a borda |
+| `raio-campo` | 14 | Arredondamento |
+| `acento-borda` → `acento-60` → `acento` | — | Traço em repouso → hover → aberto |
+| `acento-texto` / `acento-placeholder` | — | Valor escolhido / campo vazio |
+| `peso-medio` / `peso-leve` | 500 / 450 | ⭐ Escolhido é mais pesado que vazio — dá para ver se o campo está preenchido de relance, sem ler |
+| `anel-foco` | acento azul 28% | Halo de 3px no foco por teclado |
+| `giro-chevron` | 200ms | A seta virando 180° |
+
+**Painel**
+
+| Token | Padrão | O que controla |
+|---|---|---|
+| `flutuante` | — | Fundo. Separado de `superficie` de propósito: o dia em que popover ganhar vidro, muda só aqui |
+| `raio-painel` | 18 | Arredondamento |
+| `painel-respiro` | 8 | Recuo interno — e onde a barra de rolagem começa |
+| `sombra-painel` | — | Elevação |
+| `z-painel` | 60 | ⚠️ Vence a página, perde para diálogo modal |
+
+**Itens**
+
+| Token | Padrão | O que controla |
+|---|---|---|
+| `item-respiro-y` / `item-respiro-x` | 11 / 14 | Altura efetiva da linha |
+| `raio-item` | 12 | Arredondamento |
+| `acento-9` / `acento-14` | 9% / 14% | Hover e selecionado / linha em foco |
+| `texto-corpo` / `texto-apoio` | 14 / 12 | Rótulo e linha de apoio |
+| `transicao-item` | 180ms | O fundo acendendo |
+
+**Barra de rolagem**
+
+| Token | Padrão | O que controla |
+|---|---|---|
+| `scroll-largura` | 11 | Área de ARRASTO — não o que se vê |
+| `scroll-respiro` | 3 | Quanto a pílula encolhe de cada lado |
+| `scroll-polegar` / `-forte` | 22% / 42% | Em repouso / com o ponteiro no painel |
+| `raio-pilula` | 999 | Arredondamento total |
+
+A barra desenhada mede `scroll-largura − 2 × scroll-respiro` — **5px aos olhos,
+11px ao mouse**. Sem essa separação, uma barra bonita de 5px vira uma barra que
+ninguém consegue agarrar. Não há trilho, não há setas, e o polegar só ganha
+corpo quando o ponteiro entra no painel: em repouso ele informa *quanto falta*
+sem disputar atenção com o texto que está sendo lido.
+
+**Coreografia** — `passo-item`, `entrada-painel`, `entrada-item`, `saida-item`,
+`saida-painel`, `pausa-antes-do-painel`, `teto-escalonado`. Lidos ao mesmo tempo
+pelo CSS (entrada) e pelo JS (saída), do mesmo JSON.
+
 ## Decisões que valem para todo componente novo
 
 1. **Medir, não decretar.** Altura de painel é o espaço que sobra na janela;

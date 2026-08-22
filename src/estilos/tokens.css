@@ -104,15 +104,44 @@
   --cui-acento-60: color-mix(in oklab, var(--cui-acento) 60%, transparent);
   /* Halo de 3px. */
   --cui-anel-foco: color-mix(in oklab, var(--cui-foco) 28%, transparent);
+  /* ⭐ O polegar da barra de rolagem, na família do acento. Em repouso ele é quase um sussurro: a barra informa QUANTO falta, e para isso não precisa competir com o texto que a pessoa está lendo. */
+  --cui-scroll-polegar: color-mix(in oklab, var(--cui-acento) 22%, transparent);
+  /* O mesmo polegar quando o ponteiro está sobre o painel — aí ele virou alvo, e alvo precisa ser visto. */
+  --cui-scroll-polegar-forte: color-mix(in oklab, var(--cui-acento) 42%, transparent);
 
   /* Formas */
   --cui-raio-campo: 14px;
   --cui-raio-painel: 18px;
   --cui-raio-item: 12px;
   --cui-raio-busca: 11px;
+  --cui-painel-respiro: 8px;
+  --cui-item-respiro-y: 11px;
+  --cui-item-respiro-x: 14px;
+  --cui-campo-respiro-x: 16px;
   --cui-altura-campo: 44px;
   --cui-altura-campo-lg: 46px;
   --cui-altura-busca: 36px;
+  --cui-scroll-largura: 11px;
+  --cui-scroll-respiro: 3px;
+  --cui-raio-pilula: 999px;
+
+  /* Tipografia */
+  /* O tamanho de todo controle. Um só, e de propósito: campo, item de lista e botão que discordam em 1px são a coisa mais visível de uma interface mal costurada. */
+  --cui-texto-corpo: 14px;
+  /* A linha secundária sob um rótulo. */
+  --cui-texto-apoio: 12px;
+  /* Placeholder — mais leve que o valor escolhido, e é assim que se vê de relance se o campo está preenchido, mesmo sem ler. */
+  --cui-peso-leve: 450;
+  /* Valor escolhido, itens de lista. */
+  --cui-peso-medio: 500;
+  /* Rótulos. */
+  --cui-peso-forte: 600;
+
+  /* Camadas */
+  /* ⚠️ Popover portalizado no <body>. Precisa vencer o conteúdo da página, mas PERDER para diálogo modal e para torradas de notificação — quem sobe este número acima do diálogo descobre o menu desenhado por cima do modal que deveria cobri-lo. */
+  --cui-z-painel: 60;
+  /* Dentro do painel: a barra sticky sobre as opções que rolam por baixo. */
+  --cui-z-barra-de-busca: 10;
 
   /* Curvas */
   /* Entrada. Chega rápido e assenta — a curva que dá o caráter. */
@@ -134,6 +163,12 @@
   --cui-pausa-antes-do-painel: 200ms;
   /* Rede de segurança: `onfinish` não dispara em aba de segundo plano. */
   --cui-folga-do-timer: 80ms;
+  /* Hover e foco de campo. Curto o bastante para parecer resposta, não animação. */
+  --cui-transicao-estado: 160ms;
+  /* O fundo de um item de lista acendendo. */
+  --cui-transicao-item: 180ms;
+  /* A seta do campo virando 180°. */
+  --cui-giro-chevron: 200ms;
 }
 
 /*

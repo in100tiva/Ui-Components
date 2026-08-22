@@ -42,7 +42,9 @@ export const cores = {
     "acento9": "rgba(131, 118, 213, 0.09)",
     "acento14": "rgba(131, 118, 213, 0.14)",
     "acento60": "rgba(131, 118, 213, 0.6)",
-    "anelFoco": "rgba(42, 103, 189, 0.28)"
+    "anelFoco": "rgba(42, 103, 189, 0.28)",
+    "scrollPolegar": "rgba(131, 118, 213, 0.22)",
+    "scrollPolegarForte": "rgba(131, 118, 213, 0.42)"
   },
   "escuro": {
     "fundo": "#181a1f",
@@ -64,7 +66,9 @@ export const cores = {
     "acento9": "rgba(161, 152, 235, 0.09)",
     "acento14": "rgba(161, 152, 235, 0.14)",
     "acento60": "rgba(161, 152, 235, 0.6)",
-    "anelFoco": "rgba(106, 159, 238, 0.28)"
+    "anelFoco": "rgba(106, 159, 238, 0.28)",
+    "scrollPolegar": "rgba(161, 152, 235, 0.22)",
+    "scrollPolegarForte": "rgba(161, 152, 235, 0.42)"
   }
 } as const;
 
@@ -74,9 +78,31 @@ export const formas = {
   "raioPainel": 18,
   "raioItem": 12,
   "raioBusca": 11,
+  "painelRespiro": 8,
+  "itemRespiroY": 11,
+  "itemRespiroX": 14,
+  "campoRespiroX": 16,
   "alturaCampo": 44,
   "alturaCampoLg": 46,
-  "alturaBusca": 36
+  "alturaBusca": 36,
+  "scrollLargura": 11,
+  "scrollRespiro": 3,
+  "raioPilula": 999
+} as const;
+
+/** Tamanhos em px e pesos de fonte, todos como número. */
+export const tipografia = {
+  "textoCorpo": 14,
+  "textoApoio": 12,
+  "pesoLeve": 450,
+  "pesoMedio": 500,
+  "pesoForte": 600
+} as const;
+
+/** Ordem de empilhamento. */
+export const camadas = {
+  "painel": 60,
+  "barraDeBusca": 10
 } as const;
 
 /** Beziers como tupla — pronto para `Easing.bezier(...curvas.mola)` no RN. */
@@ -109,7 +135,10 @@ export const tempos = {
   "saidaItem": 300,
   "saidaPainel": 240,
   "pausaAntesDoPainel": 200,
-  "folgaDoTimer": 80
+  "folgaDoTimer": 80,
+  "transicaoEstado": 160,
+  "transicaoItem": 180,
+  "giroChevron": 200
 } as const;
 
 export const contagens = {
