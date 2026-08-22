@@ -115,7 +115,8 @@ const vite = await createServer({
 
 const React = await import("react");
 const { createRoot } = await import("react-dom/client");
-const { MenuSuspenso } = await vite.ssrLoadModule("/src/lib/index.ts");
+const { MenuSuspenso, CartaoConcluivel, CheckDeConclusao, RodapeDeConclusao } =
+  await vite.ssrLoadModule("/src/lib/index.ts");
 const { Galeria } = await vite.ssrLoadModule("/src/demo/Galeria.tsx");
 const { act } = React;
 
@@ -213,6 +214,65 @@ checar("teto preservado na reabertura", Boolean(painel()?.style.maxHeight));
 checar("itens sem maxHeight residual", itens.every((i) => i.style.maxHeight === ""));
 checar("itens sem opacity zerada", itens.every((i) => i.style.opacity !== "0"));
 
+/* --- Cartão concluível --------------------------------------------------- */
+
+console.log("\nCartão Concluível");
+
+function Tarefa({ inicial }) {
+  const [feito, setFeito] = React.useState(inicial);
+  return React.createElement(
+    CartaoConcluivel,
+    { concluido: feito, aoAlternar: setFeito, detalhe: "Concluída agora" },
+    React.createElement(CheckDeConclusao, null),
+    React.createElement(RodapeDeConclusao, null),
+  );
+}
+
+/*
+  Dois cartões no mesmo render: um que CHEGA concluído e um que será marcado por
+  gesto. A regra que isto protege é a que separa retorno de circo — o que já
+  vem pronto do servidor não desenha nada, e só o gesto anima.
+*/
+await act(async () => {
+  raiz.render(
+    React.createElement(
+      "div",
+      null,
+      React.createElement(Tarefa, { inicial: true, key: "pronta" }),
+      React.createElement(Tarefa, { inicial: false, key: "aberta" }),
+    ),
+  );
+});
+await esperar(60);
+
+const cartoes = () => [...doc.querySelectorAll(".cui-cartao")];
+const contornoDe = (i) => cartoes()[i]?.querySelector("rect");
+
+checar("os dois cartões montaram", cartoes().length === 2);
+checar(
+  "cartão que JÁ chega concluído tem contorno pronto",
+  contornoDe(0)?.style.strokeDashoffset === "0",
+  `strokeDashoffset="${contornoDe(0)?.style.strokeDashoffset}"`,
+);
+checar("cartão em aberto não tem contorno nenhum", !contornoDe(1));
+
+const check = () => cartoes()[1]?.querySelector(".cui-cartao__check");
+await clicar(check());
+await esperar(900);
+checar("marcar por gesto desenha o contorno", Boolean(contornoDe(1)));
+checar(
+  "o contorno terminou o percurso",
+  contornoDe(1)?.style.strokeDashoffset === "0",
+  `strokeDashoffset="${contornoDe(1)?.style.strokeDashoffset}"`,
+);
+checar("aria-pressed acompanha o estado", check()?.getAttribute("aria-pressed") === "true");
+checar("o rodapé anuncia a conclusão por escrito", Boolean(cartoes()[1]?.querySelector(".cui-cartao__rodape")));
+
+await clicar(check());
+await esperar(200);
+checar("desmarcar remove o contorno", !contornoDe(1));
+checar("desmarcar remove o rodapé", !cartoes()[1]?.querySelector(".cui-cartao__rodape"));
+
 /* --- Galeria ------------------------------------------------------------- */
 
 console.log("\nGaleria");
@@ -223,10 +283,10 @@ await act(async () => {
 await esperar(60);
 
 const navItens = () => [...doc.querySelectorAll(".cui-nav__item")];
-checar("a coluna lista os componentes do registro", navItens().length >= 2, navItens().map((i) => i.textContent).join(" | "));
+checar("a coluna lista os componentes do registro", navItens().length >= 3, navItens().map((i) => i.textContent).join(" | "));
 checar("abre com o primeiro item ativo", Boolean(doc.querySelector('[aria-current="page"]')));
 
-for (const alvo of ["Menu Suspenso", "Cores e tokens"]) {
+for (const alvo of ["Menu Suspenso", "Cartão Concluível", "Cores e tokens"]) {
   const botao = navItens().find((i) => i.textContent?.includes(alvo));
   if (!botao) {
     checar(`item "${alvo}" existe`, false);

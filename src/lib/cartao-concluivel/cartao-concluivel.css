@@ -1,0 +1,137 @@
+/* ==========================================================================
+   Cartão concluível — o contorno que se desenha ao marcar.
+   ========================================================================== */
+
+.cui-cartao {
+  position: relative;
+  /*
+    `overflow: hidden` recorta o contorno nos cantos: o `<rect>` está encostado
+    na borda, e sem recorte o stroke arredondado vaza meio pixel nas curvas.
+  */
+  overflow: hidden;
+  padding: 18px;
+  border: 1px solid var(--cui-borda);
+  border-radius: var(--cui-raio-cartao);
+  background: var(--cui-superficie);
+  box-shadow: var(--cui-relevo-raso);
+  transition: border-color var(--cui-transicao-estado) ease;
+}
+
+/*
+  ⭐ **O TRILHO.** A borda fraca de 1px que já mostra o estado desde o primeiro
+  quadro, antes de o traço forte percorrer o cartão. Sem ela, o contorno se
+  desenha sobre o nada e o cartão pisca de sem-borda para com-borda.
+*/
+.cui-cartao[data-concluido="true"] {
+  border-color: var(--cui-sucesso-borda);
+}
+
+/*
+  A camada de cima: a borda DE VERDADE do estado concluído. `pointer-events:
+  none` porque ela cobre o cartão inteiro — sem isso, nenhum clique dentro do
+  cartão chegaria ao conteúdo.
+*/
+.cui-cartao__contorno {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--cui-sucesso);
+  pointer-events: none;
+}
+
+/* --- O check ------------------------------------------------------------- */
+
+/*
+  Alvo de 44px com desenho de 24px, e a margem negativa devolve ao cartão o
+  espaço extra — assim o círculo alinha com a primeira linha de texto em vez de
+  esticá-la. O alvo grande vale para o dedo; o desenho pequeno, para o olho.
+*/
+.cui-cartao__check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--cui-alvo-de-toque);
+  height: var(--cui-alvo-de-toque);
+  margin: calc((var(--cui-alvo-de-toque) - var(--cui-check-tamanho)) / -2);
+  padding: 0;
+  border: none;
+  border-radius: var(--cui-raio-busca);
+  background: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.cui-cartao__check[data-pendente="true"] {
+  cursor: progress;
+}
+
+.cui-cartao__check:focus-visible {
+  box-shadow: 0 0 0 3px var(--cui-anel-foco);
+}
+
+.cui-cartao__circulo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cui-check-tamanho);
+  height: var(--cui-check-tamanho);
+  border: 1px solid var(--cui-contorno);
+  border-radius: 50%;
+  color: transparent;
+  transition:
+    background-color var(--cui-transicao-estado) ease,
+    border-color var(--cui-transicao-estado) ease,
+    color var(--cui-transicao-estado) ease;
+}
+
+.cui-cartao__circulo svg {
+  width: 14px;
+  height: 14px;
+}
+
+/*
+  O check aparece em cinza no hover do controle AINDA desmarcado: é a prévia do
+  que o clique faz, e o que impede o círculo vazio de parecer decoração.
+*/
+.cui-cartao__check:hover .cui-cartao__circulo {
+  border-color: var(--cui-sucesso);
+  color: var(--cui-texto-tenue);
+}
+
+/*
+  Concluído: círculo preenchido com o check em `--cui-fundo` — branco no claro,
+  quase-preto no escuro. `--cui-sucesso` tem L 0.55 no claro e 0.70 no escuro, e
+  nos dois o par rende ≥3:1, o piso de AA para elemento gráfico.
+*/
+.cui-cartao__check[aria-pressed="true"] .cui-cartao__circulo {
+  border-color: var(--cui-sucesso);
+  background: var(--cui-sucesso);
+  color: var(--cui-fundo);
+}
+
+/* --- Rodapé -------------------------------------------------------------- */
+
+/*
+  ⭐ O estado precisa ser LEGÍVEL, não só colorido. O contorno verde comunica por
+  cor e forma, e nenhum dos dois chega a quem usa leitor de tela ou não distingue
+  verde. Esta frase chega.
+*/
+.cui-cartao__rodape {
+  margin: 12px 0 0;
+  color: var(--cui-sucesso-texto);
+  font-size: var(--cui-texto-apoio);
+  font-weight: var(--cui-peso-medio);
+}
+
+/*
+  A coreografia respeita `prefers-reduced-motion` no JavaScript — o contorno
+  entra pronto, sem percurso. O que resta ao CSS é a transição de cor, que fica.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .cui-cartao,
+  .cui-cartao__circulo {
+    transition-duration: 1ms;
+  }
+}

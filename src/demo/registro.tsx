@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import type { GrupoDeNavegacao } from "../lib";
+import { DemoDoCartaoConcluivel } from "./demos/cartao-concluivel";
 import { DemoDosFundamentos } from "./demos/fundamentos";
 import { DemoDoMenuSuspenso } from "./demos/menu-suspenso";
 
@@ -51,6 +52,15 @@ export const REGISTRO: readonly EntradaDoRegistro[] = [
       "Lista de escolha única — controlada, acessível, posicionada por medição e portalizada.",
     estado: "pronto",
     Demo: DemoDoMenuSuspenso,
+  },
+  {
+    id: "cartao-concluivel",
+    nome: "Cartão Concluível",
+    grupo: "Componentes",
+    resumo:
+      "Cartão de tarefa cujo contorno se desenha ao redor quando alguém marca a conclusão.",
+    estado: "pronto",
+    Demo: DemoDoCartaoConcluivel,
   },
 ];
 

@@ -174,8 +174,18 @@
   text-wrap: pretty;
 }
 
+/*
+  A bancada limita a largura para o componente ser visto no tamanho em que vive
+  — um menu de 900px não existe em formulário nenhum. Cartões pedem mais, e
+  pedem por um motivo: é a largura que revela se o contorno acompanha caixas de
+  proporções diferentes.
+*/
 .demo-bancada__palco {
   max-width: 440px;
+}
+
+.demo-bancada__palco:has(.cui-cartao) {
+  max-width: 620px;
 }
 
 .demo-bancada__saida {
@@ -433,4 +443,45 @@
   color: var(--cui-texto-tenue);
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
   font-size: 11px;
+}
+
+/* --- Cartão concluível --------------------------------------------------- */
+
+.demo-cartoes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.demo-cartao-linha {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.demo-cartao-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.demo-cartao-texto strong {
+  color: var(--cui-texto);
+  font-size: 14px;
+  font-weight: var(--cui-peso-forte);
+  letter-spacing: -0.01em;
+}
+
+.demo-cartao-texto span {
+  color: var(--cui-texto-suave);
+  font-size: 12.5px;
+}
+
+.demo-cartao-corpo {
+  margin: 14px 0 0;
+  color: var(--cui-texto-suave);
+  font-size: 13px;
+  line-height: 1.65;
+  text-wrap: pretty;
 }

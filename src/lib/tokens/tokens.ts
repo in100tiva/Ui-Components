@@ -43,6 +43,10 @@ export const cores = {
     "acentoBorda": "#ecebf3",
     "acentoPlaceholder": "#6b6f89",
     "foco": "#2a67bd",
+    "sucesso": "#318454",
+    "sucessoTexto": "#115531",
+    "sucessoSuperficie": "#eaf8ee",
+    "sucessoBorda": "#bee2c9",
     "acento9": "rgba(131, 118, 213, 0.09)",
     "acento14": "rgba(131, 118, 213, 0.14)",
     "acento60": "rgba(131, 118, 213, 0.6)",
@@ -71,6 +75,10 @@ export const cores = {
     "acentoBorda": "rgba(255, 255, 255, 0.08)",
     "acentoPlaceholder": "#9695b0",
     "foco": "#6a9fee",
+    "sucesso": "#59b47d",
+    "sucessoTexto": "#8ed8a8",
+    "sucessoSuperficie": "#173523",
+    "sucessoBorda": "#2a583c",
     "acento9": "rgba(161, 152, 235, 0.09)",
     "acento14": "rgba(161, 152, 235, 0.14)",
     "acento60": "rgba(161, 152, 235, 0.6)",
@@ -98,6 +106,10 @@ export const formas = {
   "raioPilula": 999,
   "raioCasca": 22,
   "raioCascaLg": 32,
+  "raioCartao": 16,
+  "contornoEspessura": 3,
+  "checkTamanho": 24,
+  "alvoDeToque": 44,
   "molduraRespiro": 8,
   "molduraRespiroLg": 12,
   "lateralLargura": 248,
@@ -138,6 +150,12 @@ export const curvas = {
     0.65,
     0,
     0.35,
+    1
+  ],
+  "percurso": [
+    0.4,
+    0,
+    0.2,
     1
   ]
 } as const;
@@ -186,7 +204,8 @@ export const tempos = {
   "folgaDoTimer": 80,
   "transicaoEstado": 160,
   "transicaoItem": 180,
-  "deslizePilula": 320
+  "deslizePilula": 320,
+  "desenhoDoContorno": 700
 } as const;
 
 export const contagens = {

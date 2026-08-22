@@ -55,6 +55,14 @@
   --cui-acento-placeholder: #6b6f89;
   /* ⛔ Deliberadamente AZUL, e não o acento violeta. O anel de foco tem de ser distinguível do estado de seleção; se fossem a mesma cor, quem navega por teclado não veria diferença entre 'está aqui' e 'está escolhido'. */
   --cui-foco: oklch(0.52 0.15 258);
+  /* ⭐ Verde de confirmação. Preenche o círculo do check e desenha o contorno do cartão concluído. L 0.55 no claro e 0.70 no escuro — nos dois, o par com o fundo rende ≥3:1, o piso de AA para elemento gráfico. */
+  --cui-sucesso: oklch(0.55 0.11 155);
+  /* Texto sobre a superfície de sucesso. ~5.9:1 sobre `sucesso-superficie`. */
+  --cui-sucesso-texto: oklch(0.4 0.09 155);
+  /* Fundo tênue do estado concluído — o cartão inteiro não muda de cor, só o rodapé e os selos. */
+  --cui-sucesso-superficie: oklch(0.965 0.02 155);
+  /* ⭐ O TRILHO do contorno: a borda fraca de 1px que já mostra o estado antes de o traço forte percorrer o cartão. Sem ela, o contorno se desenha sobre o nada e o cartão pisca de sem-borda para com-borda. */
+  --cui-sucesso-borda: oklch(0.88 0.05 155);
   /* Elevação de campo. No claro há uma luz superior — no escuro ela não existe: superfície clara sobre fundo escuro já se separa sozinha. */
   --cui-relevo-raso: -1px -1px 3px #fafbff, 1px 2px 4px rgb(22 27 29 / 6%);
   /* Elevação de popover. */
@@ -105,6 +113,14 @@
   --cui-acento-placeholder: oklch(0.68 0.04 288);
   /* ⛔ Deliberadamente AZUL, e não o acento violeta. O anel de foco tem de ser distinguível do estado de seleção; se fossem a mesma cor, quem navega por teclado não veria diferença entre 'está aqui' e 'está escolhido'. */
   --cui-foco: oklch(0.7 0.13 258);
+  /* ⭐ Verde de confirmação. Preenche o círculo do check e desenha o contorno do cartão concluído. L 0.55 no claro e 0.70 no escuro — nos dois, o par com o fundo rende ≥3:1, o piso de AA para elemento gráfico. */
+  --cui-sucesso: oklch(0.7 0.12 155);
+  /* Texto sobre a superfície de sucesso. ~5.9:1 sobre `sucesso-superficie`. */
+  --cui-sucesso-texto: oklch(0.82 0.1 155);
+  /* Fundo tênue do estado concluído — o cartão inteiro não muda de cor, só o rodapé e os selos. */
+  --cui-sucesso-superficie: oklch(0.3 0.05 155);
+  /* ⭐ O TRILHO do contorno: a borda fraca de 1px que já mostra o estado antes de o traço forte percorrer o cartão. Sem ela, o contorno se desenha sobre o nada e o cartão pisca de sem-borda para com-borda. */
+  --cui-sucesso-borda: oklch(0.42 0.07 155);
   /* Elevação de campo. No claro há uma luz superior — no escuro ela não existe: superfície clara sobre fundo escuro já se separa sozinha. */
   --cui-relevo-raso: 1px 2px 4px rgb(0 0 0 / 40%);
   /* Elevação de popover. */
@@ -146,6 +162,10 @@
   --cui-raio-pilula: 999px;
   --cui-raio-casca: 22px;
   --cui-raio-casca-lg: 32px;
+  --cui-raio-cartao: 16px;
+  --cui-contorno-espessura: 3px;
+  --cui-check-tamanho: 24px;
+  --cui-alvo-de-toque: 44px;
   --cui-moldura-respiro: 8px;
   --cui-moldura-respiro-lg: 12px;
   --cui-lateral-largura: 248px;
@@ -178,6 +198,8 @@
   --cui-saida: cubic-bezier(0.7, 0, 0.84, 0);
   /* Retração de item. Simétrica, porque é uma medida encolhendo. */
   --cui-colapso: cubic-bezier(0.65, 0, 0.35, 1);
+  /* ⭐ Para o que PERCORRE uma distância — o contorno se desenhando ao redor do cartão. Simétrica e sem quique: um traço que acelera na saída e freia na chegada parece uma caneta passando, que é exatamente o que se quer ver. ⛔ Mola aqui estaria errada: o traço não tem massa, e um contorno que quica no canto vira brinquedo. */
+  --cui-percurso: cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Coreografia */
   /* Intervalo entre um item e o seguinte. */
@@ -195,6 +217,8 @@
   --cui-transicao-item: 180ms;
   /* ⭐ A pílula do item ativo DESLIZA de um item ao outro em vez de piscar no destino. É o movimento que amarra a coluna — e o único da casca. */
   --cui-deslize-pilula: 320ms;
+  /* ⭐ Longo de propósito, e fora da faixa dos outros tempos do sistema. Os 160–420ms daqui são para mudança de estado, onde o olho só precisa perceber QUE mudou. Aqui ele precisa VER o percurso — o contorno é a recompensa do gesto, e uma recompensa que passa em 200ms não é vista. Nada muda de lugar durante ela, então não há custo de layout. */
+  --cui-desenho-do-contorno: 700ms;
 }
 
 /*

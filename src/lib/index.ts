@@ -26,6 +26,14 @@ export {
 } from "./tokens/tokens";
 export type { NomeDeTema } from "./tokens/tokens";
 
+/* Cartão com conclusão — o contorno que se desenha ao marcar. */
+export {
+  CartaoConcluivel,
+  CheckDeConclusao,
+  RodapeDeConclusao,
+} from "./cartao-concluivel/CartaoConcluivel";
+export type { PropsDoCartaoConcluivel } from "./cartao-concluivel/CartaoConcluivel";
+
 /* A casca do app: moldura, coluna lateral e cartão central. */
 export { Casca } from "./casca/Casca";
 export type { PropsDaCasca } from "./casca/Casca";
