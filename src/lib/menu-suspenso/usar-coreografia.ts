@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import type { RefObject } from "react";
 
 import {
+  atrasoDaOnda,
   coreografar,
   createTimeline,
   curva,
@@ -87,14 +88,20 @@ export function usarCoreografia({
   painelRef,
   listaRef,
   direcaoRef,
-  /** Só depois da medição o painel tem onde ser desenhado — animar antes é
-   *  animar um nó em (0,0), com o salto visível até o lugar certo. */
-  pronto,
+  /**
+   * Se o painel já foi medido — só então ele tem onde ser desenhado.
+   *
+   * ⛔ **Ref e não booleano, e a diferença é um pisca.** Um `useState` ligado por
+   * `useEffect` só chega aqui um ciclo de pintura depois da medição, e nesse
+   * intervalo o navegador pinta o painel inteiro e opaco antes de a coreografia
+   * ter zerado a opacidade. A ref está atualizada no mesmo ciclo.
+   */
+  medindoRef,
 }: {
   painelRef: RefObject<HTMLElement | null>;
   listaRef: RefObject<HTMLElement | null>;
   direcaoRef: RefObject<Lado>;
-  pronto: boolean;
+  medindoRef: RefObject<boolean>;
 }) {
   const [estado, setEstado] = useState<EstadoDaCoreografia>("fechado");
 
@@ -138,7 +145,7 @@ export function usarCoreografia({
   /* --- Entrada ----------------------------------------------------------- */
 
   useLayoutEffect(() => {
-    if (estado !== "aberto" || !pronto || revelou.current) return;
+    if (estado !== "aberto" || !medindoRef.current || revelou.current) return;
 
     const painel = painelRef.current;
     if (!painel) return;
@@ -185,7 +192,10 @@ export function usarCoreografia({
 
       return linha;
     });
-  }, [estado, pronto, painelRef, direcaoRef, itensDo]);
+    /* `medindoRef` fora das dependências de propósito: ref não dispara efeito, e
+       o que reexecuta este bloco é a medição chegar como novo render — que
+       acontece porque `ancoragem` é estado no componente. */
+  }, [estado, painelRef, direcaoRef, itensDo, medindoRef]);
 
   /* --- Saída ------------------------------------------------------------- */
 
@@ -278,9 +288,18 @@ export function usarCoreografia({
               duration: tempos.saidaPainel,
               ease: curva(curvas.saida),
             },
-            /* Depois de tudo recolhido, mais a pausa. É o que separa "duas
-               coisas em sequência" de "uma massa sumindo". */
-            `+=${tempos.pausaAntesDoPainel}`,
+            /*
+              ⛔ **Posição ABSOLUTA, contada do início da timeline — e não
+              `+=pausa`, que é relativo ao FIM de tudo que veio antes.**
+
+              Com o `+=`, o painel esperava o ÚLTIMO item terminar de colapsar e
+              só então contava a pausa: a lista já tinha sumido inteira e a caixa
+              ficava na tela, parada e vazia, por quase meio segundo. Ancorando
+              no INÍCIO do último item, a caixa começa a sair enquanto as últimas
+              opções ainda se recolhem — os dois movimentos terminam quase
+              juntos, e o fechamento inteiro cai de ~1070ms para ~630ms.
+            */
+            atrasoDaOnda(itens.length) + tempos.pausaAntesDoPainel,
           );
 
           return linha;
@@ -296,13 +315,15 @@ export function usarCoreografia({
         do fechamento deixaria o painel montado capturando cliques até a pessoa
         voltar.
       */
+      /* A rede de segurança acompanha a duração real, que agora é a do que
+         terminar por último: o colapso dos itens ou a saída do painel. */
+      const fimDosItens = atrasoDaOnda(itens.length) + tempos.saidaItem;
+      const fimDoPainel =
+        atrasoDaOnda(itens.length) + tempos.pausaAntesDoPainel + tempos.saidaPainel;
+
       timerRef.current = setTimeout(
         encerrar,
-        tempos.passoItem * 8 +
-          tempos.saidaItem +
-          tempos.pausaAntesDoPainel +
-          tempos.saidaPainel +
-          tempos.folgaDoTimer,
+        Math.max(fimDosItens, fimDoPainel) + tempos.folgaDoTimer,
       );
     },
     [painelRef, itensDo, direcaoRef, estado, encerrar, limpar],

@@ -182,7 +182,7 @@ export const tempos = {
   "passoItem": 45,
   "saidaItem": 300,
   "saidaPainel": 240,
-  "pausaAntesDoPainel": 200,
+  "pausaAntesDoPainel": 60,
   "folgaDoTimer": 80,
   "transicaoEstado": 160,
   "transicaoItem": 180,

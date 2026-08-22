@@ -185,8 +185,8 @@
   /* O colapso de um item. */
   --cui-saida-item: 300ms;
   --cui-saida-painel: 240ms;
-  /* ⭐ A pausa entre o último item sumir e o painel sair. É o que faz a saída ser lida como duas coisas em sequência — a lista se recolhendo, e então a caixa indo embora. Tirar estes 200ms transforma a coreografia inteira num fade. */
-  --cui-pausa-antes-do-painel: 200ms;
+  /* ⭐ O respiro entre o ÚLTIMO item COMEÇAR a se recolher e o painel começar a sair. É o que faz a saída ser lida como duas coisas em sequência — a lista se recolhendo, e então a caixa indo embora. ⚠️ Ancorado no INÍCIO do último item, nunca no fim de todos: contado a partir do fim, a lista sumia inteira e a caixa ficava parada e vazia por quase meio segundo. Era 200ms nessa contagem errada, e o fechamento levava ~1070ms; agora leva ~630ms. */
+  --cui-pausa-antes-do-painel: 60ms;
   /* Rede de segurança: `onfinish` não dispara em aba de segundo plano. */
   --cui-folga-do-timer: 80ms;
   /* Hover e foco de campo. Curto o bastante para parecer resposta, não animação. */

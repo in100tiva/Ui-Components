@@ -133,10 +133,26 @@ export function MenuSuspenso<T extends string>({
      medição do lado só existe depois disso — ver a nota em `usarCoreografia`. */
   const direcaoRef = useRef<Lado>("baixo");
 
-  const [ancoragemPronta, setAncoragemPronta] = useState(false);
+  /*
+    ⛔ **A medição chega à coreografia por REF, e não por `useState` — e isso é o
+    conserto de um pisca duplo.**
+
+    Havia aqui um `ancoragemPronta` de estado, ligado por um `useEffect`, que
+    roda DEPOIS da pintura. A sequência era: o painel montava invisível, a
+    medição o tornava visível, o navegador PINTAVA o painel inteiro e opaco, o
+    efeito então ligava o sinal, e só aí a coreografia zerava a opacidade para
+    começar. O painel aparecia pronto, sumia, e voltava animando — dois piscas em
+    dois quadros.
+
+    Com a ref, o valor já está atualizado quando o `useLayoutEffect` da
+    coreografia roda: no MESMO ciclo da medição, antes de qualquer pintura.
+    (Ela é escrita durante o render, logo abaixo da medição — o que é seguro
+    porque nada aqui a lê durante o render, só efeitos a leem depois.)
+  */
+  const medindoRef = useRef(false);
 
   const { estado, aberto, montado, abrir: abrirPainel, fechar } =
-    usarCoreografia({ painelRef, listaRef, direcaoRef, pronto: ancoragemPronta });
+    usarCoreografia({ painelRef, listaRef, direcaoRef, medindoRef });
 
   const ancoragem = usarAncoragem({
     gatilhoRef,
@@ -148,18 +164,14 @@ export function MenuSuspenso<T extends string>({
     margem: MARGEM_DA_JANELA,
   });
 
+  medindoRef.current = ancoragem !== null;
+
   const lado = ancoragem?.lado ?? "baixo";
   const barraEmbaixo = lado === "cima";
 
   useEffect(() => {
     direcaoRef.current = lado;
   }, [lado]);
-
-  /* A coreografia de entrada espera a medição: animar antes é animar um nó em
-     (0,0), com o salto visível até o lugar certo. */
-  useEffect(() => {
-    setAncoragemPronta(ancoragem !== null);
-  }, [ancoragem]);
 
   /* --- Micro-interações do campo ----------------------------------------- */
 

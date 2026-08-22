@@ -177,9 +177,25 @@ checar(
   `maxHeight="${painel()?.style.maxHeight}"`,
 );
 
+/*
+  O fechamento é cronometrado porque a regressão que ele pega é de RITMO, não de
+  presença: encadear a saída do painel ao fim de todos os itens (em vez do início
+  do último) deixava a caixa vazia na tela por quase meio segundo, e o menu levava
+  ~1070ms para sumir. Nada disso quebra teste de presença.
+*/
+const inicioDoFechamento = Date.now();
 await clicar(gatilho());
-await esperar(1600);
+let duracaoDoFechamento = 0;
+for (let i = 0; i < 60 && painel(); i++) {
+  await esperar(30);
+  duracaoDoFechamento = Date.now() - inicioDoFechamento;
+}
 checar("fecha e desmonta", !painel());
+checar(
+  "fecha em menos de 900ms",
+  !painel() && duracaoDoFechamento < 900,
+  `${duracaoDoFechamento}ms`,
+);
 
 /* Dois cliques em 60ms: fechar com a entrada ainda em voo. */
 await clicar(gatilho());

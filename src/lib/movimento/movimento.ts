@@ -72,15 +72,37 @@ export function ondaDeItens(
   /* O tipo é anotado porque `stagger` tem sobrecargas por tipo de valor, e
      `ReturnType` escolheria a última delas — a de string. */
 ): StaggerFunction<number> {
-  const teto = contagens.tetoEscalonado;
-  /* Comprimir o passo quando a lista passa do teto mantém a onda inteira dentro
-     da mesma janela de tempo, em vez de cortá-la no oitavo item. */
-  const passo =
-    quantidade > teto
-      ? (tempos.passoItem * teto) / quantidade
-      : tempos.passoItem;
+  return stagger(passoDaOnda(quantidade), { from: de });
+}
 
-  return stagger(passo, { from: de });
+/**
+ * O intervalo entre um item e o seguinte.
+ *
+ * Comprimir o passo quando a lista passa do teto mantém a onda inteira dentro da
+ * mesma janela de tempo, em vez de cortá-la no oitavo item — uma lista de 40
+ * opções não pode demorar cinco vezes mais para fechar que uma de oito.
+ */
+function passoDaOnda(quantidade: number): number {
+  const teto = contagens.tetoEscalonado;
+  return quantidade > teto
+    ? (tempos.passoItem * teto) / quantidade
+    : tempos.passoItem;
+}
+
+/**
+ * Quando o ÚLTIMO item da onda começa a se mover.
+ *
+ * ⭐ **Serve para encaixar o que vem depois, e a distinção entre "começa" e
+ * "termina" é a diferença entre uma saída fluida e um balão vazio na tela.**
+ * Encadear o painel ao FIM de todos os itens (`+=pausa` na timeline) o fazia
+ * esperar o último colapso terminar: a lista já tinha sumido inteira e a caixa
+ * continuava lá, parada e vazia, por quase meio segundo. Encadeando ao INÍCIO do
+ * último item, as duas coisas se sobrepõem — a caixa começa a ir embora
+ * enquanto as últimas opções ainda se recolhem, que é como a sequência é lida
+ * sem ter um tempo morto no meio.
+ */
+export function atrasoDaOnda(quantidade: number): number {
+  return passoDaOnda(quantidade) * Math.max(quantidade - 1, 0);
 }
 
 /**
