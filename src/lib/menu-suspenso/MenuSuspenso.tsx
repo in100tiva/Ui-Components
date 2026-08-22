@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom";
 
 import { animate, mola, preferemenosMovimento, utils } from "../movimento/movimento";
+import { formas } from "../tokens/tokens";
 import { filtrarOpcoes, normalizar } from "./filtrar-opcoes";
 import { usarAncoragem } from "./usar-ancoragem";
 import type { Lado } from "./usar-ancoragem";
@@ -25,6 +26,9 @@ const TETO = 304;
 
 /** Abaixo disto o espaço não serve, e o painel prefere virar para cima. */
 const ALTURA_MINIMA = 168;
+
+/** A folga que o painel nunca invade, em qualquer borda da janela. */
+const MARGEM_DA_JANELA = formas.margemDaJanela;
 
 /**
  * A partir de quantas opções a barra de filtrar aparece — em quem pediu `buscavel`.
@@ -141,6 +145,7 @@ export function MenuSuspenso<T extends string>({
     teto: TETO,
     alinhamento,
     alturaMinima: ALTURA_MINIMA,
+    margem: MARGEM_DA_JANELA,
   });
 
   const lado = ancoragem?.lado ?? "baixo";

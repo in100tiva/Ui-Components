@@ -117,6 +117,17 @@
   background: var(--cui-flutuante);
   box-shadow: var(--cui-sombra-painel);
   padding: var(--cui-painel-respiro);
+  /*
+    ⛔ **`overflow-x: hidden` é obrigatório, e escrevê-lo não é redundância.**
+    Pela especificação, quando UM eixo recebe valor diferente de `visible`, o
+    outro deixa de ser `visible` sozinho — vira `auto`. Ou seja: declarar só
+    `overflow-y: auto` liga um eixo horizontal rolável que ninguém pediu. Basta
+    meio pixel de conteúdo excedente (a barra de busca tem margem negativa de
+    propósito, e um `translate` de animação também conta) para nascer uma barra
+    horizontal na base do painel — que aparece justamente ao passar o ponteiro,
+    quando o navegador repinta a barra.
+  */
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -163,10 +174,36 @@
     margin-block: var(--cui-painel-respiro);
   }
 
-  /* Sem as setas das pontas. Elas são um alvo de 11px que ninguém acerta e
-     ninguém usa — quem rola, rola. */
-  .cui-menu__painel::-webkit-scrollbar-button {
+  /*
+    Sem as setas das pontas — um alvo de 11px que ninguém acerta e ninguém usa.
+
+    ⛔ **`display: none` sozinho NÃO basta, e é o que deixava um quadradinho
+    escuro na base do painel.** O Chromium no Windows repinta a barra quando o
+    ponteiro entra na área de rolagem, e nesse repinte os botões voltam a ser
+    desenhados com o tema do sistema — a regra de `display` não sobrevive ao
+    caminho de pintura nativo. Zerar as dimensões e a pintura resolve pelo lado
+    de fora: um botão de 0×0 sem fundo não tem o que mostrar, independente de
+    quem o desenhe. As variantes explícitas cobrem os pseudo-seletores que o
+    Chrome gera por conta própria (`:vertical:increment` e companhia).
+  */
+  .cui-menu__painel::-webkit-scrollbar-button,
+  .cui-menu__painel::-webkit-scrollbar-button:start,
+  .cui-menu__painel::-webkit-scrollbar-button:end,
+  .cui-menu__painel::-webkit-scrollbar-button:vertical:start,
+  .cui-menu__painel::-webkit-scrollbar-button:vertical:end,
+  .cui-menu__painel::-webkit-scrollbar-button:horizontal:start,
+  .cui-menu__painel::-webkit-scrollbar-button:horizontal:end {
     display: none;
+    width: 0;
+    height: 0;
+    background: transparent;
+  }
+
+  /* Cinto e suspensório para o eixo que `overflow-x: hidden` já deveria ter
+     eliminado: se algum navegador ainda o criar, ele não é pintado. */
+  .cui-menu__painel::-webkit-scrollbar:horizontal {
+    display: none;
+    height: 0;
   }
 
   /*

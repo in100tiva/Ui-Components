@@ -31,6 +31,10 @@ export type Ancoragem = {
  *
  * 3. **Vira para cima quando embaixo é apertado**, e só então — virar por
  *    default deixaria o menu abrindo para cima no meio de uma tela vazia.
+ *
+ * 4. **A janela tem margem, e ela é descontada do espaço disponível** — nos
+ *    quatro lados. Um painel colado no rodapé fica atrás da barra de tarefas do
+ *    sistema; colado na lateral, some pela borda. Nenhum dos dois dá erro.
  */
 export function usarAncoragem({
   gatilhoRef,
@@ -39,14 +43,22 @@ export function usarAncoragem({
   teto,
   alinhamento,
   alturaMinima,
+  margem,
 }: {
   gatilhoRef: RefObject<HTMLElement | null>;
   ativo: boolean;
   afastamento: number;
   teto: number;
   alinhamento: Alinhamento;
-  /** Abaixo disto, o espaço "não serve" e o painel prefere virar. */
+  /**
+   * Abaixo disto, o espaço "não serve" e o painel prefere virar de lado.
+   *
+   * ⚠️ É um critério de DECISÃO, não um piso de tamanho. Confundir os dois é o
+   * que fazia o painel atravessar a borda da janela.
+   */
   alturaMinima: number;
+  /** A folga que o painel nunca invade, em qualquer borda da janela. */
+  margem: number;
 }) {
   const [ancoragem, setAncoragem] = useState<Ancoragem | null>(null);
 
@@ -56,23 +68,53 @@ export function usarAncoragem({
 
     const r = gatilho.getBoundingClientRect();
     const alturaDaJanela = window.innerHeight;
+    const larguraDaJanela = document.documentElement.clientWidth;
 
-    const abaixo = alturaDaJanela - r.bottom - afastamento;
-    const acima = r.top - afastamento;
+    /*
+      ⛔ **A margem é descontada do espaço, não checada no fim.** O painel nunca
+      encosta na borda da janela: colado no rodapé ele fica em cima da barra de
+      tarefas do sistema, e no celular, sob a barra de endereço — em ambos os
+      casos as últimas opções ficam atrás de outra coisa. `clientWidth` do
+      `documentElement` e não `innerWidth`: aquele já desconta a barra de
+      rolagem da página, este não, e a diferença é exatamente a largura da barra
+      vazando para fora da tela.
+    */
+    const abaixo = alturaDaJanela - r.bottom - afastamento - margem;
+    const acima = r.top - afastamento - margem;
 
     /* Vira só quando embaixo não serve E em cima é de fato melhor. */
     const lado: Lado = abaixo < alturaMinima && acima > abaixo ? "cima" : "baixo";
     const disponivel = lado === "cima" ? acima : abaixo;
 
+    /*
+      ⛔ **Sem `Math.max(alturaMinima, …)` aqui, e a ausência é o conserto.**
+      Estava escrito assim, e o efeito era o oposto do pretendido: com 40px de
+      espaço real, o piso de 168px MANDAVA o painel atravessar a borda da
+      janela. `alturaMinima` diz quando VIRAR de lado, nunca quanto ocupar —
+      quando não há espaço nenhum dos dois lados, a resposta certa é um painel
+      curto que rola, não um painel inteiro fora da tela.
+    */
+    const alturaMaxima = Math.max(0, Math.min(teto, disponivel));
+
+    /* No eixo horizontal a regra é a mesma: o painel acompanha a largura do
+       campo, mas nunca passa das margens. Num campo largo perto da borda, é o
+       que impede a lista de sangrar para fora. */
+    const largura = Math.min(r.width, larguraDaJanela - margem * 2);
+    const preferida = alinhamento === "fim" ? r.right - largura : r.left;
+    const esquerda = Math.min(
+      Math.max(preferida, margem),
+      larguraDaJanela - largura - margem,
+    );
+
     setAncoragem({
-      esquerda: alinhamento === "fim" ? r.right - r.width : r.left,
-      largura: r.width,
+      esquerda,
+      largura,
       topo: lado === "baixo" ? r.bottom + afastamento : null,
       base: lado === "cima" ? alturaDaJanela - r.top + afastamento : null,
       lado,
-      alturaMaxima: Math.max(alturaMinima, Math.min(teto, disponivel)),
+      alturaMaxima,
     });
-  }, [gatilhoRef, afastamento, teto, alinhamento, alturaMinima]);
+  }, [gatilhoRef, afastamento, teto, alinhamento, alturaMinima, margem]);
 
   /*
     `useLayoutEffect`: a medição tem de acontecer ANTES da pintura. Num `useEffect`

@@ -205,6 +205,7 @@ componente futuro que compartilhe o token.
 | `flutuante` | — | Fundo. Separado de `superficie` de propósito: o dia em que popover ganhar vidro, muda só aqui |
 | `raio-painel` | 18 | Arredondamento |
 | `painel-respiro` | 8 | Recuo interno — e onde a barra de rolagem começa |
+| `margem-da-janela` | 12 | Folga que o painel nunca invade, em qualquer borda |
 | `sombra-painel` | — | Elevação |
 | `z-painel` | 60 | ⚠️ Vence a página, perde para diálogo modal |
 
@@ -258,7 +259,10 @@ Tempos: `passo-item`, `saida-item`, `saida-painel`, `pausa-antes-do-painel`,
 ## Decisões que valem para todo componente novo
 
 1. **Medir, não decretar.** Altura de painel é o espaço que sobra na janela;
-   `60vh` num campo perto do rodapé ainda manda conteúdo para fora da tela.
+   `60vh` num campo perto do rodapé ainda manda conteúdo para fora da tela. A
+   margem da janela (`margem-da-janela`) é descontada do espaço disponível nos
+   quatro lados — e um mínimo de altura é critério para VIRAR de lado, nunca
+   piso de tamanho: confundir os dois faz o painel atravessar a borda.
 2. **Portal + `fixed`** para qualquer coisa flutuante. `absolute` é recortado
    por qualquer ancestral com `overflow`, e recorte não é empilhamento —
    nenhum `z-index` traz de volta o que deixou de ser desenhado.
