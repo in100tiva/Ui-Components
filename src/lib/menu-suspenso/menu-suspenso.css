@@ -14,7 +14,7 @@
   display: flex;
   align-items: center;
   width: 100%;
-  height: 44px;
+  height: var(--cui-altura-campo);
   padding: 0 40px 0 16px;
   border: 1px solid var(--cui-acento-borda);
   border-radius: var(--cui-raio-campo);
@@ -34,7 +34,7 @@
 }
 
 .cui-menu__gatilho[data-tamanho="lg"] {
-  height: 46px;
+  height: var(--cui-altura-campo-lg);
 }
 
 /* O rótulo trunca; o chevron nunca é empurrado para fora do campo. */
@@ -119,7 +119,7 @@
   box-shadow: var(--cui-sombra-painel);
   overflow-y: auto;
   overscroll-behavior: contain;
-  animation: cui-painel-entra 420ms var(--cui-mola) both;
+  animation: cui-painel-entra var(--cui-entrada-painel) var(--cui-mola) both;
 }
 
 /*
@@ -144,13 +144,22 @@
   animation-name: cui-painel-entra-cima;
 }
 
+/*
+  ⛔ **A SAÍDA não está aqui, e isso é deliberado.** Ela é feita em
+  `usar-coreografia.ts` com a Web Animations API, porque anima `maxHeight` a
+  partir da altura MEDIDA de cada item — e altura medida não existe em folha de
+  estilo. O que o CSS faz na saída é só uma coisa: parar de aceitar cliques, e
+  desligar a animação de ENTRADA, que senão brigaria com a de script pelos
+  mesmos nós.
+*/
 .cui-menu__painel[data-estado="fechando"] {
   pointer-events: none;
-  animation: cui-painel-sai 200ms var(--cui-saida) both;
+  animation: none;
 }
 
-.cui-menu__painel[data-estado="fechando"][data-lado="cima"] {
-  animation-name: cui-painel-sai-cima;
+.cui-menu__painel[data-estado="fechando"] .cui-menu__item,
+.cui-menu__painel[data-estado="fechando"] .cui-menu__barra {
+  animation: none;
 }
 
 /* Antes da primeira medição não há onde desenhar — invisível, mas montado, para
@@ -176,16 +185,21 @@
   cursor: pointer;
   outline: none;
   transition: background-color 180ms ease;
-  animation: cui-item-entra 380ms var(--cui-mola) both;
+  animation: cui-item-entra var(--cui-entrada-item) var(--cui-mola) both;
   /* O escalonamento vem do índice, injetado como custom property pelo React. */
-  animation-delay: calc(var(--cui-i, 0) * 45ms);
+  animation-delay: calc(var(--cui-i, 0) * var(--cui-passo-item));
 }
 
 .cui-menu__painel[data-lado="cima"] .cui-menu__item {
   animation-name: cui-item-entra-cima;
 }
 
-.cui-menu__painel[data-estado="fechando"] .cui-menu__item {
+/*
+  Filtrou uma vez, a entrada escalonada acaba. A coreografia pertence à ABERTURA:
+  re-encená-la a cada tecla faria a lista piscar item por item justamente
+  enquanto a pessoa lê para escolher.
+*/
+.cui-menu__painel[data-anima="false"] .cui-menu__item {
   animation: none;
 }
 
@@ -266,7 +280,12 @@
   margin: 0 -8px;
   padding: 8px 8px 4px;
   background: var(--cui-flutuante);
-  animation: cui-item-entra 380ms var(--cui-mola) both;
+  animation: cui-item-entra var(--cui-entrada-item) var(--cui-mola) both;
+  animation-delay: calc(var(--cui-i, 0) * var(--cui-passo-item));
+}
+
+.cui-menu__painel[data-lado="cima"] .cui-menu__barra {
+  animation-name: cui-item-entra-cima;
 }
 
 .cui-menu__painel[data-lado="baixo"][data-com-busca="true"] {
@@ -311,10 +330,10 @@
 
 .cui-menu__busca {
   width: 100%;
-  height: 36px;
+  height: var(--cui-altura-busca);
   padding: 0 12px 0 34px;
   border: 1px solid var(--cui-borda);
-  border-radius: 11px;
+  border-radius: var(--cui-raio-busca);
   background: var(--cui-campo-fundo);
   color: var(--cui-texto);
   font: inherit;
@@ -381,27 +400,8 @@
   }
 }
 
-@keyframes cui-painel-sai {
-  0% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.965);
-  }
-}
-
-@keyframes cui-painel-sai-cima {
-  0% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(10px) scale(0.965);
-  }
-}
+/* A saída não tem keyframes: ela é medida e roda por script — ver
+   `usar-coreografia.ts`. */
 
 @keyframes cui-item-entra {
   0% {
@@ -432,7 +432,6 @@
 */
 @media (prefers-reduced-motion: reduce) {
   .cui-menu__painel,
-  .cui-menu__painel[data-estado="fechando"],
   .cui-menu__item,
   .cui-menu__barra {
     animation-duration: 1ms;

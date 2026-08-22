@@ -1,102 +1,145 @@
+/* ┌──────────────────────────────────────────────────────────────────────┐
+   │  ARQUIVO GERADO — não edite à mão.                                   │
+   │  Fonte: tokens/tokens.json                                          │
+   │  Regenerar: pnpm tokens                                              │
+   └──────────────────────────────────────────────────────────────────────┘ */
+
 /*
- * Design tokens — a única coisa que precisa ser copiada junto com um componente.
- *
  * O tema é um ATRIBUTO na raiz (`data-tema="claro" | "escuro"`), não uma classe:
- * atributo não colide com o `dark:` de Tailwind nem com o `.dark` do next-themes
- * se o projeto de destino já tiver um deles, então a biblioteca convive com o
- * que já existe em vez de disputar o mesmo seletor.
+ * atributo não colide com o `dark:` de Tailwind nem com o `.dark` do
+ * next-themes se o projeto de destino já tiver um deles.
  *
  * Todo token de cor tem par nos dois temas. Um token definido só no claro é um
- * componente invisível no escuro — é a falha mais cara e a mais silenciosa.
+ * componente invisível no escuro — a falha mais cara e a mais silenciosa.
  */
 
 :root,
 [data-tema="claro"] {
-  /* Superfícies */
+  /* Fundo da página, atrás de tudo. */
   --cui-fundo: #f7f8fa;
+  /* Cartões e campos — o que se apoia sobre o fundo. */
   --cui-superficie: #ffffff;
+  /* Painéis suspensos. Igual à superfície hoje, mas separado de propósito: no dia em que popover ganhar vidro ou outra elevação, muda só aqui. */
   --cui-flutuante: #ffffff;
+  /* Estado desabilitado. */
   --cui-abafado: #eef1f6;
+  /* Interior de campo de texto. */
   --cui-campo-fundo: #fcfdfe;
-
-  /* Texto — a escada inteira passa em AA sobre `--cui-superficie` */
+  /* Texto principal. */
   --cui-texto: #0f1417;
+  /* Rótulos de campo. 8.69:1 sobre superfície. */
   --cui-texto-rotulo: #414852;
+  /* Apoio. 5.81:1 sobre superfície. */
   --cui-texto-suave: #5a626d;
+  /* O degrau mais claro que ainda passa em AA — 5.32:1. Abaixo disto não existe token: seria texto que parte das pessoas não lê. */
   --cui-texto-tenue: #5f6873;
-
-  /* Traços */
+  /* Traço de separação. */
   --cui-borda: #d9e0ea;
+  /* Traço de campo de formulário — mais presente que a borda. */
   --cui-contorno: oklch(0.62 0.02 258);
-
-  /* Acento do menu — a identidade violeta do design */
+  /* ⭐ A identidade. Trocar a matiz (288) repinta hover, seleção, chevron e anel de foco de uma vez, porque todos derivam daqui. */
   --cui-acento: oklch(0.62 0.14 288);
+  /* Texto sobre superfície, na família do acento. */
   --cui-acento-texto: oklch(0.44 0.11 288);
+  /* Traço de campo na família do acento. */
   --cui-acento-borda: #ecebf3;
+  /* Campo sem escolha feita. */
   --cui-acento-placeholder: #6b6f89;
-
-  /* Foco: um anel só, herdado por todo componente da biblioteca */
+  /* ⛔ Deliberadamente AZUL, e não o acento violeta. O anel de foco tem de ser distinguível do estado de seleção; se fossem a mesma cor, quem navega por teclado não veria diferença entre 'está aqui' e 'está escolhido'. */
   --cui-foco: oklch(0.52 0.15 258);
-
-  /* Profundidade */
-  --cui-luz: #fafbff;
-  --cui-relevo-raso: -1px -1px 3px var(--cui-luz), 1px 2px 4px rgb(22 27 29 / 6%);
+  /* Elevação de campo. No claro há uma luz superior — no escuro ela não existe: superfície clara sobre fundo escuro já se separa sozinha. */
+  --cui-relevo-raso: -1px -1px 3px #fafbff, 1px 2px 4px rgb(22 27 29 / 6%);
+  /* Elevação de popover. */
   --cui-sombra-painel: 0 12px 32px -12px rgb(16 22 58 / 22%);
-
   color-scheme: light;
 }
 
 [data-tema="escuro"] {
+  /* Fundo da página, atrás de tudo. */
   --cui-fundo: oklch(0.218 0.011 264);
+  /* Cartões e campos — o que se apoia sobre o fundo. */
   --cui-superficie: oklch(0.243 0.012 264);
+  /* Painéis suspensos. Igual à superfície hoje, mas separado de propósito: no dia em que popover ganhar vidro ou outra elevação, muda só aqui. */
   --cui-flutuante: oklch(0.243 0.012 264);
+  /* Estado desabilitado. */
   --cui-abafado: oklch(0.288 0.012 264);
+  /* Interior de campo de texto. */
   --cui-campo-fundo: oklch(1 0 0 / 2%);
-
+  /* Texto principal. */
   --cui-texto: oklch(0.97 0.005 100);
+  /* Rótulos de campo. 8.69:1 sobre superfície. */
   --cui-texto-rotulo: oklch(0.86 0.012 250);
+  /* Apoio. 5.81:1 sobre superfície. */
   --cui-texto-suave: oklch(0.74 0.012 250);
+  /* O degrau mais claro que ainda passa em AA — 5.32:1. Abaixo disto não existe token: seria texto que parte das pessoas não lê. */
   --cui-texto-tenue: oklch(0.68 0.012 250);
-
+  /* Traço de separação. */
   --cui-borda: oklch(1 0 0 / 9%);
+  /* Traço de campo de formulário — mais presente que a borda. */
   --cui-contorno: oklch(0.57 0.02 258);
-
+  /* ⭐ A identidade. Trocar a matiz (288) repinta hover, seleção, chevron e anel de foco de uma vez, porque todos derivam daqui. */
   --cui-acento: oklch(0.72 0.12 288);
+  /* Texto sobre superfície, na família do acento. */
   --cui-acento-texto: oklch(0.86 0.06 288);
+  /* Traço de campo na família do acento. */
   --cui-acento-borda: oklch(1 0 0 / 8%);
+  /* Campo sem escolha feita. */
   --cui-acento-placeholder: oklch(0.68 0.04 288);
-
+  /* ⛔ Deliberadamente AZUL, e não o acento violeta. O anel de foco tem de ser distinguível do estado de seleção; se fossem a mesma cor, quem navega por teclado não veria diferença entre 'está aqui' e 'está escolhido'. */
   --cui-foco: oklch(0.7 0.13 258);
-
+  /* Elevação de campo. No claro há uma luz superior — no escuro ela não existe: superfície clara sobre fundo escuro já se separa sozinha. */
   --cui-relevo-raso: 1px 2px 4px rgb(0 0 0 / 40%);
+  /* Elevação de popover. */
   --cui-sombra-painel: 0 12px 32px -12px rgb(0 0 0 / 55%);
-
   color-scheme: dark;
 }
 
-/*
- * Derivados — calculados a partir do acento, e por isso trocar `--cui-acento`
- * por outra matiz repinta hover, seleção e anel de foco de uma vez. É o que
- * torna o tema "próprio": um token muda, o sistema inteiro acompanha.
- */
+/* Derivados do acento — trocar a matiz repinta o sistema inteiro. */
 :root {
+  /* Hover e seleção. */
   --cui-acento-9: color-mix(in oklab, var(--cui-acento) 9%, transparent);
+  /* Item em foco. */
   --cui-acento-14: color-mix(in oklab, var(--cui-acento) 14%, transparent);
+  /* Borda em hover. */
   --cui-acento-60: color-mix(in oklab, var(--cui-acento) 60%, transparent);
+  /* Halo de 3px. */
   --cui-anel-foco: color-mix(in oklab, var(--cui-foco) 28%, transparent);
 
-  /* Curvas — uma saída expressiva na entrada, uma seca na saída */
-  --cui-mola: cubic-bezier(0.16, 1, 0.3, 1);
-  --cui-saida: cubic-bezier(0.7, 0, 0.84, 0);
+  /* Formas */
   --cui-raio-campo: 14px;
   --cui-raio-painel: 18px;
   --cui-raio-item: 12px;
+  --cui-raio-busca: 11px;
+  --cui-altura-campo: 44px;
+  --cui-altura-campo-lg: 46px;
+  --cui-altura-busca: 36px;
+
+  /* Curvas */
+  /* Entrada. Chega rápido e assenta — a curva que dá o caráter. */
+  --cui-mola: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Saída do painel. Sai devagar e acelera: some com convicção. */
+  --cui-saida: cubic-bezier(0.7, 0, 0.84, 0);
+  /* Retração de item. Simétrica, porque é uma medida encolhendo. */
+  --cui-colapso: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Coreografia */
+  /* Intervalo entre um item e o seguinte. */
+  --cui-passo-item: 45ms;
+  --cui-entrada-painel: 420ms;
+  --cui-entrada-item: 380ms;
+  /* O colapso de um item. */
+  --cui-saida-item: 300ms;
+  --cui-saida-painel: 240ms;
+  /* ⭐ A pausa entre o último item sumir e o painel sair. É o que faz a saída ser lida como duas coisas em sequência — a lista se recolhendo, e então a caixa indo embora. Tirar estes 200ms transforma a coreografia inteira num fade. */
+  --cui-pausa-antes-do-painel: 200ms;
+  /* Rede de segurança: `onfinish` não dispara em aba de segundo plano. */
+  --cui-folga-do-timer: 80ms;
 }
 
 /*
- * A transição de tema fica na RAIZ e é desligada para quem pede menos
- * movimento. Sem o `:where`, a especificidade zero se perderia e o seletor
- * passaria a competir com os estados de cada componente.
+ * A transição de tema fica na RAIZ e some para quem pede menos movimento. Sem o
+ * `:where`, a especificidade zero se perderia e o seletor competiria com os
+ * estados de cada componente.
  */
 :where([data-tema-transicao]) * {
   transition:

@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
+import { contagens } from "../tokens/tokens";
 import { filtrarOpcoes, normalizar } from "./filtrar-opcoes";
 import { usarAncoragem } from "./usar-ancoragem";
+import type { Lado } from "./usar-ancoragem";
 import { usarCliqueFora } from "./usar-clique-fora";
-import { usarPresenca } from "./usar-presenca";
+import { usarCoreografia } from "./usar-coreografia";
 import type {
   AlinhamentoDoMenu,
   OpcaoMenu,
@@ -36,9 +38,6 @@ const MINIMO_PARA_BUSCA = 8;
 
 /** Quanto tempo as letras digitadas seguem contando como a MESMA palavra. */
 const JANELA_DO_TYPEAHEAD = 600;
-
-/** Duração da animação de saída — casada com o `cui-painel-sai` do CSS. */
-const DURACAO_DE_SAIDA = 200;
 
 export type PropsDoMenuSuspenso<T extends string> = {
   /** O que está escolhido. `null` mostra o placeholder. */
@@ -113,9 +112,20 @@ export function MenuSuspenso<T extends string>({
   const [indiceFoco, setIndiceFoco] = useState(0);
   const [consulta, setConsulta] = useState("");
 
+  /**
+   * Se a lista já foi filtrada nesta abertura.
+   *
+   * A entrada escalonada é da ABERTURA, não de toda mudança de lista: sem esta
+   * trava, cada tecla digitada no filtro faria os itens sobreviventes entrarem
+   * de novo, um a um, escalonados. A lista pisca a cada letra e fica ilegível
+   * justamente enquanto a pessoa está lendo para escolher.
+   */
+  const [jaFiltrou, setJaFiltrou] = useState(false);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const gatilhoRef = useRef<HTMLButtonElement>(null);
   const painelRef = useRef<HTMLDivElement>(null);
+  const listaRef = useRef<HTMLDivElement>(null);
   const buscaRef = useRef<HTMLInputElement>(null);
   const itensRef = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -123,8 +133,12 @@ export function MenuSuspenso<T extends string>({
   const idPainel = `${ids}-painel`;
   const idLista = `${ids}-lista`;
 
-  const { estado, aberto, montado, abrir: abrirPresenca, fechar } =
-    usarPresenca(DURACAO_DE_SAIDA);
+  /* A direção viaja por ref porque a coreografia decide se o painel monta, e a
+     medição do lado só existe depois disso — ver a nota em `usarCoreografia`. */
+  const direcaoRef = useRef<Lado>("baixo");
+
+  const { estado, aberto, montado, abrir: abrirPainel, fechar } =
+    usarCoreografia({ painelRef, listaRef, direcaoRef });
 
   const ancoragem = usarAncoragem({
     gatilhoRef,
@@ -137,6 +151,10 @@ export function MenuSuspenso<T extends string>({
 
   const lado = ancoragem?.lado ?? "baixo";
   const barraEmbaixo = lado === "cima";
+
+  useEffect(() => {
+    direcaoRef.current = lado;
+  }, [lado]);
 
   const indiceSelecionado = opcoes.findIndex((o) => o.valor === valor);
   const rotuloAtual =
@@ -154,11 +172,12 @@ export function MenuSuspenso<T extends string>({
   const abrir = useCallback(() => {
     if (desabilitado) return;
     setConsulta("");
+    setJaFiltrou(false);
     /* Abrir com o foco no que já está escolhido: a seta seguinte anda a partir
        dali, e não do topo de uma lista de 12 meses. */
     setIndiceFoco(indiceSelecionado >= 0 ? indiceSelecionado : 0);
-    abrirPresenca();
-  }, [desabilitado, indiceSelecionado, abrirPresenca]);
+    abrirPainel();
+  }, [desabilitado, indiceSelecionado, abrirPainel]);
 
   const fecharEDevolverFoco = useCallback(
     (imediato = false) => {
@@ -379,6 +398,27 @@ export function MenuSuspenso<T extends string>({
 
   itensRef.current.length = visiveis.length;
 
+  /*
+    A ordem da coreografia de ENTRADA, contada em LINHAS do painel — a barra de
+    busca é uma delas.
+
+    A regra é uma só, e vale nos dois sentidos: **quem entra primeiro é quem está
+    mais perto do gatilho**. Com o painel para baixo isso é o topo da lista; para
+    cima, é o fim dela. Sem esta inversão, um menu que abre para cima começa a se
+    desenhar pela borda mais distante e parece vir de lugar nenhum.
+
+    O teto vem de `contagens.tetoEscalonado`, o mesmo da saída: acima dele tudo
+    entra junto, e o menu não fica mais lento por ter mais opções.
+  */
+  const linhasDeLista = comBusca && visiveis.length === 0 ? 1 : visiveis.length;
+  const totalDeLinhas = comBusca ? linhasDeLista + 1 : visiveis.length;
+  const deslocamento = comBusca && !barraEmbaixo ? 1 : 0;
+
+  function ordemDaLinha(linha: number): number {
+    const posicao = lado === "cima" ? totalDeLinhas - 1 - linha : linha;
+    return Math.min(Math.max(posicao, 0), contagens.tetoEscalonado);
+  }
+
   const itens = visiveis.map((opcao, i) => (
     <div
       key={opcao.valor}
@@ -402,11 +442,7 @@ export function MenuSuspenso<T extends string>({
         comBusca && !opcao.desabilitada ? () => setIndiceFoco(i) : undefined
       }
       className="cui-menu__item"
-      style={
-        /* O escalonamento tem teto: com 40 opções, o último item entraria 1,8s
-           depois do primeiro e a lista pareceria travada. */
-        { "--cui-i": Math.min(i, 8) } as React.CSSProperties
-      }
+      style={{ "--cui-i": ordemDaLinha(i + deslocamento) } as React.CSSProperties}
     >
       <span className="cui-menu__item-texto">
         <span className="cui-menu__item-rotulo">{opcao.rotulo}</span>
@@ -429,6 +465,9 @@ export function MenuSuspenso<T extends string>({
       data-alinhamento={alinhamento}
       data-com-busca={comBusca ? "true" : "false"}
       data-medido={ancoragem ? "true" : "false"}
+      /* Desliga a entrada escalonada depois da primeira filtragem — a
+         coreografia é da abertura, não de cada tecla. */
+      data-anima={jaFiltrou ? "false" : "true"}
       className="cui-menu__painel"
       /*
         ⛔ **Sem `onKeyDown` aqui, e isso não é esquecimento.** O painel está num
@@ -450,6 +489,13 @@ export function MenuSuspenso<T extends string>({
         <div
           className="cui-menu__barra"
           data-posicao={barraEmbaixo ? "base" : "topo"}
+          /* A barra entra junto com a linha que ocupa: no topo é a primeira,
+             embaixo é a última — nos dois casos, a mais perto do gatilho. */
+          style={
+            {
+              "--cui-i": ordemDaLinha(barraEmbaixo ? linhasDeLista : 0),
+            } as React.CSSProperties
+          }
         >
           <div className="cui-menu__busca-caixa">
             <IconeLupa />
@@ -470,6 +516,7 @@ export function MenuSuspenso<T extends string>({
               value={consulta}
               onChange={(e) => {
                 setConsulta(e.target.value);
+                setJaFiltrou(true);
                 setIndiceFoco(0);
               }}
               placeholder={placeholderBusca}
@@ -480,7 +527,14 @@ export function MenuSuspenso<T extends string>({
       ) : null}
 
       {comBusca ? (
+        /*
+          `listaRef` é o que a coreografia de saída percorre. Sem ela, os
+          "itens" a colapsar seriam os filhos diretos do painel — a barra de
+          busca e o aviso de lista vazia —, e a lista inteira sairia de uma vez
+          enquanto o campo de digitar se retraía sozinho.
+        */
         <div
+          ref={listaRef}
           id={idLista}
           role="listbox"
           aria-label={rotulo ?? placeholder}

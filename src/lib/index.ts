@@ -12,5 +12,10 @@ export type {
   AlinhamentoDoMenu,
 } from "./menu-suspenso/tipos";
 
+/* Os tokens em JavaScript: a camada que atravessa até onde CSS não chega.
+   Gerados de `tokens/tokens.json` — ver o README. */
+export { cores, curvas, formas, tempos, contagens, coresDoTema } from "./tokens/tokens";
+export type { NomeDeTema } from "./tokens/tokens";
+
 export { usarTema } from "./tema/usar-tema";
 export type { Tema, TemaEfetivo } from "./tema/usar-tema";
