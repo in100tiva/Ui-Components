@@ -8,13 +8,16 @@
  * sobrevive à animação, animação que não é cancelada, e API de terceiro que
  * mudou sem quebrar nada — tudo isso passa no `tsc` e no build.
  *
- * Três defeitos reais foram encontrados por este arquivo:
+ * Defeitos reais encontrados por este arquivo:
  *   1. `devolverAoCss` apagava o `maxHeight` que o React controla, e o painel
  *      crescia até caber a lista inteira ao terminar de abrir;
  *   2. fechar no meio da abertura não cancelava a entrada, que terminava
  *      sozinha durante a saída e "reabria" o menu já fechado;
  *   3. o anime.js 4.5 removeu `ease: "cubicBezier(…)"` em string — a animação
- *      seguia rodando com o easing errado, avisando só no console.
+ *      seguia rodando com o easing errado, avisando só no console;
+ *   4. a animação de ENTRADA parou de rodar quando o sinal de "já medi" virou
+ *      ref: ref não é dependência de efeito, então a coreografia nunca
+ *      reexecutava. Nada quebrou — a abertura só ficou seca.
  *
  * ⚠️ jsdom não faz layout: `getBoundingClientRect` devolve zeros. Isso é
  * suficiente para o que se verifica aqui (presença, atributos, estilo inline),
@@ -170,8 +173,32 @@ const painel = () => doc.querySelector(".cui-menu__painel");
 
 await clicar(gatilho());
 const tetoInicial = painel()?.style.maxHeight;
+
+/*
+  ⭐ **O check que prova que a ENTRADA anima.** Logo após o clique — com os
+  layout effects já processados pelo `act`, mas antes de qualquer quadro — a
+  coreografia já escreveu os valores iniciais no painel. Se a entrada for pulada,
+  `opacity` fica vazio e o menu simplesmente aparece.
+
+  Esta regressão aconteceu de verdade: trocar o sinal de "já medi" de estado para
+  ref tirou o pisca duplo e, junto, matou a animação inteira — ref não é
+  dependência, então o efeito nunca reexecutava quando a medição chegava. Nada
+  quebrava; a abertura só ficava seca.
+*/
+const opacidadeNaAbertura = painel()?.style.opacity;
+checar(
+  "a entrada COMEÇA animada (não aparece pronta)",
+  opacidadeNaAbertura !== "" && opacidadeNaAbertura !== undefined,
+  `opacity="${opacidadeNaAbertura}"`,
+);
+
 await esperar(1200);
 checar("abre com teto de altura", Boolean(tetoInicial), `maxHeight="${tetoInicial}"`);
+checar(
+  "a entrada devolve os estilos ao CSS ao terminar",
+  painel()?.style.opacity === "",
+  `opacity="${painel()?.style.opacity}"`,
+);
 checar(
   "o teto sobrevive ao fim da animação",
   painel()?.style.maxHeight === tetoInicial,

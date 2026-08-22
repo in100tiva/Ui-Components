@@ -44,6 +44,7 @@ export function usarAncoragem({
   alinhamento,
   alturaMinima,
   margem,
+  aoMedir,
 }: {
   gatilhoRef: RefObject<HTMLElement | null>;
   ativo: boolean;
@@ -59,6 +60,16 @@ export function usarAncoragem({
   alturaMinima: number;
   /** A folga que o painel nunca invade, em qualquer borda da janela. */
   margem: number;
+  /**
+   * Avisado quando a medição existe (ou deixa de existir).
+   *
+   * ⭐ **Chamado de DENTRO do `useLayoutEffect`, e é isso que importa.** Quem
+   * espera a medição para animar precisa saber dela antes da pintura; um
+   * `useEffect` no consumidor observando o retorno deste hook só saberia um
+   * ciclo depois, e nesse intervalo o painel é desenhado sem a animação ter
+   * começado.
+   */
+  aoMedir?: (medido: boolean) => void;
 }) {
   const [ancoragem, setAncoragem] = useState<Ancoragem | null>(null);
 
@@ -114,7 +125,8 @@ export function usarAncoragem({
       lado,
       alturaMaxima,
     });
-  }, [gatilhoRef, afastamento, teto, alinhamento, alturaMinima, margem]);
+    aoMedir?.(true);
+  }, [gatilhoRef, afastamento, teto, alinhamento, alturaMinima, margem, aoMedir]);
 
   /*
     `useLayoutEffect`: a medição tem de acontecer ANTES da pintura. Num `useEffect`
@@ -124,6 +136,7 @@ export function usarAncoragem({
   useLayoutEffect(() => {
     if (!ativo) {
       setAncoragem(null);
+      aoMedir?.(false);
       return;
     }
 
@@ -143,7 +156,7 @@ export function usarAncoragem({
       window.removeEventListener("scroll", remedir, { capture: true });
       window.removeEventListener("resize", remedir);
     };
-  }, [ativo, medir]);
+  }, [ativo, medir, aoMedir]);
 
   return ancoragem;
 }

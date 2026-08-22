@@ -133,26 +133,28 @@ export function MenuSuspenso<T extends string>({
      medição do lado só existe depois disso — ver a nota em `usarCoreografia`. */
   const direcaoRef = useRef<Lado>("baixo");
 
+
   /*
-    ⛔ **A medição chega à coreografia por REF, e não por `useState` — e isso é o
-    conserto de um pisca duplo.**
+    ⛔ **`ancoragemPronta` é estado, e é ATUALIZADO DENTRO DO LAYOUT EFFECT da
+    medição — não num `useEffect` depois dela.**
 
-    Havia aqui um `ancoragemPronta` de estado, ligado por um `useEffect`, que
-    roda DEPOIS da pintura. A sequência era: o painel montava invisível, a
-    medição o tornava visível, o navegador PINTAVA o painel inteiro e opaco, o
-    efeito então ligava o sinal, e só aí a coreografia zerava a opacidade para
-    começar. O painel aparecia pronto, sumia, e voltava animando — dois piscas em
-    dois quadros.
+    A distinção é a diferença entre a abertura animar e a abertura piscar:
 
-    Com a ref, o valor já está atualizado quando o `useLayoutEffect` da
-    coreografia roda: no MESMO ciclo da medição, antes de qualquer pintura.
-    (Ela é escrita durante o render, logo abaixo da medição — o que é seguro
-    porque nada aqui a lê durante o render, só efeitos a leem depois.)
+    - num `useEffect`, o sinal chegaria um ciclo de PINTURA depois da medição, e
+      o navegador desenharia o painel opaco antes de a coreografia zerá-lo —
+      dois piscas;
+    - numa REF, não haveria pisca e também não haveria animação: ref não é
+      dependência de efeito, então a coreografia nunca reexecutaria quando a
+      medição chegasse.
+
+    Estado escrito de dentro do layout effect resolve os dois: o `setState`
+    dispara um re-render SÍNCRONO, antes da pintura, e a coreografia — que tem
+    `pronto` nas dependências — roda nesse mesmo ciclo.
   */
-  const medindoRef = useRef(false);
+  const [ancoragemPronta, setAncoragemPronta] = useState(false);
 
   const { estado, aberto, montado, abrir: abrirPainel, fechar } =
-    usarCoreografia({ painelRef, listaRef, direcaoRef, medindoRef });
+    usarCoreografia({ painelRef, listaRef, direcaoRef, pronto: ancoragemPronta });
 
   const ancoragem = usarAncoragem({
     gatilhoRef,
@@ -162,9 +164,8 @@ export function MenuSuspenso<T extends string>({
     alinhamento,
     alturaMinima: ALTURA_MINIMA,
     margem: MARGEM_DA_JANELA,
+    aoMedir: setAncoragemPronta,
   });
-
-  medindoRef.current = ancoragem !== null;
 
   const lado = ancoragem?.lado ?? "baixo";
   const barraEmbaixo = lado === "cima";

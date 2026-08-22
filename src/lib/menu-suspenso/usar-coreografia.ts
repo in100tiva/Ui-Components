@@ -91,17 +91,27 @@ export function usarCoreografia({
   /**
    * Se o painel já foi medido — só então ele tem onde ser desenhado.
    *
-   * ⛔ **Ref e não booleano, e a diferença é um pisca.** Um `useState` ligado por
-   * `useEffect` só chega aqui um ciclo de pintura depois da medição, e nesse
-   * intervalo o navegador pinta o painel inteiro e opaco antes de a coreografia
-   * ter zerado a opacidade. A ref está atualizada no mesmo ciclo.
+   * ⛔ **Booleano derivado da medição, e as duas alternativas óbvias falham de
+   * jeitos opostos.**
+   *
+   * Com `useState` ligado por `useEffect`, o sinal chega um ciclo de PINTURA
+   * depois da medição: o navegador desenha o painel inteiro e opaco antes de a
+   * coreografia zerar a opacidade, e a abertura pisca duas vezes.
+   *
+   * Com uma REF, não pisca — e também não anima nunca: ref não é dependência,
+   * então o efeito abaixo não reexecuta quando a medição chega, e a entrada
+   * inteira é pulada em silêncio.
+   *
+   * O booleano funciona porque a medição acontece dentro de um
+   * `useLayoutEffect`: o `setState` dela dispara um re-render SÍNCRONO, ainda
+   * antes da pintura, e este efeito roda nesse mesmo ciclo.
    */
-  medindoRef,
+  pronto,
 }: {
   painelRef: RefObject<HTMLElement | null>;
   listaRef: RefObject<HTMLElement | null>;
   direcaoRef: RefObject<Lado>;
-  medindoRef: RefObject<boolean>;
+  pronto: boolean;
 }) {
   const [estado, setEstado] = useState<EstadoDaCoreografia>("fechado");
 
@@ -145,7 +155,7 @@ export function usarCoreografia({
   /* --- Entrada ----------------------------------------------------------- */
 
   useLayoutEffect(() => {
-    if (estado !== "aberto" || !medindoRef.current || revelou.current) return;
+    if (estado !== "aberto" || !pronto || revelou.current) return;
 
     const painel = painelRef.current;
     if (!painel) return;
@@ -192,10 +202,9 @@ export function usarCoreografia({
 
       return linha;
     });
-    /* `medindoRef` fora das dependências de propósito: ref não dispara efeito, e
-       o que reexecuta este bloco é a medição chegar como novo render — que
-       acontece porque `ancoragem` é estado no componente. */
-  }, [estado, painelRef, direcaoRef, itensDo, medindoRef]);
+    /* `pronto` PRECISA estar aqui: é ele que faz este bloco reexecutar quando a
+       medição chega. Sem ele, a entrada nunca roda. */
+  }, [estado, pronto, painelRef, direcaoRef, itensDo]);
 
   /* --- Saída ------------------------------------------------------------- */
 
