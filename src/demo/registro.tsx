@@ -16,9 +16,18 @@ export type EntradaDoRegistro = {
   /** Vira o hash da URL: `#menu-suspenso`. Estável — é o que as pessoas colam. */
   id: string;
   nome: string;
-  grupo: string;
   /** Uma linha sobre o que o componente resolve. Aparece sob o título. */
   resumo: string;
+  /**
+   * O cabeçalho sob o qual o item aparece na coluna.
+   *
+   * ⚠️ **São seções da GALERIA, não taxonomia de biblioteca.** "Fundamentos" e
+   * "Componentes" bastam: categorizar por natureza do controle — Formulário,
+   * Navegação, Sobreposição — inventa uma árvore que ninguém pediu e faz a
+   * coluna responder "que tipo de coisa é isto?" quando a pergunta real é "onde
+   * está o Menu Suspenso?".
+   */
+  grupo: string;
   /** `rascunho` ganha selo na coluna: a galeria não finge que está pronto. */
   estado?: "pronto" | "rascunho";
   Demo: () => ReactNode;
@@ -37,7 +46,7 @@ export const REGISTRO: readonly EntradaDoRegistro[] = [
   {
     id: "menu-suspenso",
     nome: "Menu Suspenso",
-    grupo: "Formulário",
+    grupo: "Componentes",
     resumo:
       "Lista de escolha única — controlada, acessível, posicionada por medição e portalizada.",
     estado: "pronto",

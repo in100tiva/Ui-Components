@@ -4,6 +4,7 @@ import type { RefObject } from "react";
 import {
   coreografar,
   createTimeline,
+  curva,
   devolverAoCss,
   mola,
   ondaDeItens,
@@ -16,7 +17,26 @@ import type { Lado } from "./usar-ancoragem";
 
 export type EstadoDaCoreografia = "fechado" | "aberto" | "fechando";
 
-const bezier = (b: readonly number[]) => `cubicBezier(${b.join(",")})`;
+/*
+  ⛔ **O painel NUNCA tem `maxHeight` limpo, e é o detalhe mais importante deste
+  arquivo.** Esse valor é do React — o teto de altura medido na janela, aplicado
+  via `style={{ maxHeight }}`. Apagá-lo ao fim da animação fazia o menu crescer
+  até caber a lista inteira, com a barra de rolagem sumindo; e o React não
+  reescrevia, porque o reconciliador só toca no DOM quando o VALOR muda entre
+  renders, e do ponto de vista dele nada tinha mudado.
+
+  Os itens, ao contrário, têm `maxHeight` escrito pela própria coreografia (é
+  como o colapso funciona) — ali limpar é obrigatório, senão eles reabrem com
+  altura zero.
+*/
+const LIMPEZA_DO_PAINEL = ["opacity", "transform"] as const;
+const LIMPEZA_DOS_ITENS = [
+  "opacity",
+  "transform",
+  "maxHeight",
+  "padding",
+  "overflow",
+] as const;
 
 /**
  * **A coreografia do menu** — entrada e saída, num lugar só.
@@ -105,8 +125,8 @@ export function usarCoreografia({
     const painel = painelRef.current;
     if (!painel) return;
 
-    devolverAoCss(painel);
-    devolverAoCss(itensDo(painel));
+    devolverAoCss(painel, LIMPEZA_DO_PAINEL);
+    devolverAoCss(itensDo(painel), LIMPEZA_DOS_ITENS);
   }, [painelRef, itensDo]);
 
   const abrir = useCallback(() => {
@@ -143,8 +163,8 @@ export function usarCoreografia({
           linhaRef.current = null;
           /* Sair limpo: sem isto o `opacity: 1` inline da animação venceria o
              `:hover` de cada item para sempre. */
-          devolverAoCss(painel);
-          devolverAoCss(itens);
+          devolverAoCss(painel, LIMPEZA_DO_PAINEL);
+          devolverAoCss(itens, LIMPEZA_DOS_ITENS);
         },
       });
 
@@ -182,6 +202,24 @@ export function usarCoreografia({
       /* Já fechando: deixa a coreografia em voo terminar em vez de empilhar uma
          segunda sobre os mesmos nós. */
       if (estado === "fechando") return;
+
+      /*
+        ⛔ **Cancelar a ENTRADA antes de montar a saída, e sem devolver ao CSS.**
+
+        Sem esta linha, fechar o menu no meio da abertura — dois cliques rápidos
+        bastam — deixava a timeline de entrada viva. Ela terminava sozinha
+        durante a saída e disparava o próprio `onComplete`, que limpa os estilos:
+        no meio do fechamento, o painel voltava a `opacity: 1` sem transform e
+        sem teto de altura. O sintoma era o menu REABRIR expandido depois de já
+        ter fechado.
+
+        `cancel()` e não `revert()`: cancelar deixa os nós onde estão, e a saída
+        parte da posição real: um painel pego a 60% da entrada recua de lá.
+        `revert()` os jogaria de volta ao estado inicial, e o fechamento
+        começaria com um salto.
+      */
+      linhaRef.current?.cancel();
+      linhaRef.current = null;
 
       setEstado("fechando");
 
@@ -224,7 +262,7 @@ export function usarCoreografia({
                 paddingBottom: 0,
                 translateY: sentido * 4,
                 duration: tempos.saidaItem,
-                ease: bezier(curvas.colapso),
+                ease: curva(curvas.colapso),
                 delay: ondaDeItens(paraCima ? "first" : "last", itens.length),
               },
               0,
@@ -238,7 +276,7 @@ export function usarCoreografia({
               translateY: sentido * 10,
               scale: 0.965,
               duration: tempos.saidaPainel,
-              ease: bezier(curvas.saida),
+              ease: curva(curvas.saida),
             },
             /* Depois de tudo recolhido, mais a pausa. É o que separa "duas
                coisas em sequência" de "uma massa sumindo". */

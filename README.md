@@ -25,7 +25,16 @@ camadas do design — ver *Tokens* abaixo.
 pnpm install
 pnpm dev      # gera os tokens e sobe em http://localhost:5199
 pnpm tokens   # só regenera os tokens
+pnpm verificar # monta os componentes num DOM e confere o comportamento
 ```
+
+`pnpm verificar` existe porque a classe de defeito mais cara desta biblioteca não
+é de tipo nem de sintaxe — é estilo inline que sobrevive à animação, animação que
+não é cancelada, e API de terceiro que mudou sem quebrar nada. Tudo isso passa no
+`tsc` e no build. Três defeitos reais foram encontrados por ele: o painel
+apagando o próprio teto de altura ao terminar de abrir, o menu "reabrindo" já
+fechado quando fechado no meio da entrada, e o anime.js 4.5 tendo removido
+`ease: "cubicBezier(…)"` em string — que seguia animando, com a curva errada.
 
 A galeria lista os componentes na coluna e mostra o escolhido no cartão central.
 Cada um tem endereço próprio — `#menu-suspenso` pode ser colado num chat e

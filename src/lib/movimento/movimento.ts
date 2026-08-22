@@ -1,4 +1,4 @@
-import { createSpring, createTimeline, animate, stagger, utils } from "animejs";
+import { cubicBezier, spring, createTimeline, animate, stagger, utils } from "animejs";
 import type { JSAnimation, StaggerFunction, Timeline } from "animejs";
 
 import { contagens, molas, tempos } from "../tokens/tokens";
@@ -29,7 +29,21 @@ export type NomeDeMola = keyof typeof molas;
  * física fora e deixa um easing com nome de mola.
  */
 export function mola(nome: NomeDeMola) {
-  return createSpring({ ...molas[nome] });
+  /* `spring()`, não `createSpring()`: o segundo continua existindo na 4.5 mas
+     avisa no console a cada chamada — e este é chamado a cada abertura de menu. */
+  return spring({ ...molas[nome] });
+}
+
+/**
+ * Uma curva do design, pronta para o `ease` do anime.js.
+ *
+ * ⛔ **Tem de ser a FUNÇÃO, nunca a string.** A 4.5 removeu do núcleo a sintaxe
+ * `ease: "cubicBezier(0.65,0,0.35,1)"` — ela não dá erro, só avisa no console e
+ * cai silenciosamente no easing padrão. O sintoma é o pior possível: a animação
+ * continua rodando, com a curva errada, e nada na tela grita.
+ */
+export function curva(b: readonly [number, number, number, number]) {
+  return cubicBezier(b[0], b[1], b[2], b[3]);
 }
 
 /** Se a pessoa pediu menos movimento. Lido a cada chamada — a preferência muda
@@ -95,33 +109,68 @@ export function coreografar(
   return linha;
 }
 
+/** O que uma coreografia pode ter escrito em `style` — e portanto apagar. */
+export type PropAnimada =
+  | "opacity"
+  | "transform"
+  | "maxHeight"
+  | "padding"
+  | "overflow";
+
 /**
- * Devolve os nós ao CSS, apagando o que a animação escreveu em `style`.
+ * Devolve os nós ao CSS, apagando **apenas** o que a animação escreveu.
  *
  * ⛔ **Isto não é opcional depois de animar, e a razão é sutil.** O anime.js
- * termina com os valores finais escritos inline — o que está certo enquanto a
- * animação manda. Mas um `opacity: 1` inline sobrevive à animação e passa a
- * vencer QUALQUER regra da folha de estilo para sempre: o `:hover` do item para
- * de funcionar, o `maxHeight` do CSS deixa de valer, e nada disso dá erro. O
- * conserto é apagar, não sobrescrever com "o valor certo" — só a string vazia
- * devolve a propriedade à cascata.
+ * termina com os valores finais escritos inline — correto enquanto a animação
+ * manda. Mas um `opacity: 1` inline sobrevive a ela e passa a vencer QUALQUER
+ * regra da folha de estilo para sempre: o `:hover` do item deixa de funcionar, e
+ * nada disso dá erro. Só a string vazia devolve a propriedade à cascata.
  *
- * As três propriedades de transform individuais entram junto porque a v4 pode
- * escrever em `transform` OU em `translate`/`rotate`/`scale`, dependendo do que
- * está sendo animado.
+ * ⛔ **`props` é obrigatório, e a lista tem de ser exata — apagar demais é um
+ * defeito pior que não apagar.** Esta função não sabe quem mais escreve inline
+ * no mesmo nó, e num app React a resposta costuma ser: o React. Limpar uma
+ * propriedade que o componente controla via `style={{…}}` a apaga de verdade,
+ * e ele NÃO a reescreve no próximo render — o reconciliador só toca no DOM
+ * quando o valor muda entre renders, e do ponto de vista dele nada mudou.
+ *
+ * Foi exatamente isso que aconteceu aqui: a lista fixa antiga incluía
+ * `maxHeight`, e o painel do menu recebe `maxHeight` do React (é o teto de
+ * altura medido na janela). Ao terminar de abrir, o menu apagava o próprio
+ * teto: crescia até caber a lista inteira e a barra de rolagem sumia.
+ *
+ * As variantes de transform entram juntas porque a v4 escreve em `transform`
+ * OU nas propriedades individuais, dependendo do que está sendo animado.
  */
-export function devolverAoCss(alvos: readonly HTMLElement[] | HTMLElement) {
+export function devolverAoCss(
+  alvos: readonly HTMLElement[] | HTMLElement,
+  props: readonly PropAnimada[],
+) {
   const lista = Array.isArray(alvos) ? alvos : [alvos as HTMLElement];
+
   for (const el of lista) {
-    el.style.opacity = "";
-    el.style.maxHeight = "";
-    el.style.paddingTop = "";
-    el.style.paddingBottom = "";
-    el.style.overflow = "";
-    el.style.transform = "";
-    el.style.translate = "";
-    el.style.rotate = "";
-    el.style.scale = "";
+    for (const prop of props) {
+      switch (prop) {
+        case "opacity":
+          el.style.opacity = "";
+          break;
+        case "transform":
+          el.style.transform = "";
+          el.style.translate = "";
+          el.style.rotate = "";
+          el.style.scale = "";
+          break;
+        case "maxHeight":
+          el.style.maxHeight = "";
+          break;
+        case "padding":
+          el.style.paddingTop = "";
+          el.style.paddingBottom = "";
+          break;
+        case "overflow":
+          el.style.overflow = "";
+          break;
+      }
+    }
   }
 }
 
