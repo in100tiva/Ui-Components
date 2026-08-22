@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
-import { Vitrine } from "./demo/Vitrine";
+import { Galeria } from "./demo/Galeria";
 import "./estilos/base.css";
 
 const raiz = document.getElementById("raiz");
@@ -18,6 +18,6 @@ requestAnimationFrame(() => {
 
 createRoot(raiz).render(
   <StrictMode>
-    <Vitrine />
+    <Galeria />
   </StrictMode>,
 );

@@ -1,0 +1,270 @@
+/* ==========================================================================
+   Casca — moldura, coluna lateral e cartão central.
+   ========================================================================== */
+
+/*
+  A casca pinta a MESA no documento inteiro, e não só na sua própria caixa.
+  Sem isto, puxar a página além do fim (o overscroll elástico do macOS e do
+  celular) revela o fundo do `<body>` — a cor do conteúdo — atrás da moldura,
+  como uma faixa clara que aparece e some. `:has` mantém a regra dentro do
+  componente: quem não usa a casca não tem o fundo trocado sob os pés.
+*/
+:root:has(.cui-casca) body {
+  background: var(--cui-moldura);
+}
+
+/*
+  A mesa. O gradiente de 160° com `moldura-alta` nas duas pontas e `moldura` no
+  meio dá o leve abaulado — sem ele a moldura é um chapado que denuncia a div.
+*/
+.cui-casca {
+  min-height: 100dvh; /* `dvh` e não `vh`: no mobile a barra de endereço some e volta */
+  padding: var(--cui-moldura-respiro);
+  background-color: var(--cui-moldura);
+  background-image: linear-gradient(
+    160deg,
+    var(--cui-moldura-alta) 0%,
+    var(--cui-moldura) 55%,
+    var(--cui-moldura-alta) 100%
+  );
+}
+
+.cui-casca__linha {
+  display: flex;
+  min-height: calc(100dvh - var(--cui-moldura-respiro) * 2);
+}
+
+/* --- Coluna lateral ------------------------------------------------------ */
+
+/*
+  ⭐ **Sem fundo próprio, de propósito.** Um `background` aqui criaria três
+  superfícies empilhadas — mesa, coluna, cartão — e uma hierarquia visual que a
+  informação não tem. Sem ele há duas: a mesa e o papel. O item ativo aparece
+  justamente por ser o único pedaço de papel na coluna.
+
+  `sticky` e não `fixed`: a coluna acompanha a rolagem mas continua no fluxo, e
+  por isso o cartão ao lado não precisa de margem compensatória.
+*/
+.cui-casca__lateral {
+  position: sticky;
+  top: var(--cui-moldura-respiro);
+  display: none;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: var(--cui-lateral-largura);
+  max-height: calc(100dvh - var(--cui-moldura-respiro) * 2);
+  padding-block: 16px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.cui-casca__marca {
+  padding-inline: 18px;
+  padding-bottom: 18px;
+}
+
+.cui-casca__nav {
+  min-height: 0;
+}
+
+/* `auto` cola o rodapé na base com navegação curta, e logo abaixo dela quando
+   a lista é longa. */
+.cui-casca__rodape {
+  margin-top: auto;
+  padding: 18px 18px 4px;
+}
+
+/* --- Cartão central ------------------------------------------------------ */
+
+/*
+  O papel. `overflow: clip` e não `hidden`: os dois recortam, mas `hidden` cria
+  um contexto de rolagem — e um contexto de rolagem aqui rouba o `sticky` de
+  qualquer cabeçalho que o conteúdo tenha, sem erro nenhum aparecer.
+*/
+.cui-casca__cartao {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  border-radius: var(--cui-raio-casca);
+  background: var(--cui-fundo);
+  box-shadow: var(--cui-relevo-repouso);
+  outline: 1px solid var(--cui-moldura-borda);
+  outline-offset: -1px;
+  overflow: clip;
+}
+
+.cui-casca__miolo {
+  flex: 1;
+  min-width: 0;
+  padding: 28px 20px 64px;
+}
+
+/* Uma medida de leitura, centrada — o cartão cresce, o conteúdo não. */
+.cui-casca__medida {
+  width: 100%;
+  max-width: 1060px;
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .cui-casca {
+    padding: var(--cui-moldura-respiro-lg);
+  }
+  .cui-casca__linha {
+    min-height: calc(100dvh - var(--cui-moldura-respiro-lg) * 2);
+  }
+  .cui-casca__lateral {
+    top: var(--cui-moldura-respiro-lg);
+    max-height: calc(100dvh - var(--cui-moldura-respiro-lg) * 2);
+  }
+  .cui-casca__cartao {
+    border-radius: var(--cui-raio-casca-lg);
+  }
+  .cui-casca__miolo {
+    padding: 36px 32px 64px;
+  }
+}
+
+/* A coluna só existe onde cabe sem espremer o conteúdo. */
+@media (min-width: 1024px) {
+  .cui-casca__lateral {
+    display: flex;
+  }
+}
+
+/* ==========================================================================
+   Navegação
+   ========================================================================== */
+
+.cui-nav {
+  position: relative; /* a âncora da pílula — ela mede `offsetTop` contra isto */
+}
+
+.cui-nav__grupo {
+  display: flex;
+  flex-direction: column;
+}
+
+.cui-nav__titulo {
+  margin: 0;
+  padding: 16px 18px 8px;
+  color: var(--cui-texto-suave);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.cui-nav__grupo:first-child .cui-nav__titulo {
+  padding-top: 4px;
+}
+
+/*
+  ⭐ **A pílula do item ativo.** Papel branco sobre a mesa, com o mesmo relevo
+  raso dos campos — uma oitava abaixo do cartão central. É o que mantém a coluna
+  calma: nada aqui é mais forte que o conteúdo ao lado.
+
+  Ela é irmã dos itens, não filha: por isso pode viajar entre eles.
+*/
+.cui-nav__pilula {
+  position: absolute;
+  left: var(--cui-item-lateral-respiro);
+  right: var(--cui-item-lateral-respiro);
+  z-index: 0;
+  border-radius: var(--cui-raio-item);
+  background: var(--cui-superficie);
+  box-shadow: var(--cui-relevo-raso);
+  pointer-events: none;
+}
+
+.cui-nav__pilula[data-animando="true"] {
+  transition:
+    top var(--cui-deslize-pilula) var(--cui-mola),
+    height var(--cui-deslize-pilula) var(--cui-mola);
+}
+
+/*
+  O deslize é enfeite sobre um estado que já é legível sem ele — quem pediu
+  menos movimento recebe a pílula posicionada, sem a viagem.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .cui-nav__pilula[data-animando="true"] {
+    transition: none;
+  }
+}
+
+.cui-nav__item {
+  position: relative;
+  z-index: 1; /* acima da pílula, senão o texto é coberto pelo papel */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-inline: var(--cui-item-lateral-respiro);
+  padding: 9px 12px;
+  border: none;
+  border-radius: var(--cui-raio-item);
+  background: none;
+  color: var(--cui-texto-rotulo);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: var(--cui-peso-medio);
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  transition:
+    color var(--cui-transicao-estado) ease,
+    background-color var(--cui-transicao-estado) ease;
+}
+
+/*
+  ⛔ O hover pinta só quem NÃO está ativo. Sobre a pílula ele criaria uma
+  segunda camada de papel sobre papel — e o item ativo pareceria afundar quando
+  o ponteiro passa.
+*/
+.cui-nav__item:hover:not([aria-current="page"]) {
+  background: var(--cui-realce);
+  color: var(--cui-texto);
+}
+
+.cui-nav__item:focus-visible {
+  box-shadow: 0 0 0 3px var(--cui-anel-foco);
+}
+
+.cui-nav__item[aria-current="page"] {
+  color: var(--cui-texto);
+  font-weight: var(--cui-peso-forte);
+}
+
+.cui-nav__icone {
+  display: flex;
+  flex-shrink: 0;
+  color: var(--cui-texto-suave);
+}
+
+.cui-nav__icone svg {
+  width: 17px;
+  height: 17px;
+}
+
+.cui-nav__item[aria-current="page"] .cui-nav__icone {
+  color: var(--cui-acento);
+}
+
+.cui-nav__rotulo {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.cui-nav__selo {
+  flex-shrink: 0;
+  padding: 2px 7px;
+  border-radius: var(--cui-raio-pilula);
+  background: var(--cui-acento-14);
+  color: var(--cui-acento-texto);
+  font-size: 10.5px;
+  font-weight: var(--cui-peso-forte);
+}

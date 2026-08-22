@@ -1,0 +1,376 @@
+/* A galeria é palco, não produto: tudo aqui existe para o componente aparecer. */
+
+/* --- Marca --------------------------------------------------------------- */
+
+.galeria__marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.galeria__selo {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: linear-gradient(
+    145deg,
+    var(--cui-acento) 0%,
+    var(--cui-acento-texto) 100%
+  );
+}
+
+.galeria__marca-texto {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+}
+
+.galeria__marca-texto strong {
+  color: var(--cui-texto);
+  font-size: 14.5px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.galeria__marca-texto small {
+  color: var(--cui-acento);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+/* --- Botão de tema ------------------------------------------------------- */
+
+.galeria__tema {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  border-radius: var(--cui-raio-item);
+  background: none;
+  color: var(--cui-texto-rotulo);
+  font: inherit;
+  font-size: 13px;
+  font-weight: var(--cui-peso-medio);
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  transition:
+    background-color var(--cui-transicao-estado) ease,
+    color var(--cui-transicao-estado) ease;
+}
+
+.galeria__tema:hover {
+  background: var(--cui-realce);
+  color: var(--cui-texto);
+}
+
+.galeria__tema:focus-visible {
+  box-shadow: 0 0 0 3px var(--cui-anel-foco);
+}
+
+.galeria__tema svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--cui-acento);
+}
+
+/* --- Cabeçalho do componente --------------------------------------------- */
+
+.galeria__seletor-movel {
+  max-width: 320px;
+  margin-bottom: 28px;
+}
+
+/* A coluna assume a navegação onde ela existe. */
+@media (min-width: 1024px) {
+  .galeria__seletor-movel {
+    display: none;
+  }
+}
+
+.galeria__cabecalho {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-bottom: 30px;
+}
+
+.galeria__olho {
+  margin: 0;
+  color: var(--cui-acento);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.galeria__titulo {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 650;
+  letter-spacing: -0.022em;
+}
+
+.galeria__resumo {
+  margin: 0;
+  max-width: 62ch;
+  color: var(--cui-texto-suave);
+  font-size: 14px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.galeria__vazio {
+  color: var(--cui-texto-suave);
+}
+
+/* --- Bancada ------------------------------------------------------------- */
+
+/*
+  Cada bancada é um cartão sobre o fundo do cartão central. O traço tracejado no
+  painel de saída o marca como instrumento de medição, não como parte do
+  componente — quem lê a tela não deve confundir o que o componente desenha com
+  o que a galeria acrescentou para observá-lo.
+*/
+.demo-bancada {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid var(--cui-borda);
+  border-radius: var(--cui-raio-casca);
+  background: var(--cui-superficie);
+}
+
+.demo-bancada + .demo-bancada {
+  margin-top: 20px;
+}
+
+.demo-bancada__cabecalho {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.demo-bancada__titulo {
+  margin: 0;
+  font-size: 14px;
+  font-weight: var(--cui-peso-forte);
+  letter-spacing: -0.01em;
+}
+
+.demo-bancada__apoio {
+  margin: 0;
+  max-width: 68ch;
+  color: var(--cui-texto-suave);
+  font-size: 12.5px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.demo-bancada__palco {
+  max-width: 440px;
+}
+
+.demo-bancada__saida {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--cui-borda);
+}
+
+.demo-saida {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12.5px;
+}
+
+.demo-saida__rotulo {
+  color: var(--cui-texto-tenue);
+}
+
+.demo-saida__valor {
+  color: var(--cui-texto);
+  font-weight: var(--cui-peso-forte);
+}
+
+/* --- Campos da bancada --------------------------------------------------- */
+
+.demo-linha {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.demo-campo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.demo-campo--estreito {
+  flex: 0 0 116px;
+}
+
+.demo-campo__rotulo {
+  color: var(--cui-texto-rotulo);
+  font-size: 12.5px;
+  font-weight: var(--cui-peso-forte);
+}
+
+/* --- Fundamentos --------------------------------------------------------- */
+
+.fund-paleta {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+.fund-cor {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "amostra nome"
+    "amostra valor";
+  align-items: center;
+  gap: 0 11px;
+}
+
+/*
+  O xadrez atrás da amostra. Sem ele, uma cor de 9% de opacidade parece apenas
+  uma cor clara — não se vê que ela é transparente, que é justamente a
+  informação que importa num token derivado.
+*/
+.fund-cor__amostra {
+  grid-area: amostra;
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--cui-borda);
+  overflow: hidden;
+  background-color: var(--cui-superficie);
+  background-image:
+    linear-gradient(45deg, var(--cui-abafado) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--cui-abafado) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--cui-abafado) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--cui-abafado) 75%);
+  background-size: 10px 10px;
+  background-position: 0 0, 0 5px, 5px -5px, -5px 0;
+}
+
+.fund-cor__amostra > span {
+  position: absolute;
+  inset: 0;
+}
+
+.fund-cor__nome {
+  grid-area: nome;
+  color: var(--cui-texto);
+  font-size: 12px;
+  font-weight: var(--cui-peso-medio);
+  overflow-wrap: anywhere;
+}
+
+.fund-cor__valor {
+  grid-area: valor;
+  color: var(--cui-texto-tenue);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+}
+
+.fund-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 6px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fund-lista li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 0;
+  border-bottom: 1px dashed var(--cui-borda);
+  font-size: 12.5px;
+}
+
+.fund-lista__nome {
+  color: var(--cui-texto-rotulo);
+}
+
+.fund-lista__valor {
+  color: var(--cui-acento-texto);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 11.5px;
+  font-weight: var(--cui-peso-forte);
+}
+
+.fund-curvas {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fund-curva {
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+}
+
+.fund-curva__nome {
+  color: var(--cui-texto-rotulo);
+  font-weight: var(--cui-peso-medio);
+}
+
+/* `container-type` dá à bola um `100cqw` que é a largura do TRILHO, e não a da
+   janela — sem ele a bola sai voando para fora do cartão. */
+.fund-curva__trilho {
+  position: relative;
+  container-type: inline-size;
+  height: 22px;
+  border-radius: var(--cui-raio-pilula);
+  background: var(--cui-abafado);
+}
+
+.fund-curva__bola {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--cui-acento);
+  transition: transform 700ms var(--curva);
+}
+
+.fund-curva:hover .fund-curva__bola {
+  transform: translateX(calc(100cqw - 22px));
+}
+
+.fund-curva__valor {
+  color: var(--cui-texto-tenue);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fund-curva__bola {
+    transition: none;
+  }
+}

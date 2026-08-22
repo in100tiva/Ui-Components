@@ -24,6 +24,10 @@ export type NomeDeTema = "claro" | "escuro";
 export const cores = {
   "claro": {
     "fundo": "#f7f8fa",
+    "moldura": "#e4ebf1",
+    "molduraAlta": "#edf1f6",
+    "molduraBorda": "#d6dce2",
+    "realce": "rgba(0, 0, 0, 0.06)",
     "superficie": "#ffffff",
     "flutuante": "#ffffff",
     "abafado": "#eef1f6",
@@ -48,6 +52,10 @@ export const cores = {
   },
   "escuro": {
     "fundo": "#181a1f",
+    "moldura": "#0e1115",
+    "molduraAlta": "#13161b",
+    "molduraBorda": "rgba(255, 255, 255, 0.07)",
+    "realce": "rgba(255, 255, 255, 0.08)",
     "superficie": "#1d2026",
     "flutuante": "#1d2026",
     "abafado": "#282b31",
@@ -87,7 +95,13 @@ export const formas = {
   "alturaBusca": 36,
   "scrollLargura": 11,
   "scrollRespiro": 3,
-  "raioPilula": 999
+  "raioPilula": 999,
+  "raioCasca": 22,
+  "raioCascaLg": 32,
+  "molduraRespiro": 8,
+  "molduraRespiroLg": 12,
+  "lateralLargura": 248,
+  "itemLateralRespiro": 14
 } as const;
 
 /** Tamanhos em px e pesos de fonte, todos como número. */
@@ -102,7 +116,8 @@ export const tipografia = {
 /** Ordem de empilhamento. */
 export const camadas = {
   "painel": 60,
-  "barraDeBusca": 10
+  "barraDeBusca": 10,
+  "cabecalhoMovel": 20
 } as const;
 
 /** Beziers como tupla — pronto para `Easing.bezier(...curvas.mola)` no RN. */
@@ -138,7 +153,8 @@ export const tempos = {
   "folgaDoTimer": 80,
   "transicaoEstado": 160,
   "transicaoItem": 180,
-  "giroChevron": 200
+  "giroChevron": 200,
+  "deslizePilula": 320
 } as const;
 
 export const contagens = {

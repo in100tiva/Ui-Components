@@ -12,13 +12,22 @@ o `.css` e nada mais. Cai em Next, Vite ou CRA sem configurar nada.
 O que viaja junto é **um arquivo**: `tokens/tokens.json`. Dele saem as três
 camadas do design — ver *Tokens* abaixo.
 
-## Rodar a vitrine
+## Rodar a galeria
 
 ```bash
 pnpm install
 pnpm dev      # gera os tokens e sobe em http://localhost:5199
 pnpm tokens   # só regenera os tokens
 ```
+
+A galeria lista os componentes na coluna e mostra o escolhido no cartão central.
+Cada um tem endereço próprio — `#menu-suspenso` pode ser colado num chat e
+recarregar não devolve ninguém para o começo.
+
+**Para adicionar um componente à galeria**, são duas coisas: um arquivo em
+`src/demo/demos/` exportando a demo, e uma entrada em `src/demo/registro.tsx`.
+A coluna, o cabeçalho e a rota saem daí — não há segunda lista para manter em
+dia, que é como uma galeria começa a mentir sobre o que a biblioteca tem.
 
 ## Tokens: uma fonte, três camadas
 
@@ -124,6 +133,45 @@ escalona ao contrário.
 vira `combobox` com `aria-activedescendant`, que é o padrão correto quando o
 foco do sistema precisa ficar no campo de texto.
 
+### `Casca` e `NavegacaoLateral`
+
+O layout do app: moldura, coluna lateral e cartão central. Tem uma ideia só, e
+tudo serve a ela — **o conteúdo é papel pousado sobre uma mesa**. A moldura é
+mais escura que o fundo do conteúdo nos dois temas, o cartão tem raio grande,
+sombra de repouso e um fio de contorno.
+
+⭐ **A coluna não tem fundo próprio, de propósito.** Um `background` ali criaria
+três superfícies empilhadas — mesa, coluna, cartão — e uma hierarquia visual que
+a informação não tem. Sem ele há duas: a mesa e o papel. O item ativo aparece
+justamente por ser o único pedaço de papel na coluna.
+
+⭐ **A pílula do item ativo é UM elemento, não uma classe no item.** Essa é a
+diferença inteira: pintando o fundo do item, o marcador *pisca* de um lugar ao
+outro, porque são dois nós e nenhuma transição liga o fundo de um ao do outro.
+Sendo um elemento só, posicionado por medição, ele **viaja** — e o olho
+acompanha para onde a navegação foi. O deslize não é o indicador de estado:
+quem carrega isso é `aria-current="page"`, o peso da fonte e a cor.
+
+```tsx
+<Casca marca={<Marca />} lateral={<NavegacaoLateral … />} rodapeLateral={<Tema />}>
+  {conteudo}
+</Casca>
+```
+
+| Token | Padrão | O que controla |
+|---|---|---|
+| `moldura` / `moldura-alta` | — | A mesa e o ponto claro do gradiente de 160° |
+| `moldura-borda` | — | O fio que separa o cartão da mesa |
+| `realce` | preto 6% / branco 8% | Hover na coluna — ⛔ não é o acento: a coluna fica calma |
+| `relevo-repouso` | — | A elevação do cartão |
+| `raio-casca` / `-lg` | 22 / 32 | Arredondamento do cartão |
+| `lateral-largura` | 248 | Largura da coluna |
+| `deslize-pilula` | 320ms | A viagem do marcador |
+
+Abaixo de 1024px a coluna some e a galeria escolhe pelo próprio `MenuSuspenso` —
+um controle a menos para manter, e a garantia de que ele é usável de verdade: se
+o menu quebrar no celular, a galeria quebra junto.
+
 ### Superfície de personalização
 
 Tudo que o `MenuSuspenso` desenha sai de um token. Nada de cor, medida ou tempo
@@ -225,10 +273,19 @@ src/
       usar-clique-fora.ts  ← fecha fora, contando o portal como dentro
       filtrar-opcoes.ts    ← busca sem acento
       tipos.ts
+    casca/
+      Casca.tsx            ← moldura + coluna + cartão
+      NavegacaoLateral.tsx ← a pílula que desliza
+      casca.css
     tema/
       usar-tema.ts         ← claro / escuro / sistema
   demo/
-    Vitrine.tsx
+    Galeria.tsx           ← a casca + o registro, com rota por hash
+    registro.tsx          ← ✏️  uma entrada por componente
+    pecas.tsx             ← bancada e campo (só da galeria)
+    demos/
+      fundamentos.tsx     ← a paleta, lida do tokens.ts gerado
+      menu-suspenso.tsx
 ```
 
 Os três hooks de `menu-suspenso/` **não são do menu**: são a base de qualquer

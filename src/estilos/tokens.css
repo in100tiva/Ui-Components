@@ -17,6 +17,14 @@
 [data-tema="claro"] {
   /* Fundo da página, atrás de tudo. */
   --cui-fundo: #f7f8fa;
+  /* ⭐ A moldura que emoldura o app — mais ESCURA que o fundo do conteúdo no tema claro, e mais escura ainda no tema escuro. É o que faz o cartão central parecer papel pousado sobre uma mesa, em vez de uma div dentro de outra. */
+  --cui-moldura: #e4ebf1;
+  /* O ponto claro do gradiente da moldura. A diagonal de 160° com este valor nas duas pontas e `moldura` no meio dá o leve abaulado — sem ele a moldura é um chapado que denuncia a div. */
+  --cui-moldura-alta: #edf1f6;
+  /* O fio que separa o cartão da moldura. Existe porque sombra sozinha não desenha aresta: no tema escuro ela some, e o cartão passaria a flutuar sem contorno. */
+  --cui-moldura-borda: #d6dce2;
+  /* Hover sobre a moldura — preto no claro, branco no escuro. ⛔ NÃO é o acento: a coluna lateral tem de ficar calma, e nada ali pode ser mais forte que o conteúdo ao lado. */
+  --cui-realce: oklch(0 0 0 / 6%);
   /* Cartões e campos — o que se apoia sobre o fundo. */
   --cui-superficie: #ffffff;
   /* Painéis suspensos. Igual à superfície hoje, mas separado de propósito: no dia em que popover ganhar vidro ou outra elevação, muda só aqui. */
@@ -51,12 +59,22 @@
   --cui-relevo-raso: -1px -1px 3px #fafbff, 1px 2px 4px rgb(22 27 29 / 6%);
   /* Elevação de popover. */
   --cui-sombra-painel: 0 12px 32px -12px rgb(16 22 58 / 22%);
+  /* A elevação do cartão central. Uma oitava acima de `relevo-raso` — é o objeto principal da tela. */
+  --cui-relevo-repouso: -5px -5px 20px #fafbff, 5px 5px 30px rgb(22 27 29 / 23%);
   color-scheme: light;
 }
 
 [data-tema="escuro"] {
   /* Fundo da página, atrás de tudo. */
   --cui-fundo: oklch(0.218 0.011 264);
+  /* ⭐ A moldura que emoldura o app — mais ESCURA que o fundo do conteúdo no tema claro, e mais escura ainda no tema escuro. É o que faz o cartão central parecer papel pousado sobre uma mesa, em vez de uma div dentro de outra. */
+  --cui-moldura: oklch(0.175 0.011 264);
+  /* O ponto claro do gradiente da moldura. A diagonal de 160° com este valor nas duas pontas e `moldura` no meio dá o leve abaulado — sem ele a moldura é um chapado que denuncia a div. */
+  --cui-moldura-alta: oklch(0.2 0.011 264);
+  /* O fio que separa o cartão da moldura. Existe porque sombra sozinha não desenha aresta: no tema escuro ela some, e o cartão passaria a flutuar sem contorno. */
+  --cui-moldura-borda: oklch(1 0 0 / 7%);
+  /* Hover sobre a moldura — preto no claro, branco no escuro. ⛔ NÃO é o acento: a coluna lateral tem de ficar calma, e nada ali pode ser mais forte que o conteúdo ao lado. */
+  --cui-realce: oklch(1 0 0 / 8%);
   /* Cartões e campos — o que se apoia sobre o fundo. */
   --cui-superficie: oklch(0.243 0.012 264);
   /* Painéis suspensos. Igual à superfície hoje, mas separado de propósito: no dia em que popover ganhar vidro ou outra elevação, muda só aqui. */
@@ -91,6 +109,8 @@
   --cui-relevo-raso: 1px 2px 4px rgb(0 0 0 / 40%);
   /* Elevação de popover. */
   --cui-sombra-painel: 0 12px 32px -12px rgb(0 0 0 / 55%);
+  /* A elevação do cartão central. Uma oitava acima de `relevo-raso` — é o objeto principal da tela. */
+  --cui-relevo-repouso: 1px 2px 4px rgb(0 0 0 / 35%), 3px 10px 24px -8px rgb(0 0 0 / 55%);
   color-scheme: dark;
 }
 
@@ -124,6 +144,12 @@
   --cui-scroll-largura: 11px;
   --cui-scroll-respiro: 3px;
   --cui-raio-pilula: 999px;
+  --cui-raio-casca: 22px;
+  --cui-raio-casca-lg: 32px;
+  --cui-moldura-respiro: 8px;
+  --cui-moldura-respiro-lg: 12px;
+  --cui-lateral-largura: 248px;
+  --cui-item-lateral-respiro: 14px;
 
   /* Tipografia */
   /* O tamanho de todo controle. Um só, e de propósito: campo, item de lista e botão que discordam em 1px são a coisa mais visível de uma interface mal costurada. */
@@ -142,6 +168,8 @@
   --cui-z-painel: 60;
   /* Dentro do painel: a barra sticky sobre as opções que rolam por baixo. */
   --cui-z-barra-de-busca: 10;
+  /* O cabeçalho que só existe abaixo do breakpoint da coluna lateral. */
+  --cui-z-cabecalho-movel: 20;
 
   /* Curvas */
   /* Entrada. Chega rápido e assenta — a curva que dá o caráter. */
@@ -169,6 +197,8 @@
   --cui-transicao-item: 180ms;
   /* A seta do campo virando 180°. */
   --cui-giro-chevron: 200ms;
+  /* ⭐ A pílula do item ativo DESLIZA de um item ao outro em vez de piscar no destino. É o movimento que amarra a coluna — e o único da casca. */
+  --cui-deslize-pilula: 320ms;
 }
 
 /*
