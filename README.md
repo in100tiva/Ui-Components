@@ -69,6 +69,26 @@ deslocamentos e borrão; no RN é `shadowOffset`/`shadowRadius` no iOS e um
 `elevation` sem cor no Android. Traduzir 1:1 seria inventar uma equivalência que
 não existe.
 
+**O tema invertido sai do mesmo lugar.** Além dos dois blocos de tema, o
+gerador emite um par de blocos para `[data-tema-invertido]`: o que estiver
+dentro desse atributo é pintado com a paleta do tema OPOSTO ao da página — no
+claro usa a escura, no escuro a clara. É o que a aba selecionada usa, e ele não
+inventa cor nenhuma: como o par texto/superfície de dentro dele já é um par que
+o sistema garante nos dois temas, nada ali precisa ser medido de novo.
+
+```html
+<div data-tema-invertido>  <!-- paleta invertida daqui para dentro -->
+```
+
+⛔ **Os derivados por transparência são REDECLARADOS dentro do bloco**, e isso
+não é redundância: o `var()` de dentro de uma custom property é substituído
+onde ela é DECLARADA, não onde é usada. Herdados da raiz, `acento-9` e
+`anel-foco` chegariam ao bloco invertido com o acento do tema de origem — fundo
+invertido, hover e foco do tema antigo.
+
+⚠️ **A inversão é relativa à RAIZ, e não é recursiva.** Um invertido dentro de
+outro continua sendo o tema oposto ao da página.
+
 O círculo se fecha nos dois sentidos: o CSS lê `--cui-passo-item` e o
 `usar-coreografia.ts` lê `tempos.passoItem`. **Nenhuma duração está escrita duas
 vezes** — antes disso, esquecer um dos dois lugares deixava entrada e saída em
@@ -330,6 +350,132 @@ Abaixo de 1024px a coluna some e a galeria escolhe pelo próprio `MenuSuspenso` 
 um controle a menos para manter, e a garantia de que ele é usável de verdade: se
 o menu quebrar no celular, a galeria quebra junto.
 
+### `Abas`
+
+A barra de seções do topo de uma página. Controlada, genérica em `T`, com o
+padrão ARIA de `tablist`/`tabpanel`.
+
+```tsx
+<Abas abas={SECOES} valor={secao} aoTrocar={setSecao} rotulo="Seções do processo">
+  {conteudoDaSecao}
+</Abas>
+```
+
+| Prop | Tipo | Padrão | O que faz |
+|---|---|---|---|
+| `abas` | `readonly Aba<T>[]` | — | `{ valor, rotulo, icone?, selo?, desabilitada? }`. |
+| `valor` | `T` | — | A aba aberta. |
+| `aoTrocar` | `(valor: T) => void` | — | Recebe o valor escolhido — `"resumo" \| "partes"`, não `string`. |
+| `rotulo` / `rotuladoPor` | `string` | — | Nome acessível do grupo: texto direto ou `id` de um rótulo visível. |
+| `children` | `ReactNode` | — | O conteúdo da aba aberta. Com ele vem o `tabpanel` e os `id` amarrados dos dois lados; sem ele, só a barra. |
+
+⭐ **A seleção é uma INVERSÃO de tema, não uma cor nova.** No claro a aba aberta
+é um bloco escuro, no escuro é um bloco claro — e o componente não define um
+token sequer para isso: ele marca a camada com `data-tema-invertido` e a paleta
+do outro tema vem junto. Trocar o acento ou os cinzas em `tokens.json` repinta a
+aba no mesmo movimento.
+
+⭐ **A aba aberta é uma PESTANA, e a barra não tem fundo — tem uma LINHA DE
+BASE.** O corpo arredonda só o topo; a base fica sobre a linha; e os dois **pés
+côncavos**, um de cada lado, fazem a forma NASCER da linha em vez de pousar
+sobre ela. É o que a faz ler como a lingueta do painel logo abaixo — e é a razão
+de o painel encostar na barra, sem respiro.
+
+⛔ **Os pés não são `border-radius`.** Um raio de canto é convexo por definição; a
+curva daqui é o negativo dele. Cada pé é um quarto de disco recortado de um
+quadrado por um `radial-gradient` centrado no canto de fora — a mesma técnica das
+abas do navegador, e a única que acompanha a posição sem recalcular caminho
+nenhum a cada quadro. Eles carregam `data-tema-invertido` por conta própria: a cor
+tem de ser a MESMA do corpo, e herdada da página o pé sairia claro colado a um
+corpo escuro.
+
+⭐ **A pestana é uma JANELA sobre uma cópia da barra, e não um bloco com um
+rótulo dentro.** A camada invertida é a barra inteira repetida por cima da real,
+escondida menos onde o `clip-path` a abre. Como as duas ocupam exatamente as
+mesmas coordenadas, o que se vê na janela é o mesmo texto, invertido.
+
+O ganho aparece na VIAGEM: as letras se invertem conforme entram na janela —
+"Anda|mentos" fica meio claro, meio escuro, como uma régua passando. ⛔ A versão
+óbvia (pintar o texto da aba ativa de claro e deslizar um bloco atrás) tem um
+defeito que não se contorna: no meio do caminho o texto claro está sobre o fundo
+claro, ilegível por uns 300ms.
+
+⚠️ **Recorte não é sombra.** `box-shadow` na camada seria cortado junto, então a
+pestana não tem elevação — ela é uma janela para outro tema, não um objeto
+pousado sobre a barra. A inversão já a separa do fundo com folga: **16,3:1 nos
+dois temas** contra a superfície da página.
+
+⛔ **O peso da fonte NÃO muda com a seleção**, e é a única regra do sistema que
+este componente quebra de propósito. Peso muda a LARGURA do rótulo: a aba
+escolhida engordaria, empurrando as vizinhas no instante do clique, e a cópia
+deixaria de cair sobre o texto real no meio da viagem. Quem carrega o estado
+aqui é `aria-selected`, a cor e o bloco invertido.
+
+⭐ **O anel de foco continua visível na aba aberta**, e é geometria que garante
+isso: o halo é desenhado FORA da caixa do botão, e a camada por cima está
+recortada exatamente NA caixa. Fora do recorte ela não pinta pixel nenhum. Um
+anel por dentro sumiria justamente na aba que tem o foco.
+
+⚠️ **A posição vive em custom properties** (`--cui-aba-x`, `--cui-aba-largura`),
+escritas na barra a cada quadro pela mola; delas saem o recorte do corpo E a
+posição dos dois pés. Uma escrita, três consumidores — não há como corpo, curvas
+e janela discordarem de onde a aba está, porque são a mesma conta. A primeira
+medição não anima: sem essa trava, a pestana corre do canto até a aba aberta
+toda vez que a página carrega.
+
+**As micro animações** — três, e cada uma responde a uma coisa diferente:
+
+⭐ **A pestana desliza com mola**, e a largura viaja junto com a posição: sem
+isso ela chegaria ao destino com a medida da aba anterior e só então esticaria,
+que é o movimento em dois tempos que se vê em toda barra de abas mal resolvida.
+
+⭐ **Os pés ASSENTAM, e é a animação que dá o caráter.** Eles recolhem a 35% no
+início da viagem — a pestana corre meio descolada da linha — e se espalham ao
+chegar, num tempo PRÓPRIO e mais longo que o do deslize (`assentar-aba`, 260ms).
+Terminar depois é o ponto: uma forma que chega e assenta lê como matéria; com
+tudo acabando no mesmo instante, o assentamento simplesmente some.
+
+⚠️ O piso de 35% não é estético: em zero a pestana vira um retângulo flutuando
+sobre a linha por um instante, o que é pior que não animar.
+
+⭐ **O traço do ponteiro** cresce do centro na base da aba fechada, no acento, e
+some do mesmo jeito. É feedback de PONTEIRO, não indicador de estado — por isso
+só existe no hover e no foco: a aba aberta já é a própria marca, e um traço
+aceso ao lado dela daria à barra dois marcadores dizendo coisas diferentes.
+Ele usa `scaleX`, não `width`: transformação não recalcula layout, e esta roda a
+cada aba que o ponteiro atravessa ao varrer a barra.
+
+E o painel entra pelo lado de onde a aba veio, em 180ms.
+
+⚠️ **Tudo isso desaparece para quem pediu menos movimento** — o deslize e o
+assentamento pelo JavaScript (`preferemenosMovimento` escreve a medição de uma
+vez), a entrada do painel encurtada no CSS.
+
+**Teclado**: ← → percorrem e já abrem a seção (ativação automática — trocar de
+aba é barato e reversível; exigir Enter faria o teclado custar o dobro de teclas
+para chegar onde o mouse chega num clique). Home e End vão às pontas, as
+desabilitadas são puladas — uma aba que não abre não é uma parada —, e o Tab
+entra na barra pela aba aberta e sai dela para o conteúdo.
+
+Contraste medido:
+
+| | claro | escuro |
+|---|---|---|
+| texto da aba aberta (invertida) | 14,96:1 | 18,54:1 |
+| texto da aba fechada | 6,17:1 | 7,11:1 |
+| texto da aba fechada em hover | 9,24:1 | 10,69:1 |
+| a pestana contra a superfície | 16,32:1 | 16,32:1 |
+
+| Token | Padrão | O que controla |
+|---|---|---|
+| `altura-aba` | 44 | Altura de cada aba |
+| `aba-respiro-x` | 18 | Recuo do rótulo até a borda da aba |
+| `raio-aba` | 16 | Arredondamento do TOPO da pestana |
+| `aba-pe` | 16 | O raio da curva côncava do pé — e o recuo da primeira aba, para a curva dela caber |
+| `assentar-aba` | 260ms | Os pés se espalhando ao fim da viagem |
+| `borda` | — | A linha de base da barra, que a pestana interrompe ao passar |
+| `transicao-item` | 180ms | A entrada do painel |
+
 ### Superfície de personalização
 
 Tudo que o `MenuSuspenso` desenha sai de um token. Nada de cor, medida ou tempo
@@ -410,6 +556,7 @@ sem disputar atenção com o texto que está sendo lido.
 | `item` | r 240 · a 26 | Cada opção. Mais rígida — o item percorre 6px, e mola mole nessa distância só parece atraso |
 | `chevron` | r 160 · a 12 | ⭐ A única com quique de verdade. A seta passa do ponto e volta |
 | `pulso` | r 420 · a 18 | A troca do rótulo no campo. ~130ms — se der para perceber a duração, está errado |
+| `aba` | r 240 · a 30 | A pestana das abas. ⛔ A única em amortecimento crítico: ela CARREGA texto, e texto que passa do ponto e volta balança enquanto está sendo lido |
 
 ⚠️ **As molas não existem no `tokens.css`**, e não é esquecimento: CSS não tem
 spring. Uma mola não tem duração, e isso não é representável em
@@ -423,6 +570,213 @@ Mola na saída faz o painel hesitar na porta.
 
 Tempos: `passo-item`, `saida-item`, `saida-painel`, `pausa-antes-do-painel`,
 `teto-escalonado`.
+
+## Padrões de página
+
+Um **padrão de página** é o degrau acima do componente: várias peças, um hook de
+estado e uma porta de dados que se copiam JUNTOS e viram uma tela inteira. O
+componente resolve um controle; o padrão resolve um trabalho.
+
+### Gerenciador de Arquivos
+
+Organiza arquivos que **já foram enviados**: árvore de pastas, grade, lista,
+arrasta-e-solta, criar/renomear/mover/excluir. Ele não faz upload — quem envia é
+outro fluxo; este arruma o que chegou.
+
+```tsx
+import { GerenciadorDeArquivos, criarRepositorioEmMemoria } from "@/lib";
+
+const repositorio = useMemo(() => criarRepositorioEmMemoria(ACERVO), []);
+
+<GerenciadorDeArquivos repositorio={repositorio} titulo="Base de Conhecimento" />;
+```
+
+| Prop | Tipo | Padrão | O que faz |
+|---|---|---|---|
+| `repositorio` | `RepositorioDeArquivos` | — | A porta para os dados. ⚠️ Precisa ser estável — `useMemo(…, [])`. |
+| `titulo` | `string` | `"Base de Conhecimento"` | O nome do acervo: topo da coluna, raiz da trilha e destino "mover para a raiz". |
+| `acoesDoCabecalho` | `ReactNode` | — | Botões extras no topo — "Enviar arquivos", por exemplo. |
+
+#### A divisão de responsabilidades
+
+É o ponto do padrão, e o que torna a troca de back-end barata:
+
+| Camada | Arquivo | Responsabilidade | Sabe de… |
+|---|---|---|---|
+| **Dados** | `repositorio.ts` | Falar com quem guarda | rede, formato do servidor |
+| **Regras** | `modelo.ts` | Árvore, caminho, o que pode mover, busca | nada além de dados puros |
+| **Estado** | `usar-gerenciador.ts` | Navegação e ações otimistas | o repositório e as regras |
+| **Gesto** | `usar-arrastar.ts` | Arrastar e soltar | ponteiro e DOM, não o domínio |
+| **Desenho** | os `.tsx` | Recebem dados, chamam callbacks | nada — não guardam estado de dados |
+
+#### Ligar num back-end real
+
+Uma linha. `RepositorioDeArquivos` é a única fronteira:
+
+```ts
+// Antes (demonstração)
+const repositorio = useMemo(() => criarRepositorioEmMemoria(ACERVO), []);
+
+// Depois (produção)
+const repositorio = useMemo(
+  () => criarRepositorioHttp({ base: "/api/arquivos", cabecalhos: () => ({ Authorization: token }) }),
+  [token],
+);
+```
+
+O `criarRepositorioHttp` é um **esqueleto**, não um cliente universal — a chance
+de as rotas casarem com a sua API é pequena, e ajustá-las é o trabalho esperado:
+
+```
+GET    {base}              → { pastas, arquivos }
+POST   {base}/pastas       → Pasta
+PATCH  {base}/pastas/:id   ← { nome? , paiId? }
+DELETE {base}/pastas/:id
+PATCH  {base}/arquivos     ← { ids, pastaId }     (mover em lote)
+PATCH  {base}/arquivos/:id ← { nome }
+DELETE {base}/arquivos     ← { ids }
+```
+
+Escrever a sua própria implementação é igualmente válido — Supabase, Firebase,
+tRPC, um `IndexedDB` local. **Nenhum componente da página sabe a diferença.**
+
+⚠️ **Todos os métodos são `async`, inclusive na versão em memória**, e isso não é
+cerimônia: uma porta síncrona parece mais simples até o dia da troca, quando
+toda a tela descobre de uma vez que precisa de carregando, erro e rollback.
+
+#### O que copiar
+
+A pasta `src/lib/gerenciador-de-arquivos/` e mais o que ela reusa —
+deliberadamente, em vez de duplicar:
+
+```
+gerenciador-de-arquivos/   ← a página inteira
+abas/                      ← a barra Pastas | Etiquetas
+movimento/                 ← as molas (o abas/ depende)
+tokens/tokens.ts           ← camadas, formas
+menu-suspenso/usar-ancoragem.ts    ← onde o menu cabe
+menu-suspenso/usar-clique-fora.ts  ← fecha fora, contando o portal como dentro
+menu-suspenso/filtrar-opcoes.ts    ← a normalização sem acento da busca
+estilos/tokens.css         ← importado uma vez, na raiz
+```
+
+#### As decisões
+
+⭐ **A lista é PLANA e a árvore é derivada.** Guardar filhos dentro de cada pasta
+parece natural até a primeira mudança de pai: mover vira cirurgia em duas listas,
+e qualquer back-end devolve linhas de tabela — que são exatamente a lista plana.
+`montarArvore` calcula a árvore quando a tela precisa dela.
+
+⛔ **Mover uma pasta para dentro de si mesma desliga o ramo da raiz.** Ele
+continua no banco e some da tela, porque não há mais caminho até ele — o pior
+tipo de perda de dados, o que não parece uma. `podeMoverPasta` recusa a pasta
+nela mesma, em qualquer descendente, e no pai onde ela já está. É a regra mais
+testada do arquivo, e a que ninguém consegue clicar de propósito para conferir.
+
+⭐ **Toda ação é OTIMISTA, com desfazer.** A tela muda no gesto; a chamada corre
+atrás; se o servidor recusar, o estado volta e um `role="alert"` diz o que houve.
+Esperar a resposta transformaria um arrasto de 200ms numa espera de meio segundo
+com o arquivo pendurado no lugar antigo — e é o tipo de lentidão que faz a pessoa
+arrastar de novo, achando que falhou.
+
+⛔ **O arrasto é por eventos de PONTEIRO, não pela API `draggable` do HTML.** A
+nativa desenha um fantasma que ninguém consegue estilizar, não dispara em toque
+na maioria dos navegadores móveis, e exige `preventDefault` no `dragover` para
+permitir a soltura — o defeito mais comum do arrasto nativo, e o mais difícil de
+perceber: a única consequência é o cursor "proibido", sem erro nenhum.
+
+⚠️ **Arrastar NÃO é acessível, e não há como torná-lo.** Por isso "Mover para"
+existe no menu de ações de toda pasta e todo arquivo, com a lista de destinos
+escrita por caminho completo. Se você replicar o padrão, replique a alternativa:
+o arrasto é o atalho, nunca o único caminho.
+
+⭐ **O arrasto só começa depois de 6px.** Sem o limiar, todo clique numa linha
+vira um micro-arrasto e a página fica escorregadia — abrir uma pasta passaria a
+exigir mão firme.
+
+⛔ **O estado de edição guarda o id E o lugar.** A mesma pasta aparece na árvore e
+na grade ao mesmo tempo; com um `emEdicao` só de id, os dois montavam um campo de
+texto para ela, o segundo roubava o foco do primeiro, e o `blur` do primeiro
+fechava a edição. Criar uma pasta abria o campo e ele sumia sozinho — sem erro
+nenhum no console, e só com o servidor lento o bastante.
+
+⭐ **A contagem ao lado do nome é DIRETA, não recursiva.** Uma pasta que mostra
+"18" somando netos, com filhas de "3", "5" e "10", faz procurar dezoito arquivos
+numa lista onde só existem três. O número responde "quantos vou ver se eu abrir
+isto".
+
+⭐ **A pasta é um objeto desenhado, com três camadas** — costas, papéis, frente.
+O que aparece entre a frente e as costas é conteúdo. Em repouso sobra uma lasca
+de papel; no ponteiro os papéis assomam; sob um arrasto, assomam mais. Numa grade
+de vinte pastas, vinte leques abertos viram ruído branco — por isso o leque é
+resposta ao gesto, e quem informa em repouso são os selos e o número.
+
+⛔ **A aba do topo é um `clip-path`, não um retângulo colado por cima.** Dois
+elementos empilhados deixam uma emenda visível, que some depois de meia hora de
+ajuste em pixel e volta no primeiro zoom.
+
+⛔ **O CSS declara o próprio `box-sizing`.** O padrão promete ser copiável; herdar
+o reset do projeto quebra a promessa em silêncio — num projeto sem reset, a
+frente da pasta soma o padding à altura, sobe 14px e cobre os papéis. O desenho
+continua aparecendo, só que errado.
+
+⚠️ **O layout responde ao CONTÊINER, não à janela** (`@container`). Esta página
+vive dentro de um cartão; com `@media`, encaixá-la numa coluna estreita de uma
+tela larga manteria as duas colunas espremidas.
+
+⭐ **Submenu é NÍVEL, não painel voador.** "Mover para" troca o conteúdo do mesmo
+painel e oferece um voltar. Submenu que abre para o lado exige perseguir o
+ponteiro na diagonal, morre quando o mouse passa um pixel fora, e no toque não
+existe.
+
+⭐ **Confirmação de exclusão acontece DENTRO do item**: "Excluir" vira "Excluir a
+pasta e o conteúdo?" e só o segundo clique executa. Um modal para cada exclusão é
+uma tela inteira montada para uma pergunta de uma linha — e produz exatamente o
+hábito de clicar em "Ok" sem ler.
+
+⭐ **Renomear é no lugar, e o texto já nasce selecionado.** Quem renomeia quase
+sempre troca o nome inteiro; começar com o cursor no fim obrigaria a apagar
+dezesseis caracteres antes de escrever o primeiro. Sair do campo CONFIRMA — quem
+clicou fora terminou, não desistiu; para desistir existe Esc.
+
+⚠️ **As cores dos selos de origem não são tokens.** Elas identificam serviços de
+terceiros, e não pertencem ao seu design — mudar `tokens.json` não pode repintar o
+azul do Drive. Ficam em `icones.tsx`, num lugar só, com formas genéricas: cópia de
+marca alheia dentro da sua interface é problema de licença esperando acontecer.
+
+#### Teclado
+
+| Onde | Teclas |
+|---|---|
+| Árvore | ↑ ↓ percorrem o que está visível · → abre o nó (e desce) · ← fecha (e sobe) · Home/End vão às pontas |
+| Menu de ações | ↑ ↓ percorrem · Enter escolhe · Esc volta um nível, e fecha no primeiro |
+| Renomear | Enter confirma · Esc descarta · sair do campo confirma |
+| Arrastar | Esc cancela o arrasto em curso |
+
+#### Tokens
+
+| Token | Padrão | O que controla |
+|---|---|---|
+| `pasta` / `pasta-fundo` | — | A frente e as costas do desenho — as costas sempre mais escuras |
+| `pasta-borda` | preto 10% / branco 12% | O fio do contorno. ⚠️ No escuro é ele que dá a aresta: a pasta rende 1,93:1 contra o cartão, e é decorativa — quem informa é o texto abaixo |
+| `papel` / `papel-borda` | — | As folhas e a separação entre elas |
+| `pasta-largura` / `-altura` | 148 / 112 | O desenho, e a coluna da grade (`auto-fill`) |
+| `raio-pasta` | 10 | Arredondamento da pasta |
+| `arquivos-lateral-largura` | 260 | A coluna do acervo |
+| `altura-linha` | 46 | A linha da lista — e a alça de arrasto |
+| `respiro-pagina` | 20 | O recuo do conteúdo |
+| `abrir-pasta` | 220ms | Os papéis assomando |
+| `trilho` | — | O sulco do interruptor de decisão. ⚠️ As Abas NÃO o usam: a barra delas é uma linha, não uma faixa |
+
+Contraste medido:
+
+| | claro | escuro |
+|---|---|---|
+| nome do arquivo | 18,54:1 | 14,96:1 |
+| cabeçalho da lista | 6,17:1 | 7,11:1 |
+| item da árvore | 9,24:1 | 10,69:1 |
+| contador ao lado do nome | 5,65:1 | 5,68:1 |
+| o papel contra a frente da pasta | 4,83:1 | 6,89:1 |
 
 ## Decisões que valem para todo componente novo
 
@@ -480,6 +834,23 @@ src/
       usar-clique-fora.ts  ← fecha fora, contando o portal como dentro
       filtrar-opcoes.ts    ← busca sem acento
       tipos.ts
+    abas/
+      Abas.tsx             ← a barra, a cópia invertida e a medição
+      abas.css             ← o recorte e as duas curvas da pestana
+    gerenciador-de-arquivos/  ← 📄 um PADRÃO DE PÁGINA inteiro
+      tipos.ts                  ← o vocabulário, e a fronteira com o back-end
+      repositorio.ts            ← ✏️  a PORTA: memória, HTTP, ou a sua
+      modelo.ts                 ← as contas puras (árvore, mover, buscar)
+      usar-gerenciador.ts       ← estado e ações otimistas
+      usar-arrastar.ts          ← arrastar e soltar por eventos de ponteiro
+      GerenciadorDeArquivos.tsx ← a composição da página
+      ArvoreDePastas.tsx
+      GradeDePastas.tsx         ← o desenho de três camadas da pasta
+      TabelaDeArquivos.tsx
+      MenuDeAcoes.tsx           ← reusa os hooks de popover do menu suspenso
+      CampoDeNome.tsx           ← renomear no lugar
+      icones.tsx
+      gerenciador.css
     casca/
       Casca.tsx            ← moldura + coluna + cartão
       NavegacaoLateral.tsx ← a pílula que desliza
@@ -493,6 +864,8 @@ src/
     demos/
       fundamentos.tsx     ← a paleta, lida do tokens.ts gerado
       menu-suspenso.tsx
+      abas.tsx
+      gerenciador-de-arquivos.tsx
 ```
 
 Os três hooks de `menu-suspenso/` **não são do menu**: são a base de qualquer
