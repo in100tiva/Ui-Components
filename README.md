@@ -780,14 +780,15 @@ Contraste medido:
 
 ## Fundos
 
-Camadas decorativas que valem para o **site inteiro**. Marcar uma liga; clicar
-de novo desliga; a escolha fica guardada entre visitas.
+Camadas decorativas **dentro do cartão de conteúdo** — atrás do que se lê, e
+não atrás do aplicativo. A moldura ao redor e a coluna lateral continuam lisas.
+Marcar liga; clicar de novo desliga; a escolha fica guardada entre visitas.
 
 ```tsx
-import { CamadaDeFundo, usarFundo } from "@/lib";
+import { CamadaDeFundo, Casca, usarFundo } from "@/lib";
 
-// uma vez, no topo da árvore
-<CamadaDeFundo />
+// a casca recebe a camada pela prop `fundo` e a põe dentro do cartão
+<Casca fundo={<CamadaDeFundo />} lateral={<Navegacao />}>{conteudo}</Casca>
 
 // onde se escolhe
 const { fundo, alternar } = usarFundo();
@@ -804,10 +805,22 @@ foto: `viewBox` + `preserveAspectRatio="slice"` é exatamente o `background-size
 cover` — as orbes mantêm posição e tamanho relativos, e o excesso é cortado. Em
 CSS com porcentagens, a esfera vira elipse na primeira tela larga.
 
-⭐ **A âncora é o canto SUPERIOR-ESQUERDO** (`xMinYMin`), e não o centro. A
-composição é retrato; numa tela larga, centralizar mostra só o miolo claro entre
-as orbes — o fundo vira uma névoa sem assunto. Ancorado no topo, o que sobra na
-tela é justamente a orbe violeta e a esfera iridescente.
+⛔ **O quadro tem a proporção da CAIXA, não a da arte original — e isso é
+aritmética, não gosto.** A composição nasceu retrato (734×1024) e o cartão é
+paisagem: com o quadro original e `slice`, a escala vira 1,5 e sobram **40% da
+arte**. Nenhuma âncora salva isso, só escolhe o que se perde — ancorado no topo,
+o cartão fica com uma lavagem violeta e uma bolinha, e a esfera principal nunca
+aparece; centralizado, sobra um close nela.
+
+A saída foi **reenquadrar, não redesenhar**: quadro `0 0 1100 640` (proporção do
+cartão, corte de ~10px) e as cinco orbes reposicionadas por `<g transform>`.
+Funciona sem retrabalhar o desenho porque `gradientUnits="userSpaceOnUse"`,
+`clipPath`, `mask` e `stdDeviation` vivem no espaço do usuário local: recorte,
+dissolução e desfoque herdam o transform do grupo e escalam juntos.
+
+⛔ **O halo e a orbe que ele ilumina usam a MESMA matriz.** Reposicionar um sem o
+outro descola a luz do objeto que a produz — e um halo órfão no meio do cartão é
+a coisa mais visível que este fundo pode fazer de errado.
 
 ⭐ **A borda nítida e o miolo macio saem da MESMA peça.** No SVG o filtro roda
 antes do recorte: o `feGaussianBlur` funde as quatro cores livremente, vazando
@@ -829,25 +842,41 @@ ilustração: trocar o acento do produto não pode repintar o céu. O que respon
 tema é a base atrás delas — e no escuro as orbes recuam para 55%, porque pastel
 pensado para papel branco vira letreiro sobre fundo quase preto.
 
-### O que acontece no site quando um fundo liga
+### O que acontece quando um fundo liga
 
-⭐ **O papel fica translúcido** (86% + `backdrop-filter`), senão o fundo não é
-fundo, é margem: um cartão opaco ocupando 80% da tela deixaria a composição
-aparecendo só numa faixa nas bordas.
+⭐ **A camada é `sticky` com uma tela de altura, e não `absolute; inset: 0`.** O
+cartão rola com a página e pode ter três telas de altura; esticada nele inteiro,
+a composição seria escalada pela altura e sobrariam duas faixas laterais da
+esfera grande. Colada ao topo da janela, o enquadramento é sempre o mesmo
+enquanto o conteúdo passa por cima. A margem negativa de uma tela é o que a
+impede de empurrar o conteúdo para baixo.
 
-⛔ **A coluna lateral ganha superfície, contrariando a regra da casca — e por um
-motivo medido.** Sem fundo, ela não tem superfície nenhuma (duas camadas, mesa e
-papel). Mas essa regra pressupõe uma mesa LISA: sobre a orbe violeta, o texto de
-apoio da coluna mede **1,99:1** e o rótulo **3,25:1**. Com o mesmo vidro do
-cartão, o pior par sobe para **4,96:1** e o rótulo para **8,11:1**. Texto sobre
-ilustração sempre precisa de uma superfície entre os dois.
+⭐ **Todo texto solto sobre a ilustração ganha uma superfície de vidro** (86% +
+`backdrop-filter`) — o cabeçalho da página e as bancadas.
 
-⚠️ **86% de opacidade, não menos.** O desfoque borra o que passa por baixo mas
-não devolve contraste: abaixo disso as orbes começam a aparecer atrás do texto.
+⛔ **Não há opacidade que resolva isso, e a conta é o argumento.** Com o texto
+direto sobre a arte, o pior par mede **1,11:1**. Varrendo de 1 em 1 ponto:
 
-⚠️ **Há reserva para quem não tem `backdrop-filter`**: opacidade cheia. Sem
-fundo aparecendo, mas com o texto legível — a troca certa quando só cabe uma das
-duas.
+| correção | menor valor que aprova em AA |
+|---|---|
+| véu da cor da superfície | **71%** |
+| baixar a opacidade da ilustração | **16%** |
+
+Nos dois casos a ilustração deixou de ser ilustração. O problema não é
+cromático, é estrutural: texto de corpo sobre gradiente saturado não se resolve
+com transparência. Com a superfície, o pior par sobe para **5,60:1** (claro) e
+**6,31:1** (escuro).
+
+⚠️ **O véu de 35% continua, mas com outro papel**: tirar o excesso de saturação
+onde nada cobre a arte. Ele não é o que garante o contraste.
+
+⚠️ **Há reserva para quem não tem `backdrop-filter`**: opacidade cheia. Sem a
+arte aparecendo através do texto, mas com o texto legível — a troca certa quando
+só cabe uma das duas.
+
+⛔ **O miolo do cartão precisa de `position: relative` e `z-index: 1`.** Sem
+isso, ele e a camada empilham pela ordem do documento, e o `z-index: 0` do fundo
+basta para o conteúdo sumir atrás da ilustração.
 
 ### Um fundo novo
 

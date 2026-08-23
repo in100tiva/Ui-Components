@@ -10,8 +10,8 @@ export function DemoDosFundos() {
 
   return (
     <Bancada
-      titulo="Fundo do site"
-      apoio="Marque um fundo e ele passa a valer para o site inteiro — a moldura ao redor do cartão vira o fundo, e o conteúdo continua sobre o papel opaco. Clicar de novo no que está marcado desliga. A escolha fica guardada entre visitas."
+      titulo="Fundo do conteúdo"
+      apoio="Marque um fundo e ele entra DENTRO do cartão de conteúdo, atrás do que se lê — a moldura ao redor e a coluna continuam lisas. O texto ganha uma superfície de vidro por cima: medindo, dá para ver que sem ela não existe opacidade que sirva. Clicar de novo no que está marcado desliga; a escolha fica guardada entre visitas."
       saida={[{ rotulo: "Fundo", valor: fundo ?? "nenhum" }]}
     >
       <div className="demo-fundos">

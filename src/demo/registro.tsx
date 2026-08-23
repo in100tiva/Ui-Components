@@ -93,7 +93,7 @@ export const REGISTRO: readonly EntradaDoRegistro[] = [
        controle nem uma página — escolhe-se algo que vale para o site inteiro. */
     grupo: "Fundos",
     resumo:
-      "Camadas decorativas para o site inteiro. Marque uma e ela vira o fundo; clique de novo para tirar.",
+      "Camadas decorativas para o cartão de conteúdo. Marque uma e ela entra atrás do que se lê; clique de novo para tirar.",
     estado: "pronto",
     Demo: DemoDosFundos,
   },

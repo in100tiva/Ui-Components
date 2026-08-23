@@ -1113,11 +1113,37 @@ console.log("\nFundos");
     "a camada de fundo não intercepta o ponteiro",
     /\.cui-fundo \{[^}]*pointer-events: none/s.test(css),
   );
-  /* ⛔ O fundo é ambiente, não conteúdo: com `absolute` ele rolaria com a página
-     e a composição sairia de quadro no primeiro scroll. */
+  /*
+    ⛔ **A camada é STICKY com uma tela de altura, e não `absolute; inset: 0`.**
+    O cartão rola com a página e pode ter três telas de altura; esticada nele
+    inteiro, a composição seria escalada pela altura e sobrariam duas faixas
+    laterais da esfera grande. Colada ao topo da janela, o enquadramento é
+    sempre o mesmo enquanto o conteúdo passa por cima.
+  */
   checar(
-    "a camada é fixa, e não rola com a página",
-    /\.cui-fundo \{[^}]*position: fixed/s.test(css),
+    "a camada é sticky, com uma tela de altura",
+    /\.cui-fundo \{[^}]*position: sticky/s.test(css) &&
+      /\.cui-fundo \{[^}]*height: 100dvh/s.test(css),
+  );
+  /* ⛔ Sem a margem negativa a camada EMPURRA o conteúdo uma tela para baixo. */
+  checar(
+    "…e devolve ao fluxo o espaço que ocupa",
+    /\.cui-fundo \{[^}]*margin-bottom: -100dvh/s.test(css),
+  );
+  /*
+    ⭐ **A conta que definiu o desenho.** Com o texto direto sobre a ilustração,
+    o pior par mede 1,11:1; para aprovar só com transparência seria preciso um
+    véu de 71% ou a arte a 16% — ou seja, apagá-la. A saída foi dar SUPERFÍCIE
+    ao texto, e é isso que esta regra garante.
+  */
+  checar(
+    "todo texto solto sobre a ilustração tem superfície própria",
+    css.includes(".galeria__cabecalho") && css.includes(".demo-bancada"),
+  );
+  /* ⛔ O miolo precisa de camada própria, senão o conteúdo some atrás da arte. */
+  checar(
+    "o conteúdo do cartão fica ACIMA da camada",
+    /\.cui-casca__miolo \{[^}]*z-index: 1/s.test(css),
   );
   /* Onde não há desfoque, o vidro vira véu leitoso sobre a composição. */
   checar(
@@ -1126,11 +1152,19 @@ console.log("\nFundos");
   );
 
   const componente = readFileSync("src/lib/fundos/FundoDeOrbes.tsx", "utf8");
+  /* ⛔ Reposicionar a orbe 3 sem o halo dela descola a luz do objeto que a
+     produz — um halo órfão no meio do cartão. A constante compartilhada é o
+     que impede isso de acontecer numa edição futura. */
+  checar(
+    "o halo e a orbe que ele ilumina usam a MESMA matriz",
+    (componente.match(/transform={ORBE_3}/g) ?? []).length === 2,
+  );
   /* ⛔ `slice` é o `cover` do SVG: sem ele a composição estica junto com a janela
      e as esferas viram elipses. */
   checar(
     "a composição é enquadrada, não esticada",
-    componente.includes('preserveAspectRatio="xMinYMin slice"'),
+    componente.includes('preserveAspectRatio="xMidYMid slice"') &&
+      componente.includes('viewBox="0 0 1100 640"'),
   );
   /* ⚠️ O fundo não pinta a própria base: ela vem do tema, senão o tema escuro
      receberia um retângulo branco. */
