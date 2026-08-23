@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 
 import type { GrupoDeNavegacao } from "../lib";
+import { DemoDasAbas } from "./demos/abas";
 import { DemoDoCartaoDeDecisao } from "./demos/cartao-de-decisao";
+import { DemoDoGerenciadorDeArquivos } from "./demos/gerenciador-de-arquivos";
 import { DemoDosFundamentos } from "./demos/fundamentos";
 import { DemoDoMenuSuspenso } from "./demos/menu-suspenso";
 
@@ -61,6 +63,27 @@ export const REGISTRO: readonly EntradaDoRegistro[] = [
       "Cartão de tarefa que se contorna ao ser aprovado ou reprovado — malha de pontos, lavagem de cor e o traço percorrendo a borda.",
     estado: "pronto",
     Demo: DemoDoCartaoDeDecisao,
+  },
+  {
+    id: "abas",
+    nome: "Abas",
+    grupo: "Componentes",
+    resumo:
+      "A barra de seções do topo da página — a aba aberta é uma pestana pintada com o tema invertido, que recorta uma cópia da barra enquanto viaja.",
+    estado: "pronto",
+    Demo: DemoDasAbas,
+  },
+  {
+    id: "gerenciador-de-arquivos",
+    nome: "Gerenciador de Arquivos",
+    /* ⭐ Um grupo novo, e ele significa outra coisa: aqui não mora um controle,
+       mora uma PÁGINA inteira — várias peças, um hook de estado e uma porta de
+       dados, prontas para serem copiadas juntas. */
+    grupo: "Páginas",
+    resumo:
+      "Organizar arquivos já enviados: árvore de pastas, grade, lista, arrasta-e-solta e menus — tudo sobre uma única porta de dados, trocável por um back-end real.",
+    estado: "pronto",
+    Demo: DemoDoGerenciadorDeArquivos,
   },
 ];
 

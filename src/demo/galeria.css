@@ -188,6 +188,17 @@
   max-width: 620px;
 }
 
+/* Abas vivem no TOPO de uma página: espremê-las em 440px mostraria a rolagem
+   horizontal como se fosse o estado normal do componente. */
+.demo-bancada__palco:has(.cui-abas) {
+  max-width: 100%;
+}
+
+/* O gerenciador é uma PÁGINA: ele ocupa a bancada inteira. */
+.demo-bancada__palco:has(.cui-arq) {
+  max-width: 100%;
+}
+
 .demo-bancada__saida {
   display: flex;
   flex-wrap: wrap;
@@ -497,6 +508,16 @@
 
 .demo-cartao-corpo {
   margin: 14px 0 0;
+  color: var(--cui-texto-suave);
+  font-size: 13px;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+/* O conteúdo do painel das abas — texto corrido, para ver a entrada lateral. */
+.demo-abas__texto {
+  max-width: 62ch;
+  margin: 0;
   color: var(--cui-texto-suave);
   font-size: 13px;
   line-height: 1.65;

@@ -44,6 +44,55 @@ export type { PropsDaCasca } from "./casca/Casca";
 export { NavegacaoLateral } from "./casca/NavegacaoLateral";
 export type { ItemDeNavegacao, GrupoDeNavegacao } from "./casca/NavegacaoLateral";
 
+/* Abas — a barra de seções, com a escolhida pintada no tema invertido. */
+export { Abas } from "./abas/Abas";
+export type { Aba, PropsDasAbas } from "./abas/Abas";
+
+/* Gerenciador de Arquivos — um PADRÃO DE PÁGINA inteiro: coluna do acervo,
+   grade de pastas, lista de arquivos, arrasta-e-solta e menus, sobre uma única
+   porta de dados. Ver o README. */
+export { GerenciadorDeArquivos } from "./gerenciador-de-arquivos/GerenciadorDeArquivos";
+export type { PropsDoGerenciador } from "./gerenciador-de-arquivos/GerenciadorDeArquivos";
+export {
+  criarRepositorioEmMemoria,
+  criarRepositorioHttp,
+} from "./gerenciador-de-arquivos/repositorio";
+export type {
+  RepositorioDeArquivos,
+  OpcoesEmMemoria,
+  OpcoesHttp,
+} from "./gerenciador-de-arquivos/repositorio";
+export type {
+  Acervo,
+  Arquivo,
+  Pasta,
+  Pessoa,
+  OrigemDoArquivo,
+  NoDaArvore,
+  ItemArrastavel,
+  AlvoDeSoltura,
+} from "./gerenciador-de-arquivos/tipos";
+/* As peças, para quem quiser montar outra composição com as mesmas partes. */
+export { usarGerenciadorDeArquivos } from "./gerenciador-de-arquivos/usar-gerenciador";
+export { usarArrastarESoltar, propsDeAlvo } from "./gerenciador-de-arquivos/usar-arrastar";
+export { ArvoreDePastas } from "./gerenciador-de-arquivos/ArvoreDePastas";
+export { GradeDePastas } from "./gerenciador-de-arquivos/GradeDePastas";
+export { TabelaDeArquivos } from "./gerenciador-de-arquivos/TabelaDeArquivos";
+export { MenuDeAcoes } from "./gerenciador-de-arquivos/MenuDeAcoes";
+export type { AcaoDeMenu } from "./gerenciador-de-arquivos/MenuDeAcoes";
+/* As contas puras — testáveis sem montar tela nenhuma. */
+export {
+  montarArvore,
+  caminhoAte,
+  podeMoverPasta,
+  subarvoreDe,
+  contarArquivos,
+  buscar,
+  etiquetasDe,
+  nomeDisponivel,
+  formatarTamanho,
+} from "./gerenciador-de-arquivos/modelo";
+
 /* A camada de movimento — o anime.js falando a língua do design. */
 export { animate, mola, ondaDeItens, coreografar, devolverAoCss } from "./movimento/movimento";
 export type { NomeDeMola } from "./movimento/movimento";
