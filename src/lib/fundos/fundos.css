@@ -148,31 +148,43 @@
 
 @keyframes cui-orbe-deriva-1 {
   to {
-    transform: translate(22px, 16px);
+    transform: translate(
+      calc(22px * var(--cui-amplitude, 1)),
+      calc(16px * var(--cui-amplitude, 1))
+    );
   }
 }
 
 @keyframes cui-orbe-deriva-2 {
   to {
-    transform: translate(-18px, 20px);
+    transform: translate(
+      calc(-18px * var(--cui-amplitude, 1)),
+      calc(20px * var(--cui-amplitude, 1))
+    );
   }
 }
 
 @keyframes cui-orbe-deriva-3 {
   to {
-    transform: translate(-24px, -14px);
+    transform: translate(
+      calc(-24px * var(--cui-amplitude, 1)),
+      calc(-14px * var(--cui-amplitude, 1))
+    );
   }
 }
 
 @keyframes cui-orbe-deriva-5 {
   to {
-    transform: translate(16px, -22px);
+    transform: translate(
+      calc(16px * var(--cui-amplitude, 1)),
+      calc(-22px * var(--cui-amplitude, 1))
+    );
   }
 }
 
 /* --- Versão 1: as esferas derivam ---------------------------------------- */
 
-.cui-fundo-orbes[data-movimento="orbes"] .cui-orbe {
+[data-movimento="orbes"] .cui-orbe {
   /*
     ⛔ `transform-box: fill-box` não serve aqui: só translação é usada, e a
     origem não muda nada — mas deixar explícito evita que um `scale` acrescentado
@@ -186,12 +198,12 @@
   animation-direction: alternate;
 }
 
-.cui-fundo-orbes[data-movimento="orbes"] .cui-orbe[data-orbe="1"] {
+[data-movimento="orbes"] .cui-orbe[data-orbe="1"] {
   animation-name: cui-orbe-deriva-1;
   animation-duration: 43s;
 }
 
-.cui-fundo-orbes[data-movimento="orbes"] .cui-orbe[data-orbe="2"] {
+[data-movimento="orbes"] .cui-orbe[data-orbe="2"] {
   animation-name: cui-orbe-deriva-2;
   animation-duration: 29s;
 }
@@ -202,12 +214,12 @@
   diferentes, a luz se descolaria do objeto que a produz — e um halo à deriva
   no meio do cartão é a coisa mais visível que este fundo pode fazer de errado.
 */
-.cui-fundo-orbes[data-movimento="orbes"] .cui-orbe[data-orbe="3"] {
+[data-movimento="orbes"] .cui-orbe[data-orbe="3"] {
   animation-name: cui-orbe-deriva-3;
   animation-duration: 41s;
 }
 
-.cui-fundo-orbes[data-movimento="orbes"] .cui-orbe[data-orbe="5"] {
+[data-movimento="orbes"] .cui-orbe[data-orbe="5"] {
   animation-name: cui-orbe-deriva-5;
   animation-duration: 31s;
 }
@@ -228,35 +240,50 @@
 
 @keyframes cui-luz-a {
   to {
-    transform: translate(34px, -30px);
+    transform: translate(
+      calc(34px * var(--cui-amplitude, 1)),
+      calc(-30px * var(--cui-amplitude, 1))
+    );
   }
 }
 
 @keyframes cui-luz-b {
   to {
-    transform: translate(-40px, 26px);
+    transform: translate(
+      calc(-40px * var(--cui-amplitude, 1)),
+      calc(26px * var(--cui-amplitude, 1))
+    );
   }
 }
 
 @keyframes cui-luz-c {
   to {
-    transform: translate(30px, 38px);
+    transform: translate(
+      calc(30px * var(--cui-amplitude, 1)),
+      calc(38px * var(--cui-amplitude, 1))
+    );
   }
 }
 
 @keyframes cui-luz-d {
   to {
-    transform: translate(-32px, -36px);
+    transform: translate(
+      calc(-32px * var(--cui-amplitude, 1)),
+      calc(-36px * var(--cui-amplitude, 1))
+    );
   }
 }
 
 @keyframes cui-luz-e {
   to {
-    transform: translate(46px, 22px);
+    transform: translate(
+      calc(46px * var(--cui-amplitude, 1)),
+      calc(22px * var(--cui-amplitude, 1))
+    );
   }
 }
 
-.cui-fundo-orbes[data-movimento="luz"] .cui-luz {
+[data-movimento="luz"] .cui-luz {
   transform-box: fill-box;
   transform-origin: center;
   animation-timing-function: ease-in-out;
@@ -264,27 +291,27 @@
   animation-direction: alternate;
 }
 
-.cui-fundo-orbes[data-movimento="luz"] .cui-luz[data-luz="a"] {
+[data-movimento="luz"] .cui-luz[data-luz="a"] {
   animation-name: cui-luz-a;
   animation-duration: 23s;
 }
 
-.cui-fundo-orbes[data-movimento="luz"] .cui-luz[data-luz="b"] {
+[data-movimento="luz"] .cui-luz[data-luz="b"] {
   animation-name: cui-luz-b;
   animation-duration: 29s;
 }
 
-.cui-fundo-orbes[data-movimento="luz"] .cui-luz[data-luz="c"] {
+[data-movimento="luz"] .cui-luz[data-luz="c"] {
   animation-name: cui-luz-c;
   animation-duration: 31s;
 }
 
-.cui-fundo-orbes[data-movimento="luz"] .cui-luz[data-luz="d"] {
+[data-movimento="luz"] .cui-luz[data-luz="d"] {
   animation-name: cui-luz-d;
   animation-duration: 37s;
 }
 
-.cui-fundo-orbes[data-movimento="luz"] .cui-luz[data-luz="e"] {
+[data-movimento="luz"] .cui-luz[data-luz="e"] {
   animation-name: cui-luz-e;
   animation-duration: 41s;
 }
@@ -300,4 +327,50 @@
   .cui-fundo-orbes .cui-luz {
     animation: none;
   }
+}
+
+/* --- A amostra da galeria ------------------------------------------------- */
+
+/*
+  ⭐ **A amostra exagera o movimento — e isso é honestidade, não licença.** Num
+  quadro de 200px de largura, o deslocamento real de 22 unidades vira 4px, ao
+  longo de 43 segundos: invisível. Quem olha três amostras lado a lado por dez
+  segundos concluiria, com razão, que nenhuma delas anima.
+
+  Então a amostra tem amplitude e ritmo próprios: 2,2× o deslocamento e períodos
+  três vezes mais curtos (9, 11, 13, 17, 19 e 23 — primos entre si, pela mesma
+  razão dos originais). Ela demonstra o TIPO de movimento; o fundo de verdade,
+  atrás do conteúdo, continua lento e discreto — que é o que um fundo deve ser.
+*/
+.cui-fundo-amostra {
+  --cui-amplitude: 2.2;
+}
+
+.cui-fundo-amostra .cui-orbe[data-orbe="1"] {
+  animation-duration: 17s;
+}
+.cui-fundo-amostra .cui-orbe[data-orbe="2"] {
+  animation-duration: 9s;
+}
+.cui-fundo-amostra .cui-orbe[data-orbe="3"] {
+  animation-duration: 13s;
+}
+.cui-fundo-amostra .cui-orbe[data-orbe="5"] {
+  animation-duration: 11s;
+}
+
+.cui-fundo-amostra .cui-luz[data-luz="a"] {
+  animation-duration: 9s;
+}
+.cui-fundo-amostra .cui-luz[data-luz="b"] {
+  animation-duration: 11s;
+}
+.cui-fundo-amostra .cui-luz[data-luz="c"] {
+  animation-duration: 13s;
+}
+.cui-fundo-amostra .cui-luz[data-luz="d"] {
+  animation-duration: 17s;
+}
+.cui-fundo-amostra .cui-luz[data-luz="e"] {
+  animation-duration: 19s;
 }

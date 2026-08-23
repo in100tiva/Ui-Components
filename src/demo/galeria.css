@@ -623,3 +623,21 @@
   outline: none;
   box-shadow: 0 0 0 3px var(--cui-anel-foco);
 }
+
+/* O aviso de que o sistema pediu menos movimento. */
+.demo-fundo__aviso {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--cui-acento-borda);
+  border-radius: var(--cui-raio-item);
+  background: var(--cui-acento-9);
+  color: var(--cui-texto-rotulo);
+  font-size: var(--cui-texto-apoio);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.demo-fundo__aviso strong {
+  color: var(--cui-texto);
+  font-weight: var(--cui-peso-forte);
+}

@@ -1223,6 +1223,28 @@ console.log("\nFundos");
     bloco.includes("animation: none") && !bloco.includes("animation-duration: 1ms"),
   );
 
+  /*
+    ⛔ **A animação NÃO pode depender do className.** O componente aceita um
+    className próprio — e ele SUBSTITUI a classe padrão. Com o seletor preso a
+    `.cui-fundo-orbes`, as três amostras da galeria ficavam paradas: o fundo do
+    site animava, a vitrine não, e não havia erro nenhum para investigar. O
+    atributo é do componente e vai junto sempre.
+  */
+  checar(
+    "a animação vem do atributo, não da classe",
+    !css.includes(".cui-fundo-orbes[data-movimento"),
+  );
+  /*
+    ⭐ A amostra tem ritmo e amplitude próprios, e isso é honestidade: num quadro
+    de 200px o deslocamento real vira 4px ao longo de 43 segundos — invisível.
+    Três amostras imóveis lado a lado seriam lidas como defeito, com razão.
+  */
+  checar(
+    "a amostra exagera o movimento para caber num preview",
+    /\.cui-fundo-amostra \{[^}]*--cui-amplitude/s.test(css) &&
+      css.includes(".cui-fundo-amostra .cui-orbe"),
+  );
+
   /* As duas versões animam coisas DIFERENTES: uma o grupo da esfera, outra o
      blob dentro dela. Se as duas mexessem no mesmo elemento, seriam a mesma. */
   checar(

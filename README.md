@@ -933,6 +933,24 @@ funde as cores também dilui o movimento.
 decorativo que se agita depressa é exatamente o que a preferência do sistema
 existe para evitar.
 
+⛔ **A animação vem do ATRIBUTO, nunca da classe.** O componente aceita um
+`className` próprio — e ele SUBSTITUI a classe padrão. Com o seletor preso a
+`.cui-fundo-orbes`, as três amostras da galeria ficavam paradas enquanto o fundo
+do site animava: nenhum erro, nenhum aviso, só uma vitrine imóvel anunciando
+movimento.
+
+⭐ **A amostra exagera o movimento, e isso é honestidade.** Num quadro de 200px
+de largura, o deslocamento real de 22 unidades vira 4px ao longo de 43 segundos:
+invisível. A amostra usa 2,2× a amplitude e períodos três vezes mais curtos (9,
+11, 13, 17, 19, 23 — primos entre si, pela mesma razão). Ela demonstra o TIPO de
+movimento; o fundo de verdade continua lento e discreto, que é o que um fundo
+deve ser.
+
+⚠️ **Quando o sistema pede menos movimento, a página DIZ isso.** Os fundos
+animados ficam parados de propósito — e três amostras imóveis lado a lado
+parecem defeito, não escolha. A página de fundos detecta a preferência e explica
+onde desligá-la.
+
 ⚠️ **Custo**: na deriva, o filtro de cada orbe é calculado uma vez e o grupo
 inteiro é transladado; na luz viva, os blobs se movem DENTRO do grupo filtrado,
 então o desfoque (σ=58 na esfera grande, σ=90 no halo) é recalculado a cada
