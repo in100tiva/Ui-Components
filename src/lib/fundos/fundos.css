@@ -1,0 +1,133 @@
+/* ==========================================================================
+   Fundos — a camada que fica atrás do site inteiro.
+   ========================================================================== */
+
+/*
+  ⭐ **A camada é `fixed`, e não `absolute`.** O fundo é um AMBIENTE: ele não
+  rola com a página, do mesmo jeito que a parede não anda quando se vira a
+  página de um livro. Com `absolute`, ele acompanharia a rolagem e a composição
+  sairia de quadro no primeiro scroll.
+
+  `z-index: 0` com o conteúdo em `1`: o suficiente para ficar atrás de tudo sem
+  entrar na guerra de camadas do resto do sistema (o painel do menu suspenso
+  vive em `--cui-z-painel`, muito acima).
+*/
+.cui-fundo {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  /* ⛔ Sem isto o fundo captura todo clique da página: ele cobre a tela inteira. */
+  pointer-events: none;
+  /* A base atrás das orbes vem do TEMA — é o que faz o mesmo fundo servir os
+     dois. O SVG por cima é transparente de propósito. */
+  background: var(--cui-fundo);
+}
+
+.cui-fundo-orbes {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/*
+  ⚠️ **No tema escuro as orbes recuam.** As cores delas são pastéis pensados
+  para papel branco; sobre um fundo quase preto, o mesmo desenho em opacidade
+  cheia vira um letreiro. A 55% ele volta a ser o que precisa ser: luz ao fundo.
+*/
+[data-tema="escuro"] .cui-fundo-orbes {
+  opacity: 0.55;
+}
+
+/* --- Integração com a casca do app --------------------------------------- */
+
+/*
+  ⭐ **Com um fundo ligado, a MOLDURA some e o cartão continua.** A casca desenha
+  duas superfícies — a mesa e o papel sobre ela; o fundo entra no lugar da mesa,
+  e o papel continua opaco por cima. É o que mantém o texto legível: fundo
+  decorativo atrás de conteúdo é a forma mais rápida de perder contraste, e aqui
+  ele nunca chega a ficar atrás de uma linha de texto.
+*/
+:root[data-fundo] .cui-casca {
+  background-color: transparent;
+  background-image: none;
+}
+
+/* A casca precisa ficar ACIMA da camada de fundo, que é `fixed`. */
+:root[data-fundo] .cui-casca {
+  position: relative;
+  z-index: 1;
+}
+
+/* A casca pinta o `<body>` com a moldura para o overscroll não revelar outra
+   cor; com fundo ligado, quem responde por essa cor é a base do fundo. */
+:root[data-fundo]:has(.cui-casca) body {
+  background: var(--cui-fundo);
+}
+
+/*
+  ⭐ **O papel fica TRANSLÚCIDO — senão o fundo não é fundo, é margem.** Um
+  cartão opaco ocupando 80% da tela deixaria a composição aparecendo só numa
+  faixa nas bordas, e o trabalho todo se perderia atrás de um retângulo branco.
+
+  ⚠️ **86%, e não menos.** O `backdrop-filter` desfoca o que passa por baixo,
+  mas não devolve contraste: abaixo disso as orbes começam a aparecer ATRÁS do
+  texto e a leitura piora exatamente onde ela mais importa. Com 86% sobre o
+  desfoque, o par texto/superfície continua praticamente o mesmo que sem fundo.
+
+  O `saturate` compensa o que o desfoque lava — sem ele o vidro fica cinzento e
+  as cores por baixo somem.
+*/
+:root[data-fundo] .cui-casca__cartao {
+  background: color-mix(in oklab, var(--cui-superficie) 86%, transparent);
+  backdrop-filter: blur(22px) saturate(1.25);
+}
+
+/*
+  ⛔ **A coluna lateral PRECISA de superfície quando há fundo, e isso contradiz
+  a regra da casca de propósito.** Sem fundo, ela não tem superfície nenhuma —
+  duas camadas, mesa e papel, e o item ativo aparece por ser o único pedaço de
+  papel ali. Mas essa regra pressupõe uma mesa LISA: sobre a orbe violeta, o
+  texto de apoio da coluna mede 1,99:1 e o rótulo 3,25:1 — ilegível e quase.
+
+  Com o mesmo vidro do cartão, o pior par sobe para 4,96:1 e o rótulo para
+  8,11:1. Texto sobre ilustração sempre precisa de uma superfície entre os dois;
+  o que muda de projeto para projeto é só o quanto ela deixa passar.
+*/
+:root[data-fundo] .cui-casca__lateral {
+  background: color-mix(in oklab, var(--cui-superficie) 86%, transparent);
+  backdrop-filter: blur(22px) saturate(1.25);
+  border-radius: var(--cui-raio-casca);
+}
+
+/* As bancadas da galeria são cartões dentro do cartão: no vidro, elas viram
+   moldura sobre moldura. Sem fundo próprio, o vidro é um só. */
+:root[data-fundo] .demo-bancada {
+  background: color-mix(in oklab, var(--cui-superficie) 55%, transparent);
+}
+
+/*
+  ⛔ Onde o desfoque não existe, o vidro vira um véu leitoso sobre a composição.
+  A reserva é opacidade cheia: sem fundo aparecendo, mas com o texto legível —
+  que é a troca certa quando só se pode ter uma das duas.
+*/
+@supports not (backdrop-filter: blur(1px)) {
+  :root[data-fundo] .cui-casca__cartao,
+  :root[data-fundo] .demo-bancada {
+    background: var(--cui-superficie);
+  }
+}
+
+/* --- Miniatura ------------------------------------------------------------ */
+
+/*
+  A amostra na galeria. O MESMO componente do fundo real, só que dentro de uma
+  caixa: é o que garante que o que se escolhe é o que se vê — uma imagem estática
+  de amostra sairia de sincronia com o fundo no primeiro ajuste.
+*/
+.cui-fundo-amostra {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
