@@ -878,6 +878,52 @@ só cabe uma das duas.
 isso, ele e a camada empilham pela ordem do documento, e o `z-index: 0` do fundo
 basta para o conteúdo sumir atrás da ilustração.
 
+### As duas versões animadas
+
+O mesmo desenho, com uma prop: `movimento={"orbes" | "luz"}`.
+
+⭐ **São duas ideias diferentes de vida, não duas intensidades.** Em **orbes em
+deriva**, as esferas passeiam pelo quadro — o que muda é a COMPOSIÇÃO. Em **luz
+viva**, elas ficam exatamente onde estão e o mesh se desloca por dentro: o que
+muda é a MATÉRIA delas, como óleo girando numa bolha de sabão.
+
+⭐ **A luz viva funciona porque os blobs vivem DENTRO do `clipPath`.** Eles podem
+passear à vontade; quem decide onde a esfera termina é o recorte, e ele não se
+move. Nenhuma máscara nova, nenhum keyframe por orbe — só os blobs andando sob o
+desfoque que já os fundia.
+
+⛔ **Os períodos são PRIMOS entre si** — 23, 29, 31, 37, 41 e 43 segundos. Com
+durações que se dividem (20s e 40s), as orbes reencontram a mesma configuração a
+cada ciclo curto e o olho aprende o compasso: o fundo passa a piscar em vez de
+derivar. Há um teste que checa o MDC de cada par, porque visualmente esse defeito
+só aparece depois de um minuto olhando.
+
+⛔ **O halo e a orbe que ele ilumina carregam o mesmo `data-orbe`**, e portanto a
+mesma animação com a mesma duração. Com períodos diferentes, a luz se descola do
+objeto que a produz — e um halo à deriva no meio do cartão é a coisa mais
+visível que este fundo pode fazer de errado.
+
+⚠️ **`ease-in-out` com `alternate`, e não `linear` com `infinite`.** Uma
+translação linear que reinicia dá um salto no fim de cada volta; alternando, a
+orbe desacelera na ponta e volta — que é como matéria com inércia se move.
+
+⚠️ **Deslocamentos pequenos** (16 a 46 unidades de um quadro de 1100). O fundo
+não pode competir com o conteúdo: o que se quer é a impressão de que a imagem
+respira, não uma cena acontecendo atrás do texto que se está lendo. Na luz viva
+os valores são maiores e ainda assim mais discretos — o desfoque de σ=58 que
+funde as cores também dilui o movimento.
+
+⛔ **Quem pediu menos movimento recebe a composição PARADA, não mais lenta.** É a
+única animação da biblioteca que se DESLIGA em vez de encurtar: um fundo
+decorativo que se agita depressa é exatamente o que a preferência do sistema
+existe para evitar.
+
+⚠️ **Custo**: na deriva, o filtro de cada orbe é calculado uma vez e o grupo
+inteiro é transladado; na luz viva, os blobs se movem DENTRO do grupo filtrado,
+então o desfoque (σ=58 na esfera grande, σ=90 no halo) é recalculado a cada
+quadro. É a mais cara das duas — vale medir no alvo antes de ligá-la numa página
+que já tenha muito acontecendo.
+
 ### Um fundo novo
 
 Uma entrada em `catalogo.tsx`. A página de escolha, a camada do site e a

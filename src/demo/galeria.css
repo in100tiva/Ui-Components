@@ -207,6 +207,12 @@
   max-width: 100%;
 }
 
+/* Os fundos são escolhidos lado a lado — comparar é o trabalho desta página, e
+   numa coluna só não há comparação. */
+.demo-bancada__palco:has(.demo-fundos) {
+  max-width: 100%;
+}
+
 .demo-bancada__saida {
   display: flex;
   flex-wrap: wrap;

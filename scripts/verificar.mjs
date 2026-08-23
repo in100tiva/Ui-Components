@@ -1102,7 +1102,105 @@ console.log("\nFundos");
     "o fundo é decorativo para o leitor de tela",
     doc.querySelector("svg")?.getAttribute("aria-hidden") === "true",
   );
-  checar("o catálogo tem ao menos um fundo", FUNDOS.length >= 1, FUNDOS.map((f) => f.id).join(", "));
+  checar("o catálogo tem os três fundos", FUNDOS.length === 3, FUNDOS.map((f) => f.id).join(", "));
+}
+
+/* --- As duas versões animadas --------------------------------------------- */
+
+{
+  await act(async () => {
+    raiz.render(
+      React.createElement(
+        "div",
+        null,
+        React.createElement(FundoDeOrbes, { movimento: "orbes" }),
+        React.createElement(FundoDeOrbes, { movimento: "luz" }),
+      ),
+    );
+  });
+  await esperar(60);
+
+  const svgs = [...doc.querySelectorAll("svg")];
+  checar(
+    "cada versão se declara no atributo que liga a animação",
+    svgs[0]?.dataset.movimento === "orbes" && svgs[1]?.dataset.movimento === "luz",
+    svgs.map((v) => v.dataset.movimento ?? "nenhum").join(" / "),
+  );
+
+  const orbes = [...svgs[0].querySelectorAll(".cui-orbe")];
+  const luzes = [...svgs[1].querySelectorAll(".cui-luz")];
+  checar("as esferas têm grupo de deriva próprio", orbes.length === 5, `${orbes.length} grupos`);
+  checar("os blobs de cor têm grupo próprio", luzes.length === 8, `${luzes.length} grupos`);
+
+  /*
+    ⛔ **O halo e a orbe que ele ilumina precisam derivar JUNTOS.** Eles são dois
+    grupos separados no DOM (a ordem de pintura exige isso), e o que os mantém
+    presos é carregarem o MESMO `data-orbe` — mesma animação, mesma duração. Com
+    períodos diferentes, a luz se descola do objeto e sobra um halo à deriva no
+    meio do cartão.
+  */
+  const doTres = orbes.filter((g) => g.dataset.orbe === "3");
+  checar(
+    "o halo e a orbe 3 compartilham o mesmo grupo de animação",
+    doTres.length === 2,
+    `${doTres.length} grupos com data-orbe="3"`,
+  );
+
+  /* O fundo estático não pode carregar animação nenhuma. */
+  await act(async () => {
+    raiz.render(React.createElement(FundoDeOrbes, null));
+  });
+  await esperar(40);
+  checar(
+    "sem movimento, o SVG não pede animação alguma",
+    doc.querySelector("svg")?.dataset.movimento === undefined,
+  );
+}
+
+{
+  const css = readFileSync("src/lib/fundos/fundos.css", "utf8");
+
+  /*
+    ⭐ **Os períodos têm de ser PRIMOS ENTRE SI.** Com durações que se dividem
+    (20s e 40s), as orbes reencontram a mesma configuração a cada ciclo curto e
+    o olho aprende o compasso: o fundo passa a piscar em vez de derivar. Este
+    teste é a única forma de garantir isso — visualmente, o defeito só aparece
+    depois de um minuto olhando.
+  */
+  const mdc = (a, b) => (b === 0 ? a : mdc(b, a % b));
+  const duracoes = [...css.matchAll(/animation-duration: (\d+)s/g)].map((m) => Number(m[1]));
+  const unicas = [...new Set(duracoes)];
+  const paresRuins = [];
+  for (let i = 0; i < unicas.length; i++) {
+    for (let j = i + 1; j < unicas.length; j++) {
+      if (mdc(unicas[i], unicas[j]) !== 1) paresRuins.push(`${unicas[i]}s+${unicas[j]}s`);
+    }
+  }
+  checar(
+    "os períodos das animações são primos entre si",
+    unicas.length >= 6 && paresRuins.length === 0,
+    paresRuins.length ? `se dividem: ${paresRuins.join(", ")}` : `${unicas.sort((a, b) => a - b).join("s, ")}s`,
+  );
+
+  /*
+    ⛔ **Quem pediu menos movimento recebe a composição PARADA, não mais rápida.**
+    Encurtar a duração aqui seria pior que não animar: um fundo decorativo que se
+    agita depressa é exatamente o que a preferência do sistema existe para
+    evitar. É a única animação da biblioteca que se DESLIGA em vez de encurtar.
+  */
+  const bloco = css.slice(css.lastIndexOf("prefers-reduced-motion"));
+  checar(
+    "com menos movimento, a animação é desligada — e não acelerada",
+    bloco.includes("animation: none") && !bloco.includes("animation-duration: 1ms"),
+  );
+
+  /* As duas versões animam coisas DIFERENTES: uma o grupo da esfera, outra o
+     blob dentro dela. Se as duas mexessem no mesmo elemento, seriam a mesma. */
+  checar(
+    "as duas versões movem elementos diferentes",
+    /\[data-movimento="orbes"\] \.cui-orbe/.test(css) &&
+      /\[data-movimento="luz"\] \.cui-luz/.test(css),
+  );
 }
 
 {
