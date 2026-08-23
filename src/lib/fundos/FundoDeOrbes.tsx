@@ -2,21 +2,14 @@
 
 import { useId } from "react";
 
-import "./fundos.css";
+import type { MovimentoDoFundo } from "./movimento";
 
-/**
- * O que se move.
- *
- * ⭐ **São duas ideias diferentes de vida, não duas intensidades.** Em
- * `orbes`, as esferas derivam pelo quadro — o que muda é a COMPOSIÇÃO. Em
- * `luz`, elas ficam exatamente onde estão e o mesh se desloca por dentro: o
- * que muda é a MATÉRIA delas, como óleo girando dentro de uma bolha de sabão.
- */
-export type MovimentoDoFundo = "nenhum" | "orbes" | "luz";
+import "./fundos.css";
 
 export type PropsDoFundoDeOrbes = {
   /** Para encaixar em outro lugar que não a camada de fundo — a miniatura, por exemplo. */
   className?: string;
+  /** Ver `movimento.ts`: `formas` move as esferas, `luz` move o mesh dentro delas. */
   movimento?: MovimentoDoFundo;
 };
 

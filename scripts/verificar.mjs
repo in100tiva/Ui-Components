@@ -123,6 +123,7 @@ const { createRoot } = await import("react-dom/client");
 const {
   Abas,
   FundoDeOrbes,
+  FundoDeSeda,
   CamadaDeFundo,
   FUNDOS,
   usarFundo,
@@ -1131,7 +1132,7 @@ console.log("\nFundos");
     "o fundo é decorativo para o leitor de tela",
     doc.querySelector("svg")?.getAttribute("aria-hidden") === "true",
   );
-  checar("o catálogo tem os três fundos", FUNDOS.length === 3, FUNDOS.map((f) => f.id).join(", "));
+  checar("o catálogo tem os seis fundos", FUNDOS.length === 6, FUNDOS.map((f) => f.id).join(", "));
 }
 
 /* --- As duas versões animadas --------------------------------------------- */
@@ -1142,7 +1143,7 @@ console.log("\nFundos");
       React.createElement(
         "div",
         null,
-        React.createElement(FundoDeOrbes, { movimento: "orbes" }),
+        React.createElement(FundoDeOrbes, { movimento: "formas" }),
         React.createElement(FundoDeOrbes, { movimento: "luz" }),
       ),
     );
@@ -1152,7 +1153,7 @@ console.log("\nFundos");
   const svgs = [...doc.querySelectorAll("svg")];
   checar(
     "cada versão se declara no atributo que liga a animação",
-    svgs[0]?.dataset.movimento === "orbes" && svgs[1]?.dataset.movimento === "luz",
+    svgs[0]?.dataset.movimento === "formas" && svgs[1]?.dataset.movimento === "luz",
     svgs.map((v) => v.dataset.movimento ?? "nenhum").join(" / "),
   );
 
@@ -1174,6 +1175,37 @@ console.log("\nFundos");
     doTres.length === 2,
     `${doTres.length} grupos com data-orbe="3"`,
   );
+
+  /* A seda: mesma estrutura de grupos, outra composição. */
+  await act(async () => {
+    raiz.render(
+      React.createElement(
+        "div",
+        null,
+        React.createElement(FundoDeSeda, { movimento: "formas" }),
+        React.createElement(FundoDeSeda, { movimento: "luz" }),
+      ),
+    );
+  });
+  await esperar(60);
+
+  {
+    const sedas = [...doc.querySelectorAll("svg")];
+    const dobras = sedas[0].querySelectorAll(".cui-dobra").length;
+    const brilhos = sedas[0].querySelectorAll(".cui-brilho").length;
+    checar(
+      "a seda tem dobras e brilhos em grupos próprios",
+      dobras === 5 && brilhos === 4,
+      dobras + " dobras, " + brilhos + " brilhos",
+    );
+    const ids = [...doc.querySelectorAll("[id]")].map((n) => n.id);
+    const repetidos = ids.filter((id, i) => ids.indexOf(id) !== i);
+    checar(
+      "duas sedas na mesma página não repetem id",
+      repetidos.length === 0,
+      repetidos.length ? repetidos.slice(0, 3).join(", ") : ids.length + " ids únicos",
+    );
+  }
 
   /* O fundo estático não pode carregar animação nenhuma. */
   await act(async () => {
@@ -1224,6 +1256,28 @@ console.log("\nFundos");
   );
 
   /*
+    ⭐ **Os dois fundos falam o MESMO vocabulário de movimento.** `formas` move
+    as peças (as esferas derivam, as dobras ondulam) e `luz` move a cor dentro
+    delas (o mesh passeia, o realce corre pela crista). Um vocabulário só é o
+    que permite ao catálogo descrever qualquer fundo com as mesmas duas
+    palavras — e a quem escolhe, saber o que vai acontecer antes de ligar.
+  */
+  checar(
+    "a seda usa o mesmo vocabulário de movimento das orbes",
+    /\[data-movimento="formas"\] \.cui-dobra/.test(css) &&
+      /\[data-movimento="luz"\] \.cui-brilho/.test(css),
+  );
+  /*
+    ⛔ Um `scaleY` num `<g>` sem `transform-box: fill-box` toma o canto do
+    viewBox como origem: a dobra escorrega para fora do quadro em vez de
+    engrossar no lugar.
+  */
+  checar(
+    "as dobras escalam a partir do próprio centro",
+    /\[data-movimento="formas"\] \.cui-dobra \{[^}]*transform-box: fill-box/s.test(css),
+  );
+
+  /*
     ⛔ **A animação NÃO pode depender do className.** O componente aceita um
     className próprio — e ele SUBSTITUI a classe padrão. Com o seletor preso a
     `.cui-fundo-orbes`, as três amostras da galeria ficavam paradas: o fundo do
@@ -1249,7 +1303,7 @@ console.log("\nFundos");
      blob dentro dela. Se as duas mexessem no mesmo elemento, seriam a mesma. */
   checar(
     "as duas versões movem elementos diferentes",
-    /\[data-movimento="orbes"\] \.cui-orbe/.test(css) &&
+    /\[data-movimento="formas"\] \.cui-orbe/.test(css) &&
       /\[data-movimento="luz"\] \.cui-luz/.test(css),
   );
 }

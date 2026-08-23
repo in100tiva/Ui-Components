@@ -184,7 +184,7 @@
 
 /* --- Versão 1: as esferas derivam ---------------------------------------- */
 
-[data-movimento="orbes"] .cui-orbe {
+[data-movimento="formas"] .cui-orbe {
   /*
     ⛔ `transform-box: fill-box` não serve aqui: só translação é usada, e a
     origem não muda nada — mas deixar explícito evita que um `scale` acrescentado
@@ -198,12 +198,12 @@
   animation-direction: alternate;
 }
 
-[data-movimento="orbes"] .cui-orbe[data-orbe="1"] {
+[data-movimento="formas"] .cui-orbe[data-orbe="1"] {
   animation-name: cui-orbe-deriva-1;
   animation-duration: 43s;
 }
 
-[data-movimento="orbes"] .cui-orbe[data-orbe="2"] {
+[data-movimento="formas"] .cui-orbe[data-orbe="2"] {
   animation-name: cui-orbe-deriva-2;
   animation-duration: 29s;
 }
@@ -214,12 +214,12 @@
   diferentes, a luz se descolaria do objeto que a produz — e um halo à deriva
   no meio do cartão é a coisa mais visível que este fundo pode fazer de errado.
 */
-[data-movimento="orbes"] .cui-orbe[data-orbe="3"] {
+[data-movimento="formas"] .cui-orbe[data-orbe="3"] {
   animation-name: cui-orbe-deriva-3;
   animation-duration: 41s;
 }
 
-[data-movimento="orbes"] .cui-orbe[data-orbe="5"] {
+[data-movimento="formas"] .cui-orbe[data-orbe="5"] {
   animation-name: cui-orbe-deriva-5;
   animation-duration: 31s;
 }
@@ -373,4 +373,146 @@
 }
 .cui-fundo-amostra .cui-luz[data-luz="e"] {
   animation-duration: 19s;
+}
+
+/* ==========================================================================
+   Movimento das dobras de seda
+   ========================================================================== */
+
+/*
+  ⭐ **Na seda, "formas" é ONDULAR, não derivar.** Um lençol de tecido não
+  atravessa a tela: ele sobe e desce no lugar. Por isso o deslocamento é quase
+  todo vertical, com um `scaleY` mínimo — a dobra respira em vez de passear.
+
+  ⚠️ `transform-origin: center` com `transform-box: fill-box`: sem os dois, o
+  `scaleY` de um `<g>` toma como origem o canto do viewBox, e a dobra escorrega
+  para fora do quadro em vez de engrossar no lugar.
+*/
+@keyframes cui-dobra-1 {
+  to {
+    transform: translateY(-16px) scaleY(1.03);
+  }
+}
+@keyframes cui-dobra-2 {
+  to {
+    transform: translateY(14px) scaleY(0.98);
+  }
+}
+@keyframes cui-dobra-3 {
+  to {
+    transform: translateY(-12px) scaleY(1.025);
+  }
+}
+@keyframes cui-dobra-4 {
+  to {
+    transform: translateY(10px);
+  }
+}
+@keyframes cui-dobra-5 {
+  to {
+    transform: translate(-18px, 12px);
+  }
+}
+
+[data-movimento="formas"] .cui-dobra {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+[data-movimento="formas"] .cui-dobra[data-dobra="1"] {
+  animation-name: cui-dobra-1;
+  animation-duration: 29s;
+}
+[data-movimento="formas"] .cui-dobra[data-dobra="2"] {
+  animation-name: cui-dobra-2;
+  animation-duration: 37s;
+}
+[data-movimento="formas"] .cui-dobra[data-dobra="3"] {
+  animation-name: cui-dobra-3;
+  animation-duration: 31s;
+}
+[data-movimento="formas"] .cui-dobra[data-dobra="4"] {
+  animation-name: cui-dobra-4;
+  animation-duration: 43s;
+}
+[data-movimento="formas"] .cui-dobra[data-dobra="5"] {
+  animation-name: cui-dobra-5;
+  animation-duration: 41s;
+}
+
+/*
+  ⭐ **Na seda, "luz" é o BRILHO CORRENDO pela dobra.** As dobras ficam paradas
+  e o traço de luz da crista desliza no eixo dela — que é exatamente o que o
+  cetim faz quando a fonte de luz se move: a forma não muda, o realce viaja.
+
+  É a mesma ideia da luz viva das orbes (a cor passeando dentro da forma), na
+  linguagem deste desenho: aqui o que passeia é o realce, não o mesh.
+*/
+@keyframes cui-brilho-a {
+  to {
+    transform: translateX(260px);
+  }
+}
+@keyframes cui-brilho-b {
+  to {
+    transform: translateX(-320px);
+  }
+}
+@keyframes cui-brilho-c {
+  to {
+    transform: translateX(300px);
+  }
+}
+@keyframes cui-brilho-d {
+  to {
+    transform: translateX(-220px);
+  }
+}
+
+[data-movimento="luz"] .cui-brilho {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+[data-movimento="luz"] .cui-brilho[data-brilho="a"] {
+  animation-name: cui-brilho-a;
+  animation-duration: 23s;
+}
+[data-movimento="luz"] .cui-brilho[data-brilho="b"] {
+  animation-name: cui-brilho-b;
+  animation-duration: 31s;
+}
+[data-movimento="luz"] .cui-brilho[data-brilho="c"] {
+  animation-name: cui-brilho-c;
+  animation-duration: 37s;
+}
+[data-movimento="luz"] .cui-brilho[data-brilho="d"] {
+  animation-name: cui-brilho-d;
+  animation-duration: 29s;
+}
+
+/* A amostra exagera, pelo mesmo motivo de sempre: num preview de 200px, o
+   movimento real é invisível. */
+.cui-fundo-amostra .cui-dobra[data-dobra="1"] { animation-duration: 11s; }
+.cui-fundo-amostra .cui-dobra[data-dobra="2"] { animation-duration: 13s; }
+.cui-fundo-amostra .cui-dobra[data-dobra="3"] { animation-duration: 9s; }
+.cui-fundo-amostra .cui-dobra[data-dobra="4"] { animation-duration: 17s; }
+.cui-fundo-amostra .cui-dobra[data-dobra="5"] { animation-duration: 19s; }
+.cui-fundo-amostra .cui-brilho[data-brilho="a"] { animation-duration: 9s; }
+.cui-fundo-amostra .cui-brilho[data-brilho="b"] { animation-duration: 11s; }
+.cui-fundo-amostra .cui-brilho[data-brilho="c"] { animation-duration: 13s; }
+.cui-fundo-amostra .cui-brilho[data-brilho="d"] { animation-duration: 17s; }
+
+/* Quem pediu menos movimento recebe a composição parada — não mais rápida. */
+@media (prefers-reduced-motion: reduce) {
+  .cui-dobra,
+  .cui-brilho {
+    animation: none;
+  }
 }

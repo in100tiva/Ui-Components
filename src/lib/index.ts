@@ -95,6 +95,9 @@ export {
 
 /* Fundos — a camada decorativa atrás do site inteiro. */
 export { FundoDeOrbes } from "./fundos/FundoDeOrbes";
+export { FundoDeSeda } from "./fundos/FundoDeSeda";
+export type { PropsDoFundoDeSeda } from "./fundos/FundoDeSeda";
+export type { MovimentoDoFundo } from "./fundos/movimento";
 export type { PropsDoFundoDeOrbes } from "./fundos/FundoDeOrbes";
 export { FUNDOS, CamadaDeFundo } from "./fundos/catalogo";
 export type { FundoDisponivel } from "./fundos/catalogo";

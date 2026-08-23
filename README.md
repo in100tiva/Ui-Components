@@ -957,6 +957,39 @@ então o desfoque (σ=58 na esfera grande, σ=90 no halo) é recalculado a cada
 quadro. É a mais cara das duas — vale medir no alvo antes de ligá-la numa página
 que já tenha muito acontecendo.
 
+### `FundoDeSeda`
+
+Lençóis de cetim em rosa, lilás e azul — a segunda composição, recriada do zero
+com a mesma arquitetura.
+
+⭐ **Cada dobra é um PAR, e é o par que produz volume**: o corpo com um gradiente
+perpendicular à curva (branco na crista, cor no ventre, sombra no vale) mais uma
+sombra própria logo abaixo da crista — a que a dobra projeta sobre o lençol de
+baixo. Só o gradiente do corpo dá uma faixa chapada; só a sombra dá um borrão.
+Juntos, dão tecido.
+
+⭐ **A crista tem um traço de luz separado**, um stroke largo e desfocado
+correndo por cima da mesma curva do corpo. É ele que faz o acetinado — sem ele o
+conjunto lê como papel colorido, não como seda.
+
+⛔ **Toda dobra que termina no meio do quadro precisa de máscara.** A aba do alto
+acabava numa borda reta vertical, e uma linha perfeitamente reta no meio de um
+tecido denuncia o path na hora.
+
+**As duas versões animadas**, no mesmo vocabulário das orbes:
+
+⭐ Em **`formas`**, a seda ONDULA em vez de derivar: um lençol não atravessa a
+tela, ele sobe e desce no lugar. Por isso o deslocamento é quase todo vertical,
+com um `scaleY` mínimo — a dobra respira.
+
+⛔ `transform-box: fill-box` com `transform-origin: center`: sem os dois, o
+`scaleY` de um `<g>` toma o canto do viewBox como origem e a dobra escorrega
+para fora do quadro em vez de engrossar no lugar.
+
+⭐ Em **`luz`**, as dobras ficam paradas e o realce viaja pela crista de cada
+uma — que é o que o cetim faz quando a fonte de luz se move: a forma não muda, o
+brilho passeia.
+
 ### Um fundo novo
 
 Uma entrada em `catalogo.tsx`. A página de escolha, a camada do site e a
