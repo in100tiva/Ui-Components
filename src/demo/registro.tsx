@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { GrupoDeNavegacao } from "../lib";
 import { DemoDasAbas } from "./demos/abas";
 import { DemoDoCartaoDeDecisao } from "./demos/cartao-de-decisao";
+import { DemoDosFundos } from "./demos/fundos";
 import { DemoDoGerenciadorDeArquivos } from "./demos/gerenciador-de-arquivos";
 import { DemoDosFundamentos } from "./demos/fundamentos";
 import { DemoDoMenuSuspenso } from "./demos/menu-suspenso";
@@ -84,6 +85,17 @@ export const REGISTRO: readonly EntradaDoRegistro[] = [
       "Organizar arquivos já enviados: árvore de pastas, grade, lista, arrasta-e-solta e menus — tudo sobre uma única porta de dados, trocável por um back-end real.",
     estado: "pronto",
     Demo: DemoDoGerenciadorDeArquivos,
+  },
+  {
+    id: "fundos",
+    nome: "Fundos",
+    /* Terceiro grupo, e de novo por natureza diferente: aqui não se demonstra um
+       controle nem uma página — escolhe-se algo que vale para o site inteiro. */
+    grupo: "Fundos",
+    resumo:
+      "Camadas decorativas para o site inteiro. Marque uma e ela vira o fundo; clique de novo para tirar.",
+    estado: "pronto",
+    Demo: DemoDosFundos,
   },
 ];
 

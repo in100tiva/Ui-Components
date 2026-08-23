@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { Casca, MenuSuspenso, NavegacaoLateral, usarTema } from "../lib";
+import { CamadaDeFundo, Casca, MenuSuspenso, NavegacaoLateral, usarTema } from "../lib";
 import { REGISTRO, acharEntrada, gruposDoRegistro } from "./registro";
 
 import "./galeria.css";
@@ -47,7 +47,11 @@ export function Galeria() {
   const entrada = acharEntrada(id);
 
   return (
-    <Casca
+    <>
+      {/* A camada de fundo vem ANTES da casca e vive em position:fixed — ela é
+         o ambiente do site, e some sozinha quando nenhum fundo está ligado. */}
+      <CamadaDeFundo />
+      <Casca
       marca={<Marca />}
       lateral={
         <NavegacaoLateral
@@ -98,7 +102,8 @@ export function Galeria() {
       ) : (
         <p className="galeria__vazio">Nenhum componente no registro ainda.</p>
       )}
-    </Casca>
+      </Casca>
+    </>
   );
 }
 

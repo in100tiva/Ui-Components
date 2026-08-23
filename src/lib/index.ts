@@ -93,6 +93,14 @@ export {
   formatarTamanho,
 } from "./gerenciador-de-arquivos/modelo";
 
+/* Fundos — a camada decorativa atrás do site inteiro. */
+export { FundoDeOrbes } from "./fundos/FundoDeOrbes";
+export type { PropsDoFundoDeOrbes } from "./fundos/FundoDeOrbes";
+export { FUNDOS, CamadaDeFundo } from "./fundos/catalogo";
+export type { FundoDisponivel } from "./fundos/catalogo";
+export { usarFundo } from "./fundos/usar-fundo";
+export type { FundoAtivo } from "./fundos/usar-fundo";
+
 /* A camada de movimento — o anime.js falando a língua do design. */
 export { animate, mola, ondaDeItens, coreografar, devolverAoCss } from "./movimento/movimento";
 export type { NomeDeMola } from "./movimento/movimento";

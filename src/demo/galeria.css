@@ -523,3 +523,89 @@
   line-height: 1.65;
   text-wrap: pretty;
 }
+
+/* --- Página de fundos ----------------------------------------------------- */
+
+.demo-fundos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 14px;
+}
+
+.demo-fundo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--cui-borda);
+  border-radius: var(--cui-raio-cartao);
+  transition:
+    border-color var(--cui-transicao-estado) ease,
+    box-shadow var(--cui-transicao-estado) ease;
+}
+
+/* O cartão do fundo em uso ganha o anel do acento — o mesmo sinal de "escolhido"
+   que a coluna lateral usa, para não inventar um segundo vocabulário. */
+.demo-fundo[data-ligado="true"] {
+  border-color: var(--cui-acento);
+  box-shadow: 0 0 0 3px var(--cui-acento-14);
+}
+
+/* A miniatura tem a proporção da tela, não a da composição: é assim que ela
+   mostra o enquadramento REAL que o fundo vai ter no site. */
+.demo-fundo__amostra {
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid var(--cui-borda);
+  border-radius: var(--cui-raio-item);
+  background: var(--cui-fundo);
+}
+
+.demo-fundo__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.demo-fundo__nome {
+  color: var(--cui-texto);
+  font-size: var(--cui-texto-corpo);
+  font-weight: var(--cui-peso-forte);
+}
+
+.demo-fundo__descricao {
+  color: var(--cui-texto-suave);
+  font-size: var(--cui-texto-apoio);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.demo-fundo__botao {
+  height: 34px;
+  border: 1px solid var(--cui-borda);
+  border-radius: var(--cui-raio-item);
+  background: var(--cui-superficie);
+  color: var(--cui-texto-rotulo);
+  font: inherit;
+  font-size: var(--cui-texto-corpo);
+  font-weight: var(--cui-peso-medio);
+  cursor: pointer;
+  transition:
+    background-color var(--cui-transicao-estado) ease,
+    color var(--cui-transicao-estado) ease;
+}
+
+.demo-fundo__botao:hover {
+  background: var(--cui-realce);
+}
+
+.demo-fundo__botao[aria-pressed="true"] {
+  border-color: transparent;
+  background: var(--cui-acento);
+  color: #ffffff;
+}
+
+.demo-fundo__botao:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--cui-anel-foco);
+}
