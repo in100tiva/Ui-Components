@@ -282,6 +282,13 @@ const cartoes = () => [...doc.querySelectorAll(".cui-decisao")];
 const parte = (i, sel) => cartoes()[i]?.querySelector(sel);
 const botao = (i, tipo) => parte(i, `.cui-interruptor__lado[data-tipo="${tipo}"]`);
 const knob = (i) => parte(i, ".cui-interruptor__knob");
+const fechado = (i) => parte(i, ".cui-interruptor__gatilho");
+
+/* Abre o interruptor, que nasce fechado como um botão. */
+const abrirInterruptor = async (i) => {
+  if (fechado(i)) await clicar(fechado(i));
+  await esperar(60);
+};
 
 checar("os três cartões montaram", cartoes().length === 3);
 checar(
@@ -294,6 +301,20 @@ checar("cartão decidido tem contorno pronto", parte(0, "rect")?.style.strokeDas
 checar("cartão decidido tem malha e lavagem", Boolean(parte(1, ".cui-decisao__malha") && parte(1, ".cui-decisao__vidro")));
 checar("cartão em aberto não tem camada nenhuma", !parte(2, ".cui-decisao__contorno") && !parte(2, ".cui-decisao__malha"));
 
+/*
+  ⭐ **O controle nasce FECHADO — um botão, não um switch.** Um switch com a
+  alavanca no meio afirmaria uma escolha em curso que não existe; o botão não
+  afirma nada, que é o estado de uma tarefa por decidir.
+*/
+checar("em aberto, o controle é um botão fechado", Boolean(fechado(2)) && !botao(2, "reprovada"));
+checar("o botão fechado anuncia que revela opções", fechado(2)?.getAttribute("aria-expanded") === "false");
+checar("cartão já decidido também mostra o botão fechado, com o resultado",
+  fechado(0)?.dataset.resultado === "aprovada" && fechado(1)?.dataset.resultado === "reprovada");
+
+await abrirInterruptor(2);
+checar("clicar abre as duas opções", Boolean(botao(2, "reprovada") && botao(2, "aprovada")));
+checar("e o botão fechado dá lugar a elas", !fechado(2));
+
 /* O intervalo entre o clique e a confirmação: o estado é anunciado na hora, o
    visual espera a volta fechar. */
 await clicar(botao(2, "reprovada"));
@@ -303,8 +324,15 @@ checar(
   botao(2, "reprovada")?.getAttribute("data-aceso") === "false",
 );
 
+/* Enquanto a coreografia roda, o controle CONTINUA aberto: é o que deixa ver a
+   alavanca chegar ao lado escolhido antes de tudo se recolher. */
+checar("durante a coreografia o controle segue aberto", Boolean(botao(2, "reprovada")));
+
 await esperar(900);
-checar("ao fechar a volta, o lado acende", botao(2, "reprovada")?.getAttribute("data-aceso") === "true");
+checar(
+  "⭐ ao confirmar, o controle se RECOLHE mostrando o resultado",
+  Boolean(fechado(2)) && fechado(2)?.dataset.resultado === "reprovada",
+);
 /*
   ⚠️ **Com tolerância, e de propósito.** Uma mola para por limiar de energia, não
   no valor exato: o repouso fica em `-0.018%` em vez de `0%`. São dois centésimos
@@ -322,7 +350,7 @@ const naParada = (i, esperado) =>
   Math.abs(parseFloat(knob(i)?.style.left ?? "NaN") - esperado) < 0.5;
 
 checar(
-  "a alavanca foi para uma parada válida",
+  "a alavanca tem posição definida",
   Number.isFinite(parseFloat(knob(2)?.style.left ?? "NaN")),
   `left="${knob(2)?.style.left}"`,
 );
@@ -330,25 +358,29 @@ checar("reprovar tinge o cartão de vermelho", cartoes()[2]?.dataset.resultado =
 checar("a malha apareceu", Number(parte(2, ".cui-decisao__malha")?.style.opacity) === 1);
 checar("o rodapé anuncia a decisão por escrito", Boolean(parte(2, ".cui-decisao__rodape")));
 
-/* Trocar de lado, e depois desfazer. */
+/* Trocar de lado, e depois desfazer — reabrindo o controle a cada vez. */
+await abrirInterruptor(2);
 await clicar(botao(2, "aprovada"));
 await esperar(900);
 checar("trocar de lado troca o tom", cartoes()[2]?.dataset.resultado === "aprovada");
-checar("o lado anterior deixou de estar marcado", botao(2, "reprovada")?.getAttribute("aria-checked") === "false");
-checar("a alavanca atravessou para o outro lobo", Number.isFinite(parseFloat(knob(2)?.style.left ?? "NaN")), `left="${knob(2)?.style.left}"`);
+checar("o botão fechado agora carrega o outro resultado", fechado(2)?.dataset.resultado === "aprovada");
 
+await abrirInterruptor(2);
 await clicar(botao(2, "aprovada"));
-/* A mola do knob leva mais que os 200ms de um fade — esperar de menos aqui mede
-   a animação no meio do caminho, e o teste falha por impaciência. */
+/* A mola da alavanca leva mais que os 200ms de um fade — esperar de menos aqui
+   mede a animação no meio do caminho, e o teste falha por impaciência. */
 await esperar(900);
 checar("clicar de novo no lado ativo desfaz", cartoes()[2]?.dataset.resultado === "aberta");
 checar(
-  "sem decisão, o cartão volta à CINTURA — o estado que um switch de dois lados não sabe dizer",
-  parte(2, ".cui-interruptor")?.dataset.resultado === "aberta",
+  "desfazer devolve o controle ao botão neutro",
+  parte(2, ".cui-interruptor")?.dataset.resultado === "aberta" &&
+    Boolean(fechado(2)) &&
+    fechado(2)?.dataset.resultado === "aberta",
 );
+await abrirInterruptor(2);
 checar(
-  "o grupo é um radiogroup, e nenhum rádio fica marcado em aberto",
-  parte(2, '[role="radiogroup"]') &&
+  "reaberto, é um radiogroup sem nenhum rádio marcado",
+  Boolean(parte(2, '[role="radiogroup"]')) &&
     [...(parte(2, '[role="radiogroup"]')?.querySelectorAll('[role="radio"]') ?? [])]
       .every((r) => r.getAttribute("aria-checked") === "false"),
 );

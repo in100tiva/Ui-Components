@@ -241,7 +241,8 @@ export const tempos = {
   "transicaoItem": 180,
   "deslizePilula": 320,
   "desenhoDoContorno": 700,
-  "acenderDaMalha": 620
+  "acenderDaMalha": 620,
+  "abrirInterruptor": 260
 } as const;
 
 export const contagens = {

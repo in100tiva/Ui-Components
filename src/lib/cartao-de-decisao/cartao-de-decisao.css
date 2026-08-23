@@ -184,11 +184,74 @@
    O interruptor — dois lobos ligados por uma cintura.
    ========================================================================== */
 
+/*
+  ⚠️ A largura é escrita pelo JavaScript — 44px fechado, 108px aberto. O valor
+  aqui é só o de partida, para o primeiro quadro não nascer com largura zero.
+  `overflow: hidden` é o que faz a forma ser REVELADA em vez de escapar do
+  quadro enquanto ele cresce.
+*/
 .cui-interruptor {
   position: relative;
   flex-shrink: 0;
-  width: var(--cui-interruptor-largura);
+  width: var(--cui-interruptor-altura);
   height: var(--cui-interruptor-altura);
+  overflow: hidden;
+  border-radius: var(--cui-raio-pilula);
+}
+
+/* --- A forma fechada ----------------------------------------------------- */
+
+/*
+  ⭐ O botão que não afirma nada. Um switch com a alavanca no meio diz que há uma
+  escolha em curso; este diz que há uma escolha a fazer — que é o estado real de
+  uma tarefa por decidir.
+*/
+.cui-interruptor__gatilho {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--cui-texto-suave);
+  cursor: pointer;
+  outline: none;
+  transition: color var(--cui-transicao-estado) ease;
+}
+
+.cui-interruptor__gatilho svg {
+  width: 18px;
+  height: 18px;
+}
+
+.cui-interruptor__gatilho:hover {
+  color: var(--cui-texto);
+}
+
+.cui-interruptor__gatilho:focus-visible {
+  box-shadow: 0 0 0 3px var(--cui-anel-foco);
+}
+
+.cui-interruptor__gatilho:disabled {
+  cursor: progress;
+}
+
+/* Fechado COM decisão: o botão carrega o resultado. */
+.cui-interruptor__gatilho[data-resultado="aprovada"] {
+  color: var(--cui-sucesso);
+}
+.cui-interruptor__gatilho[data-resultado="reprovada"] {
+  color: var(--cui-perigo);
+}
+
+.cui-interruptor__opcoes {
+  display: contents;
 }
 
 /*
@@ -196,10 +259,17 @@
   sobrepostos deixam um vinco em V no encontro; a curva côncava entre eles é o
   que faz a forma ler como UMA peça. Ela é estática — o que se move é o knob.
 */
+/*
+  ⚠️ A largura é a do VIEWBOX, não a do container. É isso que faz o
+  `xMinYMid slice` recortar em vez de espremer: o desenho mantém o tamanho e o
+  container revela mais ou menos dele conforme cresce. Com `width: 100%` a forma
+  encolheria junto, e o lobo viraria uma elipse.
+*/
 .cui-interruptor__trilho {
   position: absolute;
-  inset: 0;
-  width: 100%;
+  top: 0;
+  left: 0;
+  width: var(--cui-interruptor-largura);
   height: 100%;
   fill: var(--cui-trilho);
 }

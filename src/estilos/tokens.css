@@ -260,6 +260,8 @@
   --cui-desenho-do-contorno: 700ms;
   /* ⭐ A varredura que revela a malha de pontos. Fica logo abaixo dos 700ms do contorno: os pontos terminam de aparecer pouco antes de o traço fechar a volta, e o cartão assenta em vez de ter duas coisas acabando no mesmo instante. */
   --cui-acender-da-malha: 620ms;
+  /* ⭐ A expansão do interruptor de botão para switch. Curta: é uma revelação de opções, não uma entrada em cena — o que a pessoa quer é escolher, e cada milissegundo aqui é atrito entre a intenção e o alvo. */
+  --cui-abrir-interruptor: 260ms;
 
   /* Contagens */
   --cui-teto-escalonado: 8;

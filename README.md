@@ -172,13 +172,31 @@ aprovada, vermelho para reprovada — **o mesmo desenho, só a família de cor m
 | `pendente` | `boolean` | `false` | Em `aria-busy`, recusa cliques, cursor de progresso. |
 | `detalhe` | `string \| null` | `null` | "Aprovada por Ana em 03/08" — vira `title` e rodapé. |
 
-**O `InterruptorDeDecisao`** são dois lobos ligados por uma cintura, com o knob
-deslizando entre eles.
+**O `InterruptorDeDecisao`** tem três formas, e a do meio é efêmera:
 
-⭐ **Ele tem TRÊS paradas, e a do meio é a razão do desenho.** Um interruptor de
-duas posições sempre afirma um dos lados — pousado à esquerda, diz "reprovada"
-numa tarefa que ninguém olhou ainda. A cintura é a única forma honesta de
-desenhar "em aberto".
+| Estado | Forma |
+|---|---|
+| **Sem decisão** | Um botão redondo com reticências — como um menu fechado |
+| **Aberto** | Dois lobos ligados por uma cintura, com as duas opções |
+| **Decidido** | Volta ao círculo, com o ícone e a cor do que foi escolhido |
+
+⭐ **Por que colapsar, em vez de deixar o switch sempre aberto.** Um switch de
+duas posições com a alavanca no meio afirma uma escolha *em curso* que não
+existe — ela fica entre aprovar e reprovar, encostando nos dois. O botão fechado
+não afirma nada, que é exatamente o estado de uma tarefa por decidir. As opções
+aparecem quando alguém vai usá-las.
+
+⭐ **A transformação é uma largura só.** O `<svg>` do trilho tem `viewBox` fixo e
+`preserveAspectRatio="xMinYMid slice"`: com 44px de largura, o que cabe no quadro
+é exatamente o lobo esquerdo — um círculo perfeito. Crescendo até 108px, a
+cintura e o segundo lobo entram em cena. Não são duas formas trocando de lugar: é
+uma sendo revelada.
+
+⭐ **Quem recolhe o controle é a CONFIRMAÇÃO, não o clique.** É o mesmo
+`confirmado` que o resto do cartão espera: a alavanca vai para o lado escolhido,
+o contorno percorre a borda, e quando a volta fecha tudo se recolhe junto.
+Desfazer recolhe na hora — senão o controle ficaria aberto com a alavanca na
+cintura, o estado ambíguo que a forma fechada existe para eliminar.
 
 ⭐ **É um `radiogroup`, não um `switch`.** Um switch tem dois estados e nenhum
 jeito de dizer "ainda não decidi"; um grupo de rádios tem exatamente isso —
