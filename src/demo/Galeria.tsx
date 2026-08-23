@@ -47,11 +47,8 @@ export function Galeria() {
   const entrada = acharEntrada(id);
 
   return (
-    <>
-      {/* A camada de fundo vem ANTES da casca e vive em position:fixed — ela é
-         o ambiente do site, e some sozinha quando nenhum fundo está ligado. */}
-      <CamadaDeFundo />
-      <Casca
+    <Casca
+      fundo={<CamadaDeFundo />}
       marca={<Marca />}
       lateral={
         <NavegacaoLateral
@@ -102,8 +99,7 @@ export function Galeria() {
       ) : (
         <p className="galeria__vazio">Nenhum componente no registro ainda.</p>
       )}
-      </Casca>
-    </>
+    </Casca>
   );
 }
 

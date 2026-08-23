@@ -26,18 +26,17 @@ export const FUNDOS: readonly FundoDisponivel[] = [
     id: "orbes",
     nome: "Orbes iridescentes",
     descricao:
-      "Cinco esferas de gradiente sobre luz difusa. Composição em SVG: ela se enquadra como foto em qualquer proporção de tela, em vez de esticar junto com a janela.",
+      "Cinco esferas de gradiente sobre luz difusa, recompostas para a caixa larga do cartão — as cinco cabem, em vez de a arte ser cortada a 40%.",
     Desenho: FundoDeOrbes,
   },
 ];
 
 /**
- * **A camada de fundo do site.** Monte-a uma vez, no topo da árvore — ela
+ * **A camada de fundo do conteúdo.** Passe-a à casca pela prop `fundo` — ela
  * decide sozinha o que desenhar a partir do que estiver ligado.
  *
  * ```tsx
- * <CamadaDeFundo />
- * <MinhaApp />
+ * <Casca fundo={<CamadaDeFundo />} lateral={…}>{conteudo}</Casca>
  * ```
  *
  * ⚠️ Ela não renderiza nada quando não há fundo escolhido: um contêiner vazio

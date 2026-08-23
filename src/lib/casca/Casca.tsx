@@ -11,6 +11,12 @@ export type PropsDaCasca = {
   lateral: ReactNode;
   /** O pé da coluna: alternador de tema, conta, versão. */
   rodapeLateral?: ReactNode;
+  /**
+   * Uma camada decorativa DENTRO do cartão, atrás do conteúdo — tipicamente
+   * uma <CamadaDeFundo>. Fica aqui, e não no topo da árvore, porque o fundo é
+   * do conteúdo: a moldura ao redor continua lisa e a coluna, sem superfície.
+   */
+  fundo?: ReactNode;
   /** O que aparece no cartão central. */
   children: ReactNode;
 };
@@ -37,7 +43,7 @@ export type PropsDaCasca = {
  * ⚠️ **`min-h-dvh`, não `100vh`.** No mobile, `vh` ignora a barra de endereço
  * que aparece e some — a moldura fica com um corte na base a cada rolagem.
  */
-export function Casca({ marca, lateral, rodapeLateral, children }: PropsDaCasca) {
+export function Casca({ marca, lateral, rodapeLateral, fundo, children }: PropsDaCasca) {
   return (
     <div className="cui-casca">
       <div className="cui-casca__linha">
@@ -54,6 +60,9 @@ export function Casca({ marca, lateral, rodapeLateral, children }: PropsDaCasca)
         </aside>
 
         <div className="cui-casca__cartao">
+          {/* Antes do miolo: a camada é sticky e a ordem do documento é o que
+             a mantém atrás sem precisar de z-index negativo. */}
+          {fundo}
           <main className="cui-casca__miolo">
             <div className="cui-casca__medida">{children}</div>
           </main>

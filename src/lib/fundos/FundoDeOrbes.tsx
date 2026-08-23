@@ -38,6 +38,18 @@ export type PropsDoFundoDeOrbes = {
  * ⚠️ **Decorativo do começo ao fim**: `aria-hidden`, sem texto e sem foco. Um
  * fundo que se anuncia é ruído para quem usa leitor de tela.
  */
+/*
+  A matriz que leva a orbe 3 (e o halo dela) do quadro retrato para o lugar dela
+  no quadro largo: leva o centro (452,570) até (740,340), encolhendo 12% em
+  torno desse ponto.
+
+  ⭐ **Reenquadrar, não redesenhar.** `gradientUnits="userSpaceOnUse"`,
+  `clipPath`, `mask` e `stdDeviation` vivem no espaço do usuário LOCAL — todos
+  herdam o transform do grupo. Recorte, dissolução da esquerda e desfoque
+  escalam juntos, sem um único valor reajustado à mão.
+*/
+const ORBE_3 = "translate(740,340) scale(0.88) translate(-452,-570)";
+
 export function FundoDeOrbes({ className }: PropsDoFundoDeOrbes) {
   /*
     ⛔ **Os ids do SVG precisam ser únicos POR INSTÂNCIA.** `url(#g-orbe1)` é
@@ -54,8 +66,16 @@ export function FundoDeOrbes({ className }: PropsDoFundoDeOrbes) {
   return (
     <svg
       className={className ?? "cui-fundo-orbes"}
-      viewBox="0 0 734 1024"
-      preserveAspectRatio="xMinYMin slice"
+      /*
+        ⭐ **O quadro tem a proporção da CAIXA, não a do original.** A arte
+        nasceu retrato (734x1024) e o cartão é paisagem: com o quadro original e
+        `slice`, a escala vira 1,5 e sobram 40% da composição — o cartão fica
+        com uma lavagem violeta e uma bolinha solta, e o assunto (a esfera
+        grande) nunca aparece. Num quadro 1100x640, nada é cortado; o que muda
+        é onde cada orbe fica.
+      */
+      viewBox="0 0 1100 640"
+      preserveAspectRatio="xMidYMid slice"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
       focusable="false"
@@ -321,20 +341,31 @@ export function FundoDeOrbes({ className }: PropsDoFundoDeOrbes) {
 
       {/* O halo fica na camada mais baixa: é luz, não objeto. Por baixo, ele
           preenche o vazio que a máscara abre na esquerda da orbe 3. */}
-      <g filter={ref("f-halo")}>
+      {/* ⛔ Halo e orbe 3 usam a MESMA matriz. Reposicionar um sem o outro
+          descola a luz do objeto que a produz — e um halo órfão no meio do
+          cartão é a coisa mais visível que este fundo pode fazer de errado. */}
+      <g transform={ORBE_3} filter={ref("f-halo")}>
         <ellipse cx="318" cy="690" rx="215" ry="245" fill={ref("g4-violeta")} />
         <ellipse cx="292" cy="520" rx="170" ry="165" fill={ref("g4-violeta-alto")} />
         <ellipse cx="556" cy="858" rx="195" ry="180" fill={ref("g4-ciano")} />
       </g>
 
       {/* Orbes 1 e 5: sem filtro nenhum — a borda de cima precisa ser nítida, e
-          quem dissolve a de baixo é o gradiente. */}
-      <circle cx="285" cy="205" r="300" fill={ref("g-orbe1")} />
-      <circle cx="148" cy="900" r="92" fill={ref("g-orbe5")} />
+          quem dissolve a de baixo é o gradiente.
+
+          A lavagem violeta escorre pelo canto superior esquerdo e morre no meio
+          do quadro, abrindo espaço limpo onde o conteúdo vai ficar; a esfera
+          ciano fecha a diagonal embaixo à esquerda. */}
+      <g transform="translate(-90,-140)">
+        <circle cx="285" cy="205" r="300" fill={ref("g-orbe1")} />
+      </g>
+      <g transform="translate(150,548) scale(0.9) translate(-148,-900)">
+        <circle cx="148" cy="900" r="92" fill={ref("g-orbe5")} />
+      </g>
 
       {/* Orbe 3 — máscara (dissolve a esquerda) > recorte (borda nítida) >
           filtro (funde as quatro cores). A ordem é o efeito. */}
-      <g mask={ref("mask-orbe3")}>
+      <g transform={ORBE_3} mask={ref("mask-orbe3")}>
         <g clipPath={ref("clip-orbe3")}>
           <g filter={ref("f-mesh-grande")}>
             <circle cx="452" cy="570" r="340" fill="#eef1fb" />
@@ -347,8 +378,9 @@ export function FundoDeOrbes({ className }: PropsDoFundoDeOrbes) {
         </g>
       </g>
 
-      {/* Orbe 2 por último: ela passa por cima da orbe 1. */}
-      <g clipPath={ref("clip-orbe2")}>
+      {/* Orbe 2 por último: ela passa por cima da orbe 1. No quadro largo ela
+          sobe para o alto à direita, sem encostar na orbe 3. */}
+      <g transform="translate(1000,112) scale(0.95) translate(-548,-120)" clipPath={ref("clip-orbe2")}>
         <g filter={ref("f-mesh-pequeno")}>
           <circle cx="548" cy="120" r="125" fill="#f4f0fa" />
           <ellipse cx="505" cy="78" rx="72" ry="72" fill={ref("g2-rosa")} />
