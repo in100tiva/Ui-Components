@@ -1,0 +1,315 @@
+/* ==========================================================================
+   Abas — a pestana invertida e o painel que ela abre.
+   Nada de cor, medida ou tempo escrito aqui: tudo sai de `estilos/tokens.css`.
+   ========================================================================== */
+
+.cui-abas {
+  display: flex;
+  flex-direction: column;
+}
+
+/*
+  A rolagem é do INVÓLUCRO, nunca do trilho — e essa separação existe por causa
+  do recorte. A camada invertida se dimensiona pela caixa do trilho; se fosse o
+  trilho que rolasse, ela ficaria presa à parte visível enquanto os botões
+  correriam por baixo, e a pestana desalinharia do rótulo a cada pixel rolado.
+*/
+.cui-abas__rolagem {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+/*
+  ⭐ **A barra não tem fundo: tem uma LINHA DE BASE.** É ela que a pestana
+  interrompe ao passar, e é o que faz a aba aberta parecer a lingueta do painel
+  em vez de um botão pousado numa faixa cinza. Um trilho preenchido atrás das
+  abas resolveria o mesmo agrupamento, mas transformaria a barra num objeto —
+  e o objeto da tela é o conteúdo abaixo dela.
+
+  `width: max-content`: a barra tem a largura das abas, não a da página.
+*/
+.cui-abas__trilho {
+  position: relative;
+  width: max-content;
+  min-width: 100%;
+  border-bottom: 1px solid var(--cui-borda);
+}
+
+.cui-abas__lista {
+  display: flex;
+  flex-wrap: nowrap; /* a medição da pestana pressupõe uma linha só */
+  gap: 2px;
+  /* ⭐ O recuo é do tamanho do PÉ: sem ele a primeira aba nasce colada na borda
+     e a curva esquerda dela fica do lado de fora do trilho, cortada. */
+  padding-inline: var(--cui-aba-pe);
+}
+
+.cui-abas__aba {
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  gap: 8px;
+  height: var(--cui-altura-aba);
+  padding-inline: var(--cui-aba-respiro-x);
+  border: none;
+  /* Só o topo arredonda: a base da pestana continua na linha da barra. */
+  border-radius: var(--cui-raio-aba) var(--cui-raio-aba) 0 0;
+  background: none;
+  color: var(--cui-texto-suave);
+  font: inherit;
+  font-size: var(--cui-texto-corpo);
+  /*
+    ⛔ O peso NÃO muda entre a aba aberta e as outras, e isso é deliberado — é a
+    única regra do sistema que este componente quebra. Peso diferente muda a
+    LARGURA do rótulo: a aba escolhida engordaria, empurrando as vizinhas de
+    lugar no exato instante do clique, e a cópia invertida (que precisa cair
+    pixel a pixel sobre o texto real) deixaria de coincidir no meio da viagem.
+    Quem carrega o estado aqui é `aria-selected`, a cor e o bloco invertido —
+    três indicadores, nenhum deles geométrico.
+  */
+  font-weight: var(--cui-peso-medio);
+  white-space: nowrap;
+  cursor: pointer;
+  outline: none;
+  transition:
+    color var(--cui-transicao-estado) ease,
+    background-color var(--cui-transicao-estado) ease;
+}
+
+.cui-abas__aba:hover:not([aria-selected="true"]):not(:disabled) {
+  background: var(--cui-realce);
+  color: var(--cui-texto-rotulo);
+}
+
+/*
+  ⭐ **O traço do ponteiro** — a resposta que faltava às abas fechadas. Ele
+  cresce do centro sobre a linha de base, no acento, e some do mesmo jeito.
+
+  ⚠️ **É feedback de PONTEIRO, não indicador de estado**, e por isso só existe no
+  hover: quem diz qual aba está aberta é a pestana, o `aria-selected` e a cor.
+  Um traço que ficasse aceso disputaria com ela e a barra passaria a ter dois
+  marcadores dizendo coisas diferentes.
+
+  `scaleX` e não `width`: transformação não recalcula layout, e esta roda a cada
+  aba que o ponteiro atravessa ao varrer a barra.
+*/
+.cui-abas__aba::after {
+  content: "";
+  position: absolute;
+  right: var(--cui-raio-aba);
+  bottom: 0;
+  left: var(--cui-raio-aba);
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--cui-acento);
+  transform: scaleX(0);
+  transition: transform var(--cui-transicao-item) var(--cui-mola);
+}
+
+.cui-abas__aba {
+  position: relative;
+}
+
+.cui-abas__aba:hover:not([aria-selected="true"]):not(:disabled)::after,
+.cui-abas__aba:focus-visible:not([aria-selected="true"])::after {
+  transform: scaleX(1);
+}
+
+/* Na aba aberta o traço não existe: ela já é a própria marca. */
+.cui-abas__aba[aria-selected="true"]::after,
+.cui-abas__invertida .cui-abas__aba::after {
+  content: none;
+}
+
+/*
+  `:focus-visible` e não `:focus`: o anel aparece para quem chega pelo teclado e
+  não pisca a cada clique de mouse.
+
+  ⭐ **O anel fica visível mesmo na aba aberta, e é a geometria que garante
+  isso.** O halo é desenhado FORA da caixa do botão, e a camada invertida por
+  cima está recortada exatamente na caixa do botão — fora do recorte ela não
+  pinta pixel nenhum. Um anel desenhado por dentro (`inset`) sumiria sob a
+  pestana justamente na aba que tem o foco.
+*/
+.cui-abas__aba:focus-visible {
+  box-shadow: 0 0 0 3px var(--cui-anel-foco);
+}
+
+.cui-abas__aba:disabled,
+.cui-abas__aba[data-desabilitada="true"] {
+  color: var(--cui-texto-tenue);
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.cui-abas__selo {
+  padding: 1px 7px;
+  border-radius: var(--cui-raio-pilula);
+  background: var(--cui-acento-14);
+  color: var(--cui-acento-texto);
+  font-size: 10.5px;
+  font-weight: var(--cui-peso-forte);
+}
+
+.cui-abas__icone {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+/* --- A pestana invertida ------------------------------------------------- */
+
+/*
+  ⭐ **A pestana é um RECORTE de uma cópia da barra, não um bloco colorido com um
+  rótulo dentro.**
+
+  A camada é a barra repetida — mesmas classes, mesmos rótulos, mesmas medidas —
+  pintada com o tema OPOSTO (`data-tema-invertido`) e escondida por completo,
+  menos na janela que o `clip-path` abre sobre a aba aberta. O que se vê ali é o
+  fundo invertido E o texto invertido, sempre em cima do texto real, porque as
+  duas camadas ocupam exatamente as mesmas coordenadas.
+
+  O ganho aparece durante a VIAGEM: a janela desliza e as letras se invertem
+  conforme entram nela — meia palavra clara, meia escura, como uma régua
+  passando. A alternativa (pintar o texto da aba aberta de claro e deslizar um
+  bloco atrás) tem um defeito que não se contorna: no meio do caminho o texto
+  claro está sobre o fundo claro, ilegível por 300ms.
+
+  ⚠️ O recorte arredonda só o TOPO: os cantos de baixo são os PÉS, e eles são
+  côncavos — coisa que `inset()` não sabe desenhar. Ver `.cui-abas__pe`.
+*/
+.cui-abas__invertida {
+  position: absolute;
+  inset: 0;
+  background: var(--cui-superficie);
+  color: var(--cui-texto);
+  /* ⛔ Sem isto a camada engole todo clique da barra — ela cobre os botões. */
+  pointer-events: none;
+  clip-path: inset(
+    0
+    calc(100% - var(--cui-aba-x, 0px) - var(--cui-aba-largura, 0px))
+    0
+    var(--cui-aba-x, 0px)
+    round var(--cui-raio-aba) var(--cui-raio-aba) 0 0
+  );
+}
+
+/* Sem aba correspondente ao valor, não há janela para abrir. */
+.cui-abas__invertida[data-visivel="false"],
+.cui-abas__pe[data-visivel="false"] {
+  display: none;
+}
+
+/* A cópia herda a cor invertida da camada; o resto vem da mesma classe. */
+.cui-abas__invertida .cui-abas__aba {
+  color: inherit;
+}
+
+/*
+  ⭐ **Os PÉS — as duas curvas côncavas que fazem a aba derreter na barra.**
+  São o que separa uma pestana de um retângulo com o topo arredondado: sem eles
+  a aba fica pousada sobre a linha; com eles, ela NASCE da linha.
+
+  ⛔ **Não são `border-radius`.** Um raio de canto é convexo por definição — a
+  curva que se precisa aqui é o negativo dele. O desenho é um quarto de disco
+  recortado de um quadrado: um `radial-gradient` centrado no canto de fora, com
+  transparente até o raio e a cor da aba do raio em diante. É a mesma técnica
+  que as abas do navegador usam, e a única que anima junto com a posição sem
+  recalcular caminho nenhum.
+
+  ⛔ **Eles carregam `data-tema-invertido` por conta própria.** A cor precisa ser
+  a MESMA do corpo da pestana; herdada do tema da página, o pé sairia claro
+  colado a um corpo escuro — e a emenda apareceria como um degrau.
+*/
+.cui-abas__pe {
+  position: absolute;
+  bottom: 0;
+  /* A medida ANIMADA, com a do token como reserva para o primeiro quadro e
+     para quem pediu menos movimento. */
+  width: var(--cui-aba-pe-atual, var(--cui-aba-pe));
+  height: var(--cui-aba-pe-atual, var(--cui-aba-pe));
+  pointer-events: none;
+}
+
+.cui-abas__pe--esquerdo {
+  left: calc(var(--cui-aba-x, 0px) - var(--cui-aba-pe-atual, var(--cui-aba-pe)));
+  background: radial-gradient(
+    circle at 0 0,
+    transparent var(--cui-aba-pe-atual, var(--cui-aba-pe)),
+    var(--cui-superficie) calc(var(--cui-aba-pe-atual, var(--cui-aba-pe)) + 0.5px)
+  );
+}
+
+.cui-abas__pe--direito {
+  left: calc(var(--cui-aba-x, 0px) + var(--cui-aba-largura, 0px));
+  background: radial-gradient(
+    circle at 100% 0,
+    transparent var(--cui-aba-pe-atual, var(--cui-aba-pe)),
+    var(--cui-superficie) calc(var(--cui-aba-pe-atual, var(--cui-aba-pe)) + 0.5px)
+  );
+}
+
+/* --- O painel ------------------------------------------------------------ */
+
+/*
+  ⭐ **O painel encosta na barra, sem respiro.** A pestana é a lingueta DELE: com
+  um vão entre os dois, a aba passa a ser um botão solto acima de um cartão, e a
+  ligação que o desenho inteiro existe para mostrar se perde.
+*/
+.cui-abas__painel {
+  padding-top: 18px;
+  outline: none;
+}
+
+.cui-abas__painel:focus-visible {
+  border-radius: var(--cui-raio-item);
+  box-shadow: 0 0 0 3px var(--cui-anel-foco);
+}
+
+/*
+  ⭐ **O conteúdo entra pelo lado de onde a aba veio.** Ir para a aba da direita
+  traz o painel da direita; voltar traz da esquerda. É a mesma regra de direção
+  do menu suspenso — quem se move primeiro é quem está mais perto de quem tocou —
+  e é o que faz as abas lerem como posições de uma fita, não como telas
+  sorteadas.
+
+  Os 8px são curtos por necessidade: o painel pode ter a altura da página
+  inteira, e deslocar uma tela cheia de conteúdo por 40px é enjoo, não
+  movimento.
+*/
+@keyframes cui-abas-entra-frente {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+}
+
+@keyframes cui-abas-entra-tras {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+
+.cui-abas__painel[data-direcao="frente"] {
+  animation: cui-abas-entra-frente var(--cui-transicao-item) var(--cui-mola) both;
+}
+
+.cui-abas__painel[data-direcao="tras"] {
+  animation: cui-abas-entra-tras var(--cui-transicao-item) var(--cui-mola) both;
+}
+
+/*
+  A entrada é ENCURTADA, e não removida — a mesma regra do resto da biblioteca.
+  Com `both`, apagar a animação deixaria o painel preso no `opacity: 0` do
+  primeiro quadro; em 1ms ela vai direto ao último. O deslize morre, o conteúdo
+  aparece.
+
+  A pestana é atendida no JavaScript, não aqui: `preferemenosMovimento` faz a
+  medição ser escrita de uma vez, sem mola.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .cui-abas__painel[data-direcao] {
+    animation-duration: 1ms;
+  }
+}
