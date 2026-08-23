@@ -71,6 +71,10 @@
   --cui-perigo-superficie: oklch(0.97 0.014 25);
   /* O TRILHO do contorno de recusa — o irmão de `sucesso-borda`. */
   --cui-perigo-borda: oklch(0.89 0.055 25);
+  /* ⭐ O sulco de um controle deslizante. ⛔ NÃO é `abafado`, e a diferença só aparece no tema escuro: `abafado` (L 0.288) é mais CLARO que a superfície do cartão (L 0.243), então a alavanca — que é a superfície — sumia dentro do próprio trilho. Um sulco é uma cavidade: ele tem de ser mais escuro que a peça que corre dentro dele, nos dois temas. */
+  --cui-trilho: #e9edf3;
+  /* A peça que corre no sulco. Sempre mais clara que `trilho` — é o que a faz parecer pousada sobre ele em vez de embutida. */
+  --cui-alavanca: #ffffff;
   /* Elevação de campo. No claro há uma luz superior — no escuro ela não existe: superfície clara sobre fundo escuro já se separa sozinha. */
   --cui-relevo-raso: -1px -1px 3px #fafbff, 1px 2px 4px rgb(22 27 29 / 6%);
   /* Elevação de popover. */
@@ -137,6 +141,10 @@
   --cui-perigo-superficie: oklch(0.3 0.06 22);
   /* O TRILHO do contorno de recusa — o irmão de `sucesso-borda`. */
   --cui-perigo-borda: oklch(0.42 0.09 22);
+  /* ⭐ O sulco de um controle deslizante. ⛔ NÃO é `abafado`, e a diferença só aparece no tema escuro: `abafado` (L 0.288) é mais CLARO que a superfície do cartão (L 0.243), então a alavanca — que é a superfície — sumia dentro do próprio trilho. Um sulco é uma cavidade: ele tem de ser mais escuro que a peça que corre dentro dele, nos dois temas. */
+  --cui-trilho: oklch(0.19 0.012 264);
+  /* A peça que corre no sulco. Sempre mais clara que `trilho` — é o que a faz parecer pousada sobre ele em vez de embutida. */
+  --cui-alavanca: oklch(0.36 0.012 264);
   /* Elevação de campo. No claro há uma luz superior — no escuro ela não existe: superfície clara sobre fundo escuro já se separa sozinha. */
   --cui-relevo-raso: 1px 2px 4px rgb(0 0 0 / 40%);
   /* Elevação de popover. */

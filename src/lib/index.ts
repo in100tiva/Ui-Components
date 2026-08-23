@@ -32,6 +32,9 @@ export {
   RodapeDaDecisao,
 } from "./cartao-de-decisao/CartaoDeDecisao";
 export { InterruptorDeDecisao } from "./cartao-de-decisao/InterruptorDeDecisao";
+/* Exportada para verificação: jsdom não faz layout, então a única forma de
+   testar onde a alavanca pousa é testar a conta. */
+export { paradasDe } from "./cartao-de-decisao/InterruptorDeDecisao";
 export type { PropsDoCartaoDeDecisao } from "./cartao-de-decisao/CartaoDeDecisao";
 export type { Resultado } from "./cartao-de-decisao/contexto";
 

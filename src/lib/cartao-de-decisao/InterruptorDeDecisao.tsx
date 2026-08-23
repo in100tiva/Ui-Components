@@ -1,21 +1,32 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 
 import { animate, mola, preferemenosMovimento, utils } from "../movimento/movimento";
 import { usarCartao } from "./contexto";
 import type { Resultado } from "./contexto";
 
 /**
- * As três paradas do knob, em fração da largura útil.
+ * Onde o centro da alavanca pousa em cada parada, medido no controle.
  *
  * ⭐ **O centro existe, e é o que separa este controle de um switch comum.** Um
  * interruptor de duas posições SEMPRE afirma um dos lados — pousado à esquerda,
  * ele diz "reprovada" mesmo numa tarefa que ninguém olhou ainda. A terceira
- * parada é a única forma honesta de desenhar "em aberto": o knob fica na cintura,
- * entre os dois lobos, sem tom nenhum aceso.
+ * parada é a única forma honesta de desenhar "em aberto": a alavanca fica na
+ * cintura, entre os dois lobos, sem tom nenhum aceso.
+ *
+ * ⛔ **Medido em pixels, e não em porcentagem da largura.** O centro de cada
+ * lobo é `altura / 2` das bordas — porque o lobo é um círculo de raio igual à
+ * metade da altura —, e isso não é uma fração fixa da LARGURA. A versão anterior
+ * usava `0% / 50% / 100%` com uma margem lateral constante: só a parada da
+ * esquerda caía no lugar, a do meio errava por 22px e a da direita punha a
+ * alavanca 44px FORA do controle.
  */
-const PARADAS = { reprovada: 0, aberta: 0.5, aprovada: 1 } as const;
+export function paradasDe(elemento: Pick<HTMLElement, "clientWidth" | "clientHeight">) {
+  const { clientWidth: largura, clientHeight: altura } = elemento;
+  const raio = altura / 2;
+  return { reprovada: raio, aberta: largura / 2, aprovada: largura - raio };
+}
 
 /**
  * **O interruptor de decisão** — dois lobos ligados por uma cintura, e o knob
@@ -36,8 +47,8 @@ export function InterruptorDeDecisao({ className }: { className?: string }) {
   const knobRef = useRef<HTMLSpanElement>(null);
   const primeiro = useRef(true);
 
-  const parada = PARADAS[resultado ?? "aberta"];
-  const paradaAnterior = useRef(parada);
+  const chave = resultado ?? "aberta";
+  const chaveAnterior = useRef(chave);
 
   /*
     ⚠️ **Uma mola para por LIMIAR, e o último quadro fica em `-0.018%` em vez de
@@ -53,24 +64,28 @@ export function InterruptorDeDecisao({ className }: { className?: string }) {
     Então o JavaScript é o dono da posição, do primeiro quadro ao último — sem
     regra de CSS competindo — e o resíduo fica documentado em vez de combatido.
   */
-  useEffect(() => {
+  useLayoutEffect(() => {
     const knob = knobRef.current;
-    const anterior = paradaAnterior.current;
-    paradaAnterior.current = parada;
-    if (!knob) return;
+    const trilho = knob?.parentElement;
+    const anterior = chaveAnterior.current;
+    chaveAnterior.current = chave;
+    if (!knob || !trilho) return;
 
-    const destino = `${parada * 100}%`;
+    /* Medido a cada mudança: o controle tem tamanho de token, mas quem o usa
+       pode escalá-lo — e uma parada calculada uma vez só ficaria errada ali. */
+    const destino = `${paradasDe(trilho)[chave]}px`;
 
     /* Montagem, ou nada mudou: posição exata, sem viagem. O primeiro quadro é
-       estado, não gesto — o knob não desliza até o lugar na frente da pessoa. */
-    if (primeiro.current || anterior === parada || preferemenosMovimento()) {
+       estado, não gesto — a alavanca não desliza até o lugar na frente da
+       pessoa. `useLayoutEffect` para que isso aconteça antes da pintura. */
+    if (primeiro.current || anterior === chave || preferemenosMovimento()) {
       primeiro.current = false;
       utils.set(knob, { left: destino });
       return;
     }
 
     animate(knob, { left: destino, ease: mola("interruptor") });
-  }, [parada]);
+  }, [chave]);
 
   return (
     <div

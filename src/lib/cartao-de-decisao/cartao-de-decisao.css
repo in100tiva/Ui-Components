@@ -201,22 +201,21 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  fill: var(--cui-abafado);
+  fill: var(--cui-trilho);
 }
 
 /*
-  O knob. `left` em porcentagem ajusta o percurso à largura real do controle: 0%
-  encosta no lobo esquerdo, 100% no direito, e 50% o deixa na cintura — a posição
-  de "em aberto".
+  A alavanca.
 
-  ⚠️ **O `left` daqui é só o valor de partida — quem manda nele é o JavaScript**,
-  do primeiro quadro ao último. Não há regra de CSS por `data-resultado` de
-  propósito: duas fontes disputando a mesma propriedade é como o knob acabaria
-  num lugar em repouso e noutro durante a animação. Ver a nota em
-  `InterruptorDeDecisao`.
+  ⭐ **`translate(-50%, -50%)` com `left` no CENTRO da parada.** O JavaScript
+  mede onde cada lobo está — `altura / 2` das bordas, porque o lobo é um círculo
+  de raio igual à metade da altura — e escreve esse ponto em `left`; o transform
+  centra a peça nele.
 
-  ⚠️ A margem lateral é o raio do knob: sem ela, `left: 0%` alinharia a BORDA do
-  knob com a borda do controle, e ele ficaria deslocado meio corpo para dentro.
+  ⛔ A versão anterior punha `left: 0% / 50% / 100%` com uma margem lateral
+  constante, e a conta só fechava na parada da esquerda: a do meio errava por
+  22px e a da direita jogava a alavanca 44px para FORA do controle. Margem fixa
+  não centra em três pontos diferentes — centrar é trabalho do transform.
 */
 .cui-interruptor__knob {
   position: absolute;
@@ -225,12 +224,11 @@
   z-index: 1;
   width: var(--cui-interruptor-knob);
   height: var(--cui-interruptor-knob);
-  margin: calc(var(--cui-interruptor-knob) / -2)
-    calc(var(--cui-interruptor-altura) / 2 - var(--cui-interruptor-knob) / 2);
   border-radius: 50%;
-  background: var(--cui-superficie);
+  background: var(--cui-alavanca);
   box-shadow: var(--cui-relevo-raso);
   pointer-events: none;
+  transform: translate(-50%, -50%);
   transition: background-color var(--cui-transicao-estado) ease;
 }
 

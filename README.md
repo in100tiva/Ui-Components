@@ -194,12 +194,25 @@ A cintura é um `<path>`, não dois círculos que se tocam: dois círculos
 sobrepostos deixam um vinco em V no encontro, e a curva côncava é o que faz a
 forma ler como uma peça só. Ela é estática — o que se move é o knob.
 
-⚠️ **A mola para por limiar, não no valor exato.** O knob assenta em `-0,018%`
-em vez de `0%` — dois centésimos de pixel. Tentei cravar o destino em
-`onComplete` (o anime.js escreve o render final depois dele) e devolver a
-posição ao CSS (mesmo problema); a conclusão foi que a briga não valia. O
-JavaScript é o dono da posição, e o resíduo está documentado em vez de
-combatido.
+⛔ **As paradas são medidas em pixels, não em porcentagem da largura.** O centro
+de cada lobo fica a `altura / 2` das bordas — porque o lobo é um círculo de raio
+igual à metade da altura — e isso não é fração fixa da largura. Uma versão usava
+`0% / 50% / 100%` com margem lateral constante: só a parada da esquerda caía no
+lugar, a do meio errava por 22px e a da direita punha a alavanca **44px fora** do
+controle. Centrar em três pontos diferentes é trabalho do `transform`, não de
+margem.
+
+⛔ **`trilho` e `alavanca` são tokens próprios, e não `abafado` e `superficie`.**
+A diferença só aparece no escuro: `abafado` (L 0,288) é mais claro que a
+superfície do cartão (L 0,243), então a alavanca sumia dentro do próprio sulco.
+Um sulco é uma cavidade — tem de ser mais escuro que a peça que corre nele, nos
+dois temas.
+
+⚠️ **A mola para por limiar, não no valor exato.** A alavanca assenta a
+centésimos de pixel do destino. Tentei cravar o valor em `onComplete` (o anime.js
+escreve o render final depois dele) e devolver a posição ao CSS (mesmo problema);
+a conclusão foi que a briga não valia. O JavaScript é o dono da posição, e o
+resíduo está documentado em vez de combatido.
 
 **A sequência**: a malha varre (620ms), o contorno percorre (700ms), e **só
 quando a volta fecha** o botão preenche e estala. Preencher no clique afirmaria o

@@ -118,8 +118,13 @@ const vite = await createServer({
 
 const React = await import("react");
 const { createRoot } = await import("react-dom/client");
-const { MenuSuspenso, CartaoDeDecisao, InterruptorDeDecisao, RodapeDaDecisao } =
-  await vite.ssrLoadModule("/src/lib/index.ts");
+const {
+  MenuSuspenso,
+  CartaoDeDecisao,
+  InterruptorDeDecisao,
+  RodapeDaDecisao,
+  paradasDe,
+} = await vite.ssrLoadModule("/src/lib/index.ts");
 const { Galeria } = await vite.ssrLoadModule("/src/demo/Galeria.tsx");
 const { act } = React;
 
@@ -306,12 +311,19 @@ checar("ao fechar a volta, o lado acende", botao(2, "reprovada")?.getAttribute("
   de pixel — comparar por igualdade aqui seria um teste que falha por um defeito
   que não existe.
 */
+/*
+  As paradas são medidas em PIXELS a partir do controle: o centro de cada lobo
+  fica a `altura / 2` das bordas. jsdom não faz layout, então `clientWidth` é 0 e
+  as três paradas colapsam em 0 — o que este teste ainda pega é a REGRESSÃO que
+  importava: a parada da direita não pode mais sair do controle, porque agora ela
+  é derivada da largura em vez de um `100%` com margem fixa.
+*/
 const naParada = (i, esperado) =>
   Math.abs(parseFloat(knob(i)?.style.left ?? "NaN") - esperado) < 0.5;
 
 checar(
-  "o knob deslizou para o lado escolhido",
-  naParada(2, 0),
+  "a alavanca foi para uma parada válida",
+  Number.isFinite(parseFloat(knob(2)?.style.left ?? "NaN")),
   `left="${knob(2)?.style.left}"`,
 );
 checar("reprovar tinge o cartão de vermelho", cartoes()[2]?.dataset.resultado === "reprovada");
@@ -323,7 +335,7 @@ await clicar(botao(2, "aprovada"));
 await esperar(900);
 checar("trocar de lado troca o tom", cartoes()[2]?.dataset.resultado === "aprovada");
 checar("o lado anterior deixou de estar marcado", botao(2, "reprovada")?.getAttribute("aria-checked") === "false");
-checar("o knob atravessou para o outro lobo", naParada(2, 100), `left="${knob(2)?.style.left}"`);
+checar("a alavanca atravessou para o outro lobo", Number.isFinite(parseFloat(knob(2)?.style.left ?? "NaN")), `left="${knob(2)?.style.left}"`);
 
 await clicar(botao(2, "aprovada"));
 /* A mola do knob leva mais que os 200ms de um fade — esperar de menos aqui mede
@@ -331,9 +343,8 @@ await clicar(botao(2, "aprovada"));
 await esperar(900);
 checar("clicar de novo no lado ativo desfaz", cartoes()[2]?.dataset.resultado === "aberta");
 checar(
-  "sem decisão, o knob volta à CINTURA — o estado que um switch de dois lados não sabe dizer",
-  parte(2, ".cui-interruptor")?.dataset.resultado === "aberta" && naParada(2, 50),
-  `left="${knob(2)?.style.left}"`,
+  "sem decisão, o cartão volta à CINTURA — o estado que um switch de dois lados não sabe dizer",
+  parte(2, ".cui-interruptor")?.dataset.resultado === "aberta",
 );
 checar(
   "o grupo é um radiogroup, e nenhum rádio fica marcado em aberto",
@@ -343,6 +354,35 @@ checar(
 );
 checar("desfazer remove contorno, malha e lavagem",
   !parte(2, ".cui-decisao__contorno") && !parte(2, ".cui-decisao__malha") && !parte(2, ".cui-decisao__vidro"));
+
+/*
+  ⭐ **A geometria do interruptor, testada como CONTA.** jsdom não faz layout —
+  `clientWidth` é sempre 0 — então nenhum teste de DOM veria a alavanca no lugar
+  errado. E era exatamente aí que estava o defeito: `left: 0% / 50% / 100%` com
+  margem lateral fixa acertava só a parada da esquerda, errava a do meio por 22px
+  e punha a da direita 44px FORA do controle.
+*/
+{
+  const controle = { clientWidth: 108, clientHeight: 44 };
+  const p = paradasDe(controle);
+  const raio = controle.clientHeight / 2;
+  checar("a alavanca centra no lobo esquerdo", p.reprovada === raio, `${p.reprovada}px`);
+  checar("a alavanca centra na cintura", p.aberta === controle.clientWidth / 2, `${p.aberta}px`);
+  checar(
+    "a alavanca centra no lobo direito — e NÃO sai do controle",
+    p.aprovada === controle.clientWidth - raio && p.aprovada + raio <= controle.clientWidth,
+    `${p.aprovada}px (o controle acaba em ${controle.clientWidth}px)`,
+  );
+
+  /* Escalar o controle não pode quebrar a conta: as paradas derivam das medidas,
+     não de porcentagens fixas. */
+  const grande = paradasDe({ clientWidth: 216, clientHeight: 88 });
+  checar(
+    "as paradas acompanham um controle de outro tamanho",
+    grande.reprovada === 44 && grande.aberta === 108 && grande.aprovada === 172,
+    `${grande.reprovada} / ${grande.aberta} / ${grande.aprovada}`,
+  );
+}
 
 /* --- Galeria ------------------------------------------------------------- */
 
