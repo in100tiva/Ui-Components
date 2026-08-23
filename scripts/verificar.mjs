@@ -26,6 +26,8 @@
  * Rodar: `pnpm verificar`
  */
 
+import { readFileSync } from "node:fs";
+
 import { JSDOM } from "jsdom";
 import { createServer } from "vite";
 
@@ -413,6 +415,24 @@ checar("desfazer remove contorno, malha e lavagem",
     "as paradas acompanham um controle de outro tamanho",
     grande.reprovada === 44 && grande.aberta === 108 && grande.aprovada === 172,
     `${grande.reprovada} / ${grande.aberta} / ${grande.aprovada}`,
+  );
+
+  /*
+    ⭐ **Um guarda de CSS, e ele existe por um defeito específico.** O ícone de
+    cada lado se ancora na borda EXTERNA à distância do raio, porque é ali que o
+    lobo está — o centro do botão (metade do controle) fica 5px para dentro
+    disso, e os dois ícones apareciam puxados um em direção ao outro.
+
+    A "simplificação" tentadora é trocar as duas regras por um
+    `justify-content: center` no botão. Ela reintroduz exatamente o desvio, e
+    nada em DOM ou tipo acusaria — jsdom não faz layout, e o CSS não tem tipos.
+  */
+  const css = readFileSync("src/lib/cartao-de-decisao/cartao-de-decisao.css", "utf8");
+  checar(
+    "o ícone continua ancorado no lobo, e não no centro do botão",
+    css.includes('[data-tipo="reprovada"] svg {') &&
+      css.includes("left: calc(var(--cui-interruptor-altura) / 2)") &&
+      css.includes("right: calc(var(--cui-interruptor-altura) / 2)"),
   );
 }
 

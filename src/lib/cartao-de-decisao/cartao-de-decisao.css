@@ -331,9 +331,36 @@
 .cui-interruptor__lado[data-tipo="reprovada"] { left: 0; }
 .cui-interruptor__lado[data-tipo="aprovada"] { right: 0; }
 
+/*
+  ⭐ **O ícone se alinha ao LOBO, não ao botão que o contém — e os dois centros
+  não coincidem.**
+
+  O alvo de toque é metade do controle (54px de 108), e seu centro cai em 27px.
+  O lobo, porém, é um círculo de raio `altura / 2`, então o centro dele está a
+  22px da borda. Centrar o ícone no botão o deixa 5px para dentro; nos dois
+  lados, puxados um em direção ao outro — que é o desalinhamento visível quando
+  o interruptor está marcado.
+
+  A correção ancora o ícone na BORDA EXTERNA de cada lado, à distância do raio:
+  é onde o lobo está, em qualquer largura que o controle tenha durante a
+  expansão. O alvo continua com os 54px inteiros — o que muda é só onde o
+  desenho pousa dentro dele.
+*/
 .cui-interruptor__lado svg {
+  position: absolute;
+  top: 50%;
   width: 17px;
   height: 17px;
+}
+
+.cui-interruptor__lado[data-tipo="reprovada"] svg {
+  left: calc(var(--cui-interruptor-altura) / 2);
+  transform: translate(-50%, -50%);
+}
+
+.cui-interruptor__lado[data-tipo="aprovada"] svg {
+  right: calc(var(--cui-interruptor-altura) / 2);
+  transform: translate(50%, -50%);
 }
 
 .cui-interruptor__lado:focus-visible {
