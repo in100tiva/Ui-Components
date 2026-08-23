@@ -167,8 +167,19 @@ function blocoDeTema(tema) {
   return linhas.join("\n");
 }
 
-function gerarCss() {
-  const alfas = Object.entries(fonte.alfas)
+/**
+ * Os derivados por transparência — `acento-9`, `anel-foco`, as malhas.
+ *
+ * ⛔ **Precisam ser REDECLARADOS em todo escopo que troca a cor base**, e a
+ * razão é uma regra pouco intuitiva das custom properties: o `var()` de dentro
+ * de uma delas é substituído no elemento onde ela é DECLARADA, não onde é usada.
+ * Um `--cui-acento-9` declarado só na raiz já chega herdado com o acento da
+ * raiz DENTRO dele — trocar `--cui-acento` mais abaixo na árvore não o repinta.
+ * Sem esta função, um bloco de tema invertido teria fundo e texto do tema
+ * oposto e hover, seleção e anel de foco do tema de origem.
+ */
+function blocoDeAlfas() {
+  return Object.entries(fonte.alfas)
     .map(([nome, def]) => {
       const pct = Math.round(def.alfa * 100);
       const nota = def.nota ? `  /* ${def.nota} */\n` : "";
@@ -178,6 +189,10 @@ function gerarCss() {
       return `${nota}  --${p}-${nome}: color-mix(in oklab, var(--${p}-${def.base}) ${pct}%, transparent);`;
     })
     .join("\n");
+}
+
+function gerarCss() {
+  const alfas = blocoDeAlfas();
 
   const formas = Object.entries(fonte.formas)
     .map(([nome, v]) => `  --${p}-${nome}: ${v}px;`)
@@ -241,6 +256,38 @@ ${blocoDeTema("claro")}
 
 [data-tema="escuro"] {
 ${blocoDeTema("escuro")}
+}
+
+/*
+ * ⭐ **O TEMA INVERTIDO** — um pedaço de interface pintado com as cores do tema
+ * OPOSTO ao da página. No claro, o que estiver dentro de [data-tema-invertido]
+ * usa a paleta escura; no escuro, a clara.
+ *
+ * É a mesma paleta de sempre, e é isso que o torna barato: um bloco invertido
+ * não inventa cor nenhuma, então nada dentro dele precisa ser medido de novo —
+ * o par texto/superfície que ele usa é um par que o sistema já garante nos dois
+ * temas. É o que permite uma aba selecionada ser um bloco sólido sem exigir uma
+ * família de tokens só dela.
+ *
+ * ⚠️ **A inversão é relativa à RAIZ, não ao contêiner mais próximo**, e não é
+ * recursiva: um invertido dentro de outro continua sendo o tema oposto ao da
+ * página, e não uma volta ao original. Dois níveis de inversão aninhados são um
+ * desenho confuso muito antes de serem um problema de CSS.
+ *
+ * O :not() do primeiro seletor não é estilo: ele dá especificidade suficiente
+ * para o bloco vencer sem depender da ordem do arquivo, e cobre de uma vez a
+ * raiz clara explícita e a raiz sem atributo nenhum (que é clara por padrão).
+ */
+:root:not([data-tema="escuro"]) [data-tema-invertido] {
+${blocoDeTema("escuro")}
+
+${blocoDeAlfas()}
+}
+
+[data-tema="escuro"] [data-tema-invertido] {
+${blocoDeTema("claro")}
+
+${blocoDeAlfas()}
 }
 
 /* Derivados do acento — trocar a matiz repinta o sistema inteiro. */

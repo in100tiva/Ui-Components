@@ -73,6 +73,16 @@
   --cui-perigo-borda: oklch(0.89 0.055 25);
   /* ⭐ O sulco de um controle deslizante. ⛔ NÃO é `abafado`, e a diferença só aparece no tema escuro: `abafado` (L 0.288) é mais CLARO que a superfície do cartão (L 0.243), então a alavanca — que é a superfície — sumia dentro do próprio trilho. Um sulco é uma cavidade: ele tem de ser mais escuro que a peça que corre dentro dele, nos dois temas. */
   --cui-trilho: #e9edf3;
+  /* ⭐ A FRENTE da pasta desenhada. É um objeto, não um ícone de traço: tem duas faces em tons diferentes e papéis entre elas. ⚠️ O desenho é DECORATIVO — quem carrega o nome e a contagem é o texto abaixo dele —, então ele não precisa dos 3:1 de elemento gráfico informativo; o que ele precisa é de aresta, e quem garante isso é `pasta-borda`. */
+  --cui-pasta: oklch(0.55 0.008 264);
+  /* As COSTAS da pasta e a aba do topo — sempre mais escuras que a frente. É essa diferença que faz o desenho ler como uma peça de duas faces com papel no meio, em vez de um retângulo com um recorte. */
+  --cui-pasta-fundo: oklch(0.46 0.008 264);
+  /* ⭐ O fio no contorno da pasta, pelo mesmo motivo de `moldura-borda`: no tema escuro a pasta e o fundo do cartão ficam próximos em luminância, e sombra sozinha não desenha aresta. */
+  --cui-pasta-borda: oklch(0 0 0 / 10%);
+  /* ⭐ As folhas que aparecem entre as duas faces da pasta. Papel é papel nos dois temas — mas branco puro sobre fundo escuro vira uma lâmina brilhante, e por isso o escuro usa um branco assentado. */
+  --cui-papel: #ffffff;
+  /* A separação entre uma folha e a de baixo. Sem ela a pilha vira um bloco branco só. */
+  --cui-papel-borda: oklch(0 0 0 / 8%);
   /* A peça que corre no sulco. Sempre mais clara que `trilho` — é o que a faz parecer pousada sobre ele em vez de embutida. */
   --cui-alavanca: #ffffff;
   /* Elevação de campo. No claro há uma luz superior — no escuro ela não existe: superfície clara sobre fundo escuro já se separa sozinha. */
@@ -143,6 +153,16 @@
   --cui-perigo-borda: oklch(0.42 0.09 22);
   /* ⭐ O sulco de um controle deslizante. ⛔ NÃO é `abafado`, e a diferença só aparece no tema escuro: `abafado` (L 0.288) é mais CLARO que a superfície do cartão (L 0.243), então a alavanca — que é a superfície — sumia dentro do próprio trilho. Um sulco é uma cavidade: ele tem de ser mais escuro que a peça que corre dentro dele, nos dois temas. */
   --cui-trilho: oklch(0.19 0.012 264);
+  /* ⭐ A FRENTE da pasta desenhada. É um objeto, não um ícone de traço: tem duas faces em tons diferentes e papéis entre elas. ⚠️ O desenho é DECORATIVO — quem carrega o nome e a contagem é o texto abaixo dele —, então ele não precisa dos 3:1 de elemento gráfico informativo; o que ele precisa é de aresta, e quem garante isso é `pasta-borda`. */
+  --cui-pasta: oklch(0.42 0.008 264);
+  /* As COSTAS da pasta e a aba do topo — sempre mais escuras que a frente. É essa diferença que faz o desenho ler como uma peça de duas faces com papel no meio, em vez de um retângulo com um recorte. */
+  --cui-pasta-fundo: oklch(0.33 0.008 264);
+  /* ⭐ O fio no contorno da pasta, pelo mesmo motivo de `moldura-borda`: no tema escuro a pasta e o fundo do cartão ficam próximos em luminância, e sombra sozinha não desenha aresta. */
+  --cui-pasta-borda: oklch(1 0 0 / 12%);
+  /* ⭐ As folhas que aparecem entre as duas faces da pasta. Papel é papel nos dois temas — mas branco puro sobre fundo escuro vira uma lâmina brilhante, e por isso o escuro usa um branco assentado. */
+  --cui-papel: oklch(0.93 0.004 264);
+  /* A separação entre uma folha e a de baixo. Sem ela a pilha vira um bloco branco só. */
+  --cui-papel-borda: oklch(0 0 0 / 18%);
   /* A peça que corre no sulco. Sempre mais clara que `trilho` — é o que a faz parecer pousada sobre ele em vez de embutida. */
   --cui-alavanca: oklch(0.36 0.012 264);
   /* Elevação de campo. No claro há uma luz superior — no escuro ela não existe: superfície clara sobre fundo escuro já se separa sozinha. */
@@ -152,6 +172,232 @@
   /* A elevação do cartão central. Uma oitava acima de `relevo-raso` — é o objeto principal da tela. */
   --cui-relevo-repouso: 1px 2px 4px rgb(0 0 0 / 35%), 3px 10px 24px -8px rgb(0 0 0 / 55%);
   color-scheme: dark;
+}
+
+/*
+ * ⭐ **O TEMA INVERTIDO** — um pedaço de interface pintado com as cores do tema
+ * OPOSTO ao da página. No claro, o que estiver dentro de [data-tema-invertido]
+ * usa a paleta escura; no escuro, a clara.
+ *
+ * É a mesma paleta de sempre, e é isso que o torna barato: um bloco invertido
+ * não inventa cor nenhuma, então nada dentro dele precisa ser medido de novo —
+ * o par texto/superfície que ele usa é um par que o sistema já garante nos dois
+ * temas. É o que permite uma aba selecionada ser um bloco sólido sem exigir uma
+ * família de tokens só dela.
+ *
+ * ⚠️ **A inversão é relativa à RAIZ, não ao contêiner mais próximo**, e não é
+ * recursiva: um invertido dentro de outro continua sendo o tema oposto ao da
+ * página, e não uma volta ao original. Dois níveis de inversão aninhados são um
+ * desenho confuso muito antes de serem um problema de CSS.
+ *
+ * O :not() do primeiro seletor não é estilo: ele dá especificidade suficiente
+ * para o bloco vencer sem depender da ordem do arquivo, e cobre de uma vez a
+ * raiz clara explícita e a raiz sem atributo nenhum (que é clara por padrão).
+ */
+:root:not([data-tema="escuro"]) [data-tema-invertido] {
+  /* Fundo da página, atrás de tudo. */
+  --cui-fundo: oklch(0.218 0.011 264);
+  /* ⭐ A moldura que emoldura o app — mais ESCURA que o fundo do conteúdo no tema claro, e mais escura ainda no tema escuro. É o que faz o cartão central parecer papel pousado sobre uma mesa, em vez de uma div dentro de outra. */
+  --cui-moldura: oklch(0.175 0.011 264);
+  /* O ponto claro do gradiente da moldura. A diagonal de 160° com este valor nas duas pontas e `moldura` no meio dá o leve abaulado — sem ele a moldura é um chapado que denuncia a div. */
+  --cui-moldura-alta: oklch(0.2 0.011 264);
+  /* O fio que separa o cartão da moldura. Existe porque sombra sozinha não desenha aresta: no tema escuro ela some, e o cartão passaria a flutuar sem contorno. */
+  --cui-moldura-borda: oklch(1 0 0 / 7%);
+  /* Hover sobre a moldura — preto no claro, branco no escuro. ⛔ NÃO é o acento: a coluna lateral tem de ficar calma, e nada ali pode ser mais forte que o conteúdo ao lado. */
+  --cui-realce: oklch(1 0 0 / 8%);
+  /* Cartões e campos — o que se apoia sobre o fundo. */
+  --cui-superficie: oklch(0.243 0.012 264);
+  /* Painéis suspensos. Igual à superfície hoje, mas separado de propósito: no dia em que popover ganhar vidro ou outra elevação, muda só aqui. */
+  --cui-flutuante: oklch(0.243 0.012 264);
+  /* Estado desabilitado. */
+  --cui-abafado: oklch(0.288 0.012 264);
+  /* Interior de campo de texto. ⚠️ SEM CONSUMIDOR hoje: a busca do menu suspenso passou a ser um campo cru sobre o painel. Fica no sistema porque um componente de entrada de texto vai precisar dele — se isso não acontecer, é candidato a remoção. */
+  --cui-campo-fundo: oklch(1 0 0 / 2%);
+  /* Texto principal. */
+  --cui-texto: oklch(0.97 0.005 100);
+  /* Rótulos de campo. 8.69:1 sobre superfície. */
+  --cui-texto-rotulo: oklch(0.86 0.012 250);
+  /* Apoio. 5.81:1 sobre superfície. */
+  --cui-texto-suave: oklch(0.74 0.012 250);
+  /* O degrau mais claro que ainda passa em AA — 5.32:1. Abaixo disto não existe token: seria texto que parte das pessoas não lê. */
+  --cui-texto-tenue: oklch(0.68 0.012 250);
+  /* Traço de separação. */
+  --cui-borda: oklch(1 0 0 / 9%);
+  /* Traço de campo de formulário — mais presente que a borda. ⚠️ SEM CONSUMIDOR hoje; herdado do design de origem e reservado ao campo de texto. */
+  --cui-contorno: oklch(0.57 0.02 258);
+  /* ⭐ A identidade. Trocar a matiz (288) repinta hover, seleção, chevron e anel de foco de uma vez, porque todos derivam daqui. */
+  --cui-acento: oklch(0.72 0.12 288);
+  /* Texto sobre superfície, na família do acento. */
+  --cui-acento-texto: oklch(0.86 0.06 288);
+  /* Traço de campo na família do acento. */
+  --cui-acento-borda: oklch(1 0 0 / 8%);
+  /* Campo sem escolha feita. */
+  --cui-acento-placeholder: oklch(0.68 0.04 288);
+  /* ⛔ Deliberadamente AZUL, e não o acento violeta. O anel de foco tem de ser distinguível do estado de seleção; se fossem a mesma cor, quem navega por teclado não veria diferença entre 'está aqui' e 'está escolhido'. */
+  --cui-foco: oklch(0.7 0.13 258);
+  /* ⭐ Verde de confirmação. Preenche o círculo do check e desenha o contorno do cartão concluído. L 0.55 no claro e 0.70 no escuro — nos dois, o par com o fundo rende ≥3:1, o piso de AA para elemento gráfico. */
+  --cui-sucesso: oklch(0.7 0.12 155);
+  /* Texto sobre a superfície de sucesso. ~5.9:1 sobre `sucesso-superficie`. */
+  --cui-sucesso-texto: oklch(0.82 0.1 155);
+  /* Fundo tênue do estado concluído — o cartão inteiro não muda de cor, só o rodapé e os selos. */
+  --cui-sucesso-superficie: oklch(0.3 0.05 155);
+  /* ⭐ O TRILHO do contorno: a borda fraca de 1px que já mostra o estado antes de o traço forte percorrer o cartão. Sem ela, o contorno se desenha sobre o nada e o cartão pisca de sem-borda para com-borda. */
+  --cui-sucesso-borda: oklch(0.42 0.07 155);
+  /* ⭐ Vermelho de recusa — o par simétrico de `sucesso`. Mesma função em tudo: preenche o círculo, desenha o contorno e tinge a malha do cartão recusado. ⚠️ A matiz vira 25→22 no escuro porque o vermelho puro escurece para marrom sobre fundo escuro; os três graus a menos o mantêm vermelho. */
+  --cui-perigo: oklch(0.7 0.19 22);
+  /* Texto sobre a superfície de recusa. */
+  --cui-perigo-texto: oklch(0.82 0.1 22);
+  /* Fundo tênue do estado recusado. ⚠️ Croma 0.014 e não 0.02: acima disso a cor sai do gamut sRGB, e o valor gerado para mobile viraria uma aproximação clampada — diferente do que a web mostra. O gerador avisa quando isso acontece. */
+  --cui-perigo-superficie: oklch(0.3 0.06 22);
+  /* O TRILHO do contorno de recusa — o irmão de `sucesso-borda`. */
+  --cui-perigo-borda: oklch(0.42 0.09 22);
+  /* ⭐ O sulco de um controle deslizante. ⛔ NÃO é `abafado`, e a diferença só aparece no tema escuro: `abafado` (L 0.288) é mais CLARO que a superfície do cartão (L 0.243), então a alavanca — que é a superfície — sumia dentro do próprio trilho. Um sulco é uma cavidade: ele tem de ser mais escuro que a peça que corre dentro dele, nos dois temas. */
+  --cui-trilho: oklch(0.19 0.012 264);
+  /* ⭐ A FRENTE da pasta desenhada. É um objeto, não um ícone de traço: tem duas faces em tons diferentes e papéis entre elas. ⚠️ O desenho é DECORATIVO — quem carrega o nome e a contagem é o texto abaixo dele —, então ele não precisa dos 3:1 de elemento gráfico informativo; o que ele precisa é de aresta, e quem garante isso é `pasta-borda`. */
+  --cui-pasta: oklch(0.42 0.008 264);
+  /* As COSTAS da pasta e a aba do topo — sempre mais escuras que a frente. É essa diferença que faz o desenho ler como uma peça de duas faces com papel no meio, em vez de um retângulo com um recorte. */
+  --cui-pasta-fundo: oklch(0.33 0.008 264);
+  /* ⭐ O fio no contorno da pasta, pelo mesmo motivo de `moldura-borda`: no tema escuro a pasta e o fundo do cartão ficam próximos em luminância, e sombra sozinha não desenha aresta. */
+  --cui-pasta-borda: oklch(1 0 0 / 12%);
+  /* ⭐ As folhas que aparecem entre as duas faces da pasta. Papel é papel nos dois temas — mas branco puro sobre fundo escuro vira uma lâmina brilhante, e por isso o escuro usa um branco assentado. */
+  --cui-papel: oklch(0.93 0.004 264);
+  /* A separação entre uma folha e a de baixo. Sem ela a pilha vira um bloco branco só. */
+  --cui-papel-borda: oklch(0 0 0 / 18%);
+  /* A peça que corre no sulco. Sempre mais clara que `trilho` — é o que a faz parecer pousada sobre ele em vez de embutida. */
+  --cui-alavanca: oklch(0.36 0.012 264);
+  /* Elevação de campo. No claro há uma luz superior — no escuro ela não existe: superfície clara sobre fundo escuro já se separa sozinha. */
+  --cui-relevo-raso: 1px 2px 4px rgb(0 0 0 / 40%);
+  /* Elevação de popover. */
+  --cui-sombra-painel: 0 12px 32px -12px rgb(0 0 0 / 55%);
+  /* A elevação do cartão central. Uma oitava acima de `relevo-raso` — é o objeto principal da tela. */
+  --cui-relevo-repouso: 1px 2px 4px rgb(0 0 0 / 35%), 3px 10px 24px -8px rgb(0 0 0 / 55%);
+  color-scheme: dark;
+
+  /* Hover e seleção. */
+  --cui-acento-9: color-mix(in oklab, var(--cui-acento) 9%, transparent);
+  /* Item em foco. */
+  --cui-acento-14: color-mix(in oklab, var(--cui-acento) 14%, transparent);
+  /* Borda em hover. */
+  --cui-acento-60: color-mix(in oklab, var(--cui-acento) 60%, transparent);
+  /* Halo de 3px. */
+  --cui-anel-foco: color-mix(in oklab, var(--cui-foco) 28%, transparent);
+  /* ⭐ O polegar da barra de rolagem, na família do acento. Em repouso ele é quase um sussurro: a barra informa QUANTO falta, e para isso não precisa competir com o texto que a pessoa está lendo. */
+  --cui-scroll-polegar: color-mix(in oklab, var(--cui-acento) 22%, transparent);
+  /* O mesmo polegar quando o ponteiro está sobre o painel — aí ele virou alvo, e alvo precisa ser visto. */
+  --cui-scroll-polegar-forte: color-mix(in oklab, var(--cui-acento) 42%, transparent);
+  /* ⭐ O teto de opacidade dos blocos da malha — e ele é BAIXO de propósito. A malha é textura de fundo atrás de texto que precisa continuar legível; passando de ~0.2 ela deixa de ser atmosfera e vira ruído sobre a frase que a pessoa está lendo. */
+  --cui-sucesso-malha: color-mix(in oklab, var(--cui-sucesso) 16%, transparent);
+  /* O piso da variação. Blocos com pesos diferentes entre este e `sucesso-malha` é o que dá o aspecto de pixels acendendo em vez de um retângulo chapado. */
+  --cui-sucesso-malha-tenue: color-mix(in oklab, var(--cui-sucesso) 5%, transparent);
+  /* O teto de opacidade da malha em cartão recusado. */
+  --cui-perigo-malha: color-mix(in oklab, var(--cui-perigo) 16%, transparent);
+  --cui-perigo-malha-tenue: color-mix(in oklab, var(--cui-perigo) 5%, transparent);
+  /* ⭐ O degradê de fundo do cartão resolvido — a lavagem de cor que a malha de pontos flutua por cima. Muito baixo: ele é o que faz o cartão parecer TINGIDO, não pintado. Acima de ~10% o texto perde contraste contra o próprio fundo. */
+  --cui-sucesso-vidro: color-mix(in oklab, var(--cui-sucesso) 7%, transparent);
+  --cui-perigo-vidro: color-mix(in oklab, var(--cui-perigo) 7%, transparent);
+}
+
+[data-tema="escuro"] [data-tema-invertido] {
+  /* Fundo da página, atrás de tudo. */
+  --cui-fundo: #f7f8fa;
+  /* ⭐ A moldura que emoldura o app — mais ESCURA que o fundo do conteúdo no tema claro, e mais escura ainda no tema escuro. É o que faz o cartão central parecer papel pousado sobre uma mesa, em vez de uma div dentro de outra. */
+  --cui-moldura: #e4ebf1;
+  /* O ponto claro do gradiente da moldura. A diagonal de 160° com este valor nas duas pontas e `moldura` no meio dá o leve abaulado — sem ele a moldura é um chapado que denuncia a div. */
+  --cui-moldura-alta: #edf1f6;
+  /* O fio que separa o cartão da moldura. Existe porque sombra sozinha não desenha aresta: no tema escuro ela some, e o cartão passaria a flutuar sem contorno. */
+  --cui-moldura-borda: #d6dce2;
+  /* Hover sobre a moldura — preto no claro, branco no escuro. ⛔ NÃO é o acento: a coluna lateral tem de ficar calma, e nada ali pode ser mais forte que o conteúdo ao lado. */
+  --cui-realce: oklch(0 0 0 / 6%);
+  /* Cartões e campos — o que se apoia sobre o fundo. */
+  --cui-superficie: #ffffff;
+  /* Painéis suspensos. Igual à superfície hoje, mas separado de propósito: no dia em que popover ganhar vidro ou outra elevação, muda só aqui. */
+  --cui-flutuante: #ffffff;
+  /* Estado desabilitado. */
+  --cui-abafado: #eef1f6;
+  /* Interior de campo de texto. ⚠️ SEM CONSUMIDOR hoje: a busca do menu suspenso passou a ser um campo cru sobre o painel. Fica no sistema porque um componente de entrada de texto vai precisar dele — se isso não acontecer, é candidato a remoção. */
+  --cui-campo-fundo: #fcfdfe;
+  /* Texto principal. */
+  --cui-texto: #0f1417;
+  /* Rótulos de campo. 8.69:1 sobre superfície. */
+  --cui-texto-rotulo: #414852;
+  /* Apoio. 5.81:1 sobre superfície. */
+  --cui-texto-suave: #5a626d;
+  /* O degrau mais claro que ainda passa em AA — 5.32:1. Abaixo disto não existe token: seria texto que parte das pessoas não lê. */
+  --cui-texto-tenue: #5f6873;
+  /* Traço de separação. */
+  --cui-borda: #d9e0ea;
+  /* Traço de campo de formulário — mais presente que a borda. ⚠️ SEM CONSUMIDOR hoje; herdado do design de origem e reservado ao campo de texto. */
+  --cui-contorno: oklch(0.62 0.02 258);
+  /* ⭐ A identidade. Trocar a matiz (288) repinta hover, seleção, chevron e anel de foco de uma vez, porque todos derivam daqui. */
+  --cui-acento: oklch(0.62 0.14 288);
+  /* Texto sobre superfície, na família do acento. */
+  --cui-acento-texto: oklch(0.44 0.11 288);
+  /* Traço de campo na família do acento. */
+  --cui-acento-borda: #ecebf3;
+  /* Campo sem escolha feita. */
+  --cui-acento-placeholder: #6b6f89;
+  /* ⛔ Deliberadamente AZUL, e não o acento violeta. O anel de foco tem de ser distinguível do estado de seleção; se fossem a mesma cor, quem navega por teclado não veria diferença entre 'está aqui' e 'está escolhido'. */
+  --cui-foco: oklch(0.52 0.15 258);
+  /* ⭐ Verde de confirmação. Preenche o círculo do check e desenha o contorno do cartão concluído. L 0.55 no claro e 0.70 no escuro — nos dois, o par com o fundo rende ≥3:1, o piso de AA para elemento gráfico. */
+  --cui-sucesso: oklch(0.55 0.11 155);
+  /* Texto sobre a superfície de sucesso. ~5.9:1 sobre `sucesso-superficie`. */
+  --cui-sucesso-texto: oklch(0.4 0.09 155);
+  /* Fundo tênue do estado concluído — o cartão inteiro não muda de cor, só o rodapé e os selos. */
+  --cui-sucesso-superficie: oklch(0.965 0.02 155);
+  /* ⭐ O TRILHO do contorno: a borda fraca de 1px que já mostra o estado antes de o traço forte percorrer o cartão. Sem ela, o contorno se desenha sobre o nada e o cartão pisca de sem-borda para com-borda. */
+  --cui-sucesso-borda: oklch(0.88 0.05 155);
+  /* ⭐ Vermelho de recusa — o par simétrico de `sucesso`. Mesma função em tudo: preenche o círculo, desenha o contorno e tinge a malha do cartão recusado. ⚠️ A matiz vira 25→22 no escuro porque o vermelho puro escurece para marrom sobre fundo escuro; os três graus a menos o mantêm vermelho. */
+  --cui-perigo: oklch(0.55 0.19 25);
+  /* Texto sobre a superfície de recusa. */
+  --cui-perigo-texto: oklch(0.45 0.15 25);
+  /* Fundo tênue do estado recusado. ⚠️ Croma 0.014 e não 0.02: acima disso a cor sai do gamut sRGB, e o valor gerado para mobile viraria uma aproximação clampada — diferente do que a web mostra. O gerador avisa quando isso acontece. */
+  --cui-perigo-superficie: oklch(0.97 0.014 25);
+  /* O TRILHO do contorno de recusa — o irmão de `sucesso-borda`. */
+  --cui-perigo-borda: oklch(0.89 0.055 25);
+  /* ⭐ O sulco de um controle deslizante. ⛔ NÃO é `abafado`, e a diferença só aparece no tema escuro: `abafado` (L 0.288) é mais CLARO que a superfície do cartão (L 0.243), então a alavanca — que é a superfície — sumia dentro do próprio trilho. Um sulco é uma cavidade: ele tem de ser mais escuro que a peça que corre dentro dele, nos dois temas. */
+  --cui-trilho: #e9edf3;
+  /* ⭐ A FRENTE da pasta desenhada. É um objeto, não um ícone de traço: tem duas faces em tons diferentes e papéis entre elas. ⚠️ O desenho é DECORATIVO — quem carrega o nome e a contagem é o texto abaixo dele —, então ele não precisa dos 3:1 de elemento gráfico informativo; o que ele precisa é de aresta, e quem garante isso é `pasta-borda`. */
+  --cui-pasta: oklch(0.55 0.008 264);
+  /* As COSTAS da pasta e a aba do topo — sempre mais escuras que a frente. É essa diferença que faz o desenho ler como uma peça de duas faces com papel no meio, em vez de um retângulo com um recorte. */
+  --cui-pasta-fundo: oklch(0.46 0.008 264);
+  /* ⭐ O fio no contorno da pasta, pelo mesmo motivo de `moldura-borda`: no tema escuro a pasta e o fundo do cartão ficam próximos em luminância, e sombra sozinha não desenha aresta. */
+  --cui-pasta-borda: oklch(0 0 0 / 10%);
+  /* ⭐ As folhas que aparecem entre as duas faces da pasta. Papel é papel nos dois temas — mas branco puro sobre fundo escuro vira uma lâmina brilhante, e por isso o escuro usa um branco assentado. */
+  --cui-papel: #ffffff;
+  /* A separação entre uma folha e a de baixo. Sem ela a pilha vira um bloco branco só. */
+  --cui-papel-borda: oklch(0 0 0 / 8%);
+  /* A peça que corre no sulco. Sempre mais clara que `trilho` — é o que a faz parecer pousada sobre ele em vez de embutida. */
+  --cui-alavanca: #ffffff;
+  /* Elevação de campo. No claro há uma luz superior — no escuro ela não existe: superfície clara sobre fundo escuro já se separa sozinha. */
+  --cui-relevo-raso: -1px -1px 3px #fafbff, 1px 2px 4px rgb(22 27 29 / 6%);
+  /* Elevação de popover. */
+  --cui-sombra-painel: 0 12px 32px -12px rgb(16 22 58 / 22%);
+  /* A elevação do cartão central. Uma oitava acima de `relevo-raso` — é o objeto principal da tela. */
+  --cui-relevo-repouso: -5px -5px 20px #fafbff, 5px 5px 30px rgb(22 27 29 / 23%);
+  color-scheme: light;
+
+  /* Hover e seleção. */
+  --cui-acento-9: color-mix(in oklab, var(--cui-acento) 9%, transparent);
+  /* Item em foco. */
+  --cui-acento-14: color-mix(in oklab, var(--cui-acento) 14%, transparent);
+  /* Borda em hover. */
+  --cui-acento-60: color-mix(in oklab, var(--cui-acento) 60%, transparent);
+  /* Halo de 3px. */
+  --cui-anel-foco: color-mix(in oklab, var(--cui-foco) 28%, transparent);
+  /* ⭐ O polegar da barra de rolagem, na família do acento. Em repouso ele é quase um sussurro: a barra informa QUANTO falta, e para isso não precisa competir com o texto que a pessoa está lendo. */
+  --cui-scroll-polegar: color-mix(in oklab, var(--cui-acento) 22%, transparent);
+  /* O mesmo polegar quando o ponteiro está sobre o painel — aí ele virou alvo, e alvo precisa ser visto. */
+  --cui-scroll-polegar-forte: color-mix(in oklab, var(--cui-acento) 42%, transparent);
+  /* ⭐ O teto de opacidade dos blocos da malha — e ele é BAIXO de propósito. A malha é textura de fundo atrás de texto que precisa continuar legível; passando de ~0.2 ela deixa de ser atmosfera e vira ruído sobre a frase que a pessoa está lendo. */
+  --cui-sucesso-malha: color-mix(in oklab, var(--cui-sucesso) 16%, transparent);
+  /* O piso da variação. Blocos com pesos diferentes entre este e `sucesso-malha` é o que dá o aspecto de pixels acendendo em vez de um retângulo chapado. */
+  --cui-sucesso-malha-tenue: color-mix(in oklab, var(--cui-sucesso) 5%, transparent);
+  /* O teto de opacidade da malha em cartão recusado. */
+  --cui-perigo-malha: color-mix(in oklab, var(--cui-perigo) 16%, transparent);
+  --cui-perigo-malha-tenue: color-mix(in oklab, var(--cui-perigo) 5%, transparent);
+  /* ⭐ O degradê de fundo do cartão resolvido — a lavagem de cor que a malha de pontos flutua por cima. Muito baixo: ele é o que faz o cartão parecer TINGIDO, não pintado. Acima de ~10% o texto perde contraste contra o próprio fundo. */
+  --cui-sucesso-vidro: color-mix(in oklab, var(--cui-sucesso) 7%, transparent);
+  --cui-perigo-vidro: color-mix(in oklab, var(--cui-perigo) 7%, transparent);
 }
 
 /* Derivados do acento — trocar a matiz repinta o sistema inteiro. */
@@ -209,6 +455,16 @@
   --cui-moldura-respiro-lg: 12px;
   --cui-lateral-largura: 248px;
   --cui-item-lateral-respiro: 14px;
+  --cui-altura-aba: 44px;
+  --cui-aba-respiro-x: 18px;
+  --cui-raio-aba: 16px;
+  --cui-aba-pe: 16px;
+  --cui-arquivos-lateral-largura: 260px;
+  --cui-pasta-largura: 148px;
+  --cui-pasta-altura: 112px;
+  --cui-raio-pasta: 10px;
+  --cui-altura-linha: 46px;
+  --cui-respiro-pagina: 20px;
 
   /* Tipografia */
   /* O tamanho de todo controle. Um só, e de propósito: campo, item de lista e botão que discordam em 1px são a coisa mais visível de uma interface mal costurada. */
@@ -260,6 +516,10 @@
   --cui-desenho-do-contorno: 700ms;
   /* ⭐ A varredura que revela a malha de pontos. Fica logo abaixo dos 700ms do contorno: os pontos terminam de aparecer pouco antes de o traço fechar a volta, e o cartão assenta em vez de ter duas coisas acabando no mesmo instante. */
   --cui-acender-da-malha: 620ms;
+  /* ⭐ Os PÉS da pestana se espalhando quando ela chega. Durante a viagem eles ficam recolhidos — a aba viaja meio descolada da linha — e ao parar se abrem, e é isso que dá o assentamento. Um pouco mais longo que o deslize de propósito: a forma termina de assentar DEPOIS de a posição parar, que é como matéria se acomoda. */
+  --cui-assentar-aba: 260ms;
+  /* ⭐ Os papéis saindo da pasta quando o ponteiro chega — e saindo MAIS quando há um arquivo sendo arrastado sobre ela. Curta: é resposta ao ponteiro, não uma cena, e roda dezenas de vezes enquanto alguém varre a grade com o mouse. */
+  --cui-abrir-pasta: 220ms;
   /* ⭐ A expansão do interruptor de botão para switch. Curta: é uma revelação de opções, não uma entrada em cena — o que a pessoa quer é escolher, e cada milissegundo aqui é atrito entre a intenção e o alvo. */
   --cui-abrir-interruptor: 260ms;
 

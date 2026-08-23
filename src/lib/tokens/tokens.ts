@@ -52,6 +52,11 @@ export const cores = {
     "perigoSuperficie": "#fff2f0",
     "perigoBorda": "#fdcdc9",
     "trilho": "#e9edf3",
+    "pasta": "#6f7276",
+    "pastaFundo": "#56585d",
+    "pastaBorda": "rgba(0, 0, 0, 0.1)",
+    "papel": "#ffffff",
+    "papelBorda": "rgba(0, 0, 0, 0.08)",
     "alavanca": "#ffffff",
     "acento9": "rgba(131, 118, 213, 0.09)",
     "acento14": "rgba(131, 118, 213, 0.14)",
@@ -96,6 +101,11 @@ export const cores = {
     "perigoSuperficie": "#472020",
     "perigoBorda": "#773736",
     "trilho": "#111419",
+    "pasta": "#4b4d52",
+    "pastaFundo": "#33353a",
+    "pastaBorda": "rgba(255, 255, 255, 0.12)",
+    "papel": "#e6e8eb",
+    "papelBorda": "rgba(0, 0, 0, 0.18)",
     "alavanca": "#3a3d44",
     "acento9": "rgba(161, 152, 235, 0.09)",
     "acento14": "rgba(161, 152, 235, 0.14)",
@@ -142,7 +152,17 @@ export const formas = {
   "molduraRespiro": 8,
   "molduraRespiroLg": 12,
   "lateralLargura": 248,
-  "itemLateralRespiro": 14
+  "itemLateralRespiro": 14,
+  "alturaAba": 44,
+  "abaRespiroX": 18,
+  "raioAba": 16,
+  "abaPe": 16,
+  "arquivosLateralLargura": 260,
+  "pastaLargura": 148,
+  "pastaAltura": 112,
+  "raioPasta": 10,
+  "alturaLinha": 46,
+  "respiroPagina": 20
 } as const;
 
 /** Tamanhos em px e pesos de fonte, todos como número. */
@@ -227,6 +247,12 @@ export const molas = {
     "stiffness": 210,
     "damping": 17,
     "velocity": 0
+  },
+  "aba": {
+    "mass": 1,
+    "stiffness": 240,
+    "damping": 30,
+    "velocity": 0
   }
 } as const;
 
@@ -242,6 +268,8 @@ export const tempos = {
   "deslizePilula": 320,
   "desenhoDoContorno": 700,
   "acenderDaMalha": 620,
+  "assentarAba": 260,
+  "abrirPasta": 220,
   "abrirInterruptor": 260
 } as const;
 
