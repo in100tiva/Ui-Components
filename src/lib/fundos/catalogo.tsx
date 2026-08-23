@@ -27,7 +27,21 @@ export const FUNDOS: readonly FundoDisponivel[] = [
     nome: "Orbes iridescentes",
     descricao:
       "Cinco esferas de gradiente sobre luz difusa, recompostas para a caixa larga do cartão — as cinco cabem, em vez de a arte ser cortada a 40%.",
-    Desenho: FundoDeOrbes,
+    Desenho: (p) => <FundoDeOrbes {...p} />,
+  },
+  {
+    id: "orbes-deriva",
+    nome: "Orbes em deriva",
+    descricao:
+      "O mesmo desenho, com as esferas derivando pelo quadro em períodos que não se dividem entre si — o movimento nunca reencontra a mesma configuração.",
+    Desenho: (p) => <FundoDeOrbes {...p} movimento="orbes" />,
+  },
+  {
+    id: "orbes-luz",
+    nome: "Orbes com luz viva",
+    descricao:
+      "As esferas ficam onde estão e o mesh passeia por dentro delas: o que muda é a matéria, como óleo girando numa bolha de sabão.",
+    Desenho: (p) => <FundoDeOrbes {...p} movimento="luz" />,
   },
 ];
 

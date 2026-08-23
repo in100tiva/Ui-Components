@@ -4,9 +4,20 @@ import { useId } from "react";
 
 import "./fundos.css";
 
+/**
+ * O que se move.
+ *
+ * ⭐ **São duas ideias diferentes de vida, não duas intensidades.** Em
+ * `orbes`, as esferas derivam pelo quadro — o que muda é a COMPOSIÇÃO. Em
+ * `luz`, elas ficam exatamente onde estão e o mesh se desloca por dentro: o
+ * que muda é a MATÉRIA delas, como óleo girando dentro de uma bolha de sabão.
+ */
+export type MovimentoDoFundo = "nenhum" | "orbes" | "luz";
+
 export type PropsDoFundoDeOrbes = {
   /** Para encaixar em outro lugar que não a camada de fundo — a miniatura, por exemplo. */
   className?: string;
+  movimento?: MovimentoDoFundo;
 };
 
 /**
@@ -50,7 +61,7 @@ export type PropsDoFundoDeOrbes = {
 */
 const ORBE_3 = "translate(740,340) scale(0.88) translate(-452,-570)";
 
-export function FundoDeOrbes({ className }: PropsDoFundoDeOrbes) {
+export function FundoDeOrbes({ className, movimento = "nenhum" }: PropsDoFundoDeOrbes) {
   /*
     ⛔ **Os ids do SVG precisam ser únicos POR INSTÂNCIA.** `url(#g-orbe1)` é
     global ao documento: com dois fundos na mesma página — a miniatura da
@@ -66,6 +77,7 @@ export function FundoDeOrbes({ className }: PropsDoFundoDeOrbes) {
   return (
     <svg
       className={className ?? "cui-fundo-orbes"}
+      data-movimento={movimento === "nenhum" ? undefined : movimento}
       /*
         ⭐ **O quadro tem a proporção da CAIXA, não a do original.** A arte
         nasceu retrato (734x1024) e o cartão é paisagem: com o quadro original e
@@ -344,10 +356,12 @@ export function FundoDeOrbes({ className }: PropsDoFundoDeOrbes) {
       {/* ⛔ Halo e orbe 3 usam a MESMA matriz. Reposicionar um sem o outro
           descola a luz do objeto que a produz — e um halo órfão no meio do
           cartão é a coisa mais visível que este fundo pode fazer de errado. */}
+      <g className="cui-orbe" data-orbe="3">
       <g transform={ORBE_3} filter={ref("f-halo")}>
         <ellipse cx="318" cy="690" rx="215" ry="245" fill={ref("g4-violeta")} />
         <ellipse cx="292" cy="520" rx="170" ry="165" fill={ref("g4-violeta-alto")} />
         <ellipse cx="556" cy="858" rx="195" ry="180" fill={ref("g4-ciano")} />
+      </g>
       </g>
 
       {/* Orbes 1 e 5: sem filtro nenhum — a borda de cima precisa ser nítida, e
@@ -356,40 +370,64 @@ export function FundoDeOrbes({ className }: PropsDoFundoDeOrbes) {
           A lavagem violeta escorre pelo canto superior esquerdo e morre no meio
           do quadro, abrindo espaço limpo onde o conteúdo vai ficar; a esfera
           ciano fecha a diagonal embaixo à esquerda. */}
-      <g transform="translate(-90,-140)">
-        <circle cx="285" cy="205" r="300" fill={ref("g-orbe1")} />
+      <g className="cui-orbe" data-orbe="1">
+        <g transform="translate(-90,-140)">
+          <circle cx="285" cy="205" r="300" fill={ref("g-orbe1")} />
+        </g>
       </g>
-      <g transform="translate(150,548) scale(0.9) translate(-148,-900)">
-        <circle cx="148" cy="900" r="92" fill={ref("g-orbe5")} />
+      <g className="cui-orbe" data-orbe="5">
+        <g transform="translate(150,548) scale(0.9) translate(-148,-900)">
+          <circle cx="148" cy="900" r="92" fill={ref("g-orbe5")} />
+        </g>
       </g>
 
       {/* Orbe 3 — máscara (dissolve a esquerda) > recorte (borda nítida) >
           filtro (funde as quatro cores). A ordem é o efeito. */}
+      <g className="cui-orbe" data-orbe="3">
       <g transform={ORBE_3} mask={ref("mask-orbe3")}>
         <g clipPath={ref("clip-orbe3")}>
           <g filter={ref("f-mesh-grande")}>
             <circle cx="452" cy="570" r="340" fill="#eef1fb" />
-            <ellipse cx="300" cy="500" rx="215" ry="215" fill={ref("g3-violeta")} />
-            <ellipse cx="352" cy="655" rx="175" ry="175" fill={ref("g3-violeta2")} />
-            <ellipse cx="455" cy="368" rx="185" ry="160" fill={ref("g3-topo")} />
-            <ellipse cx="648" cy="530" rx="215" ry="205" fill={ref("g3-menta")} />
-            <ellipse cx="600" cy="722" rx="200" ry="190" fill={ref("g3-agua")} />
+            <g className="cui-luz" data-luz="a">
+              <ellipse cx="300" cy="500" rx="215" ry="215" fill={ref("g3-violeta")} />
+            </g>
+            <g className="cui-luz" data-luz="b">
+              <ellipse cx="352" cy="655" rx="175" ry="175" fill={ref("g3-violeta2")} />
+            </g>
+            <g className="cui-luz" data-luz="c">
+              <ellipse cx="455" cy="368" rx="185" ry="160" fill={ref("g3-topo")} />
+            </g>
+            <g className="cui-luz" data-luz="d">
+              <ellipse cx="648" cy="530" rx="215" ry="205" fill={ref("g3-menta")} />
+            </g>
+            <g className="cui-luz" data-luz="e">
+              <ellipse cx="600" cy="722" rx="200" ry="190" fill={ref("g3-agua")} />
+            </g>
           </g>
         </g>
+      </g>
       </g>
 
       {/* Orbe 2 por último: ela passa por cima da orbe 1. No quadro largo ela
           sobe para o alto à direita, sem encostar na orbe 3. */}
+      <g className="cui-orbe" data-orbe="2">
       <g transform="translate(1000,112) scale(0.95) translate(-548,-120)" clipPath={ref("clip-orbe2")}>
         <g filter={ref("f-mesh-pequeno")}>
           <circle cx="548" cy="120" r="125" fill="#f4f0fa" />
-          <ellipse cx="505" cy="78" rx="72" ry="72" fill={ref("g2-rosa")} />
-          <ellipse cx="612" cy="118" rx="76" ry="76" fill={ref("g2-ciano")} />
-          <ellipse cx="546" cy="188" rx="76" ry="72" fill={ref("g2-menta")} />
+          <g className="cui-luz" data-luz="a">
+            <ellipse cx="505" cy="78" rx="72" ry="72" fill={ref("g2-rosa")} />
+          </g>
+          <g className="cui-luz" data-luz="d">
+            <ellipse cx="612" cy="118" rx="76" ry="76" fill={ref("g2-ciano")} />
+          </g>
+          <g className="cui-luz" data-luz="b">
+            <ellipse cx="546" cy="188" rx="76" ry="72" fill={ref("g2-menta")} />
+          </g>
         </g>
         {/* O aro fica FORA do grupo borrado: o blur apagaria justamente a parte
             dele que encosta na borda, que é a que desenha o volume. */}
         <circle cx="548" cy="120" r="80" fill={ref("g2-anel")} />
+      </g>
       </g>
     </svg>
   );
