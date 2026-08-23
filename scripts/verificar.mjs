@@ -122,6 +122,10 @@ const React = await import("react");
 const { createRoot } = await import("react-dom/client");
 const {
   Abas,
+  FundoDeOrbes,
+  CamadaDeFundo,
+  FUNDOS,
+  usarFundo,
   GerenciadorDeArquivos,
   criarRepositorioEmMemoria,
   montarArvore,
@@ -990,6 +994,149 @@ checar(
     "os itens arrastáveis desligam o gesto de rolagem do toque",
     /\.cui-arq__linha \{[^}]*touch-action: none/s.test(css) &&
       /\.cui-arq__cartao-alvo \{[^}]*touch-action: none/s.test(css),
+  );
+}
+
+/* --- Fundos --------------------------------------------------------------- */
+
+console.log("\nFundos");
+
+{
+  /* Cada teste começa do zero: o fundo mora em localStorage, e um teste que
+     herda a escolha do anterior passa por acidente. */
+  localStorage.removeItem("componentes-ui:fundo");
+  delete doc.documentElement.dataset.fundo;
+
+  function Palco() {
+    const { fundo, alternar } = usarFundo();
+    return React.createElement(
+      "div",
+      null,
+      React.createElement(CamadaDeFundo, null),
+      React.createElement(
+        "button",
+        { id: "liga", onClick: () => alternar("orbes") },
+        fundo ?? "nenhum",
+      ),
+    );
+  }
+
+  await act(async () => {
+    raiz.render(React.createElement(Palco));
+  });
+  await esperar(60);
+
+  const camada = () => doc.querySelector(".cui-fundo");
+  const liga = () => doc.getElementById("liga");
+
+  checar("sem fundo escolhido, a camada não existe", !camada());
+  checar(
+    "…e a raiz não carrega atributo nenhum",
+    doc.documentElement.dataset.fundo === undefined,
+  );
+
+  await clicar(liga());
+  await esperar(60);
+
+  checar("marcar liga a camada", Boolean(camada()));
+  checar(
+    "…e escreve o fundo na RAIZ, que é o que faz o CSS da casca reagir",
+    doc.documentElement.dataset.fundo === "orbes",
+  );
+  checar("…e o estado chega a quem consome o hook", liga()?.textContent === "orbes");
+
+  /*
+    ⭐ **O mesmo clique desmarca.** É a metade que costuma faltar: ligar um fundo
+    decorativo é fácil de descobrir, desligar tem de ser igualmente óbvio — e no
+    mesmo lugar.
+  */
+  await clicar(liga());
+  await esperar(60);
+  checar("clicar de novo DESMARCA", !camada() && liga()?.textContent === "nenhum");
+  checar(
+    "…e limpa a raiz",
+    doc.documentElement.dataset.fundo === undefined,
+  );
+
+  /*
+    ⛔ **Duas instâncias do fundo na mesma página não podem repetir id.**
+    `url(#g-orbe1)` é global ao documento: com a miniatura da galeria e o fundo
+    do site ligados ao mesmo tempo, o segundo SVG passaria a usar os gradientes
+    do primeiro — e nada acusaria, além de uma cor estranha que ninguém liga ao
+    id. Este é o teste que garante o `useId`.
+  */
+  await act(async () => {
+    raiz.render(
+      React.createElement(
+        "div",
+        null,
+        React.createElement(FundoDeOrbes, null),
+        React.createElement(FundoDeOrbes, null),
+      ),
+    );
+  });
+  await esperar(60);
+
+  const ids = [...doc.querySelectorAll("[id]")].map((n) => n.id);
+  const repetidos = ids.filter((id, i) => ids.indexOf(id) !== i);
+  checar(
+    "dois fundos na mesma página não repetem nenhum id",
+    repetidos.length === 0,
+    repetidos.length ? `repetidos: ${[...new Set(repetidos)].slice(0, 3).join(", ")}` : `${ids.length} ids únicos`,
+  );
+
+  /* Cada referência interna tem de apontar para um id que EXISTE — um
+     `url(#…)` órfão não desenha nada e também não dá erro. */
+  const svg = doc.querySelector("svg");
+  const referencias = [...(svg?.innerHTML.matchAll(/url\(#([^)]+)\)/g) ?? [])].map(
+    (m) => m[1],
+  );
+  const existentes = new Set([...svg.querySelectorAll("[id]")].map((n) => n.id));
+  checar(
+    "toda referência do SVG aponta para um id existente",
+    referencias.length > 0 && referencias.every((r) => existentes.has(r)),
+    `${referencias.length} referências`,
+  );
+
+  checar(
+    "o fundo é decorativo para o leitor de tela",
+    doc.querySelector("svg")?.getAttribute("aria-hidden") === "true",
+  );
+  checar("o catálogo tem ao menos um fundo", FUNDOS.length >= 1, FUNDOS.map((f) => f.id).join(", "));
+}
+
+{
+  const css = readFileSync("src/lib/fundos/fundos.css", "utf8");
+
+  /* ⛔ A camada cobre a tela inteira: sem isto ela engole todo clique do site. */
+  checar(
+    "a camada de fundo não intercepta o ponteiro",
+    /\.cui-fundo \{[^}]*pointer-events: none/s.test(css),
+  );
+  /* ⛔ O fundo é ambiente, não conteúdo: com `absolute` ele rolaria com a página
+     e a composição sairia de quadro no primeiro scroll. */
+  checar(
+    "a camada é fixa, e não rola com a página",
+    /\.cui-fundo \{[^}]*position: fixed/s.test(css),
+  );
+  /* Onde não há desfoque, o vidro vira véu leitoso sobre a composição. */
+  checar(
+    "há reserva para quem não tem backdrop-filter",
+    css.includes("@supports not (backdrop-filter"),
+  );
+
+  const componente = readFileSync("src/lib/fundos/FundoDeOrbes.tsx", "utf8");
+  /* ⛔ `slice` é o `cover` do SVG: sem ele a composição estica junto com a janela
+     e as esferas viram elipses. */
+  checar(
+    "a composição é enquadrada, não esticada",
+    componente.includes('preserveAspectRatio="xMinYMin slice"'),
+  );
+  /* ⚠️ O fundo não pinta a própria base: ela vem do tema, senão o tema escuro
+     receberia um retângulo branco. */
+  checar(
+    "o SVG não pinta a base — quem faz isso é o tema",
+    !/<rect[^>]*fill="#ffffff"/.test(componente),
   );
 }
 

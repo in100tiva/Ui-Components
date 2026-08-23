@@ -778,6 +778,82 @@ Contraste medido:
 | contador ao lado do nome | 5,65:1 | 5,68:1 |
 | o papel contra a frente da pasta | 4,83:1 | 6,89:1 |
 
+## Fundos
+
+Camadas decorativas que valem para o **site inteiro**. Marcar uma liga; clicar
+de novo desliga; a escolha fica guardada entre visitas.
+
+```tsx
+import { CamadaDeFundo, usarFundo } from "@/lib";
+
+// uma vez, no topo da árvore
+<CamadaDeFundo />
+
+// onde se escolhe
+const { fundo, alternar } = usarFundo();
+<button aria-pressed={fundo === "orbes"} onClick={() => alternar("orbes")}>Usar</button>
+```
+
+### `FundoDeOrbes`
+
+Cinco esferas de gradiente sobre luz difusa, recriadas do zero em SVG.
+
+⭐ **É SVG por causa da MOLDURA.** Um fundo de tela vive em telas de todas as
+proporções, e a composição só sobrevive a isso se puder ser enquadrada como uma
+foto: `viewBox` + `preserveAspectRatio="slice"` é exatamente o `background-size:
+cover` — as orbes mantêm posição e tamanho relativos, e o excesso é cortado. Em
+CSS com porcentagens, a esfera vira elipse na primeira tela larga.
+
+⭐ **A âncora é o canto SUPERIOR-ESQUERDO** (`xMinYMin`), e não o centro. A
+composição é retrato; numa tela larga, centralizar mostra só o miolo claro entre
+as orbes — o fundo vira uma névoa sem assunto. Ancorado no topo, o que sobra na
+tela é justamente a orbe violeta e a esfera iridescente.
+
+⭐ **A borda nítida e o miolo macio saem da MESMA peça.** No SVG o filtro roda
+antes do recorte: o `feGaussianBlur` funde as quatro cores livremente, vazando
+para fora do círculo, e o `clipPath` corta reto. Miolo sem nenhuma emenda entre
+cores, contorno duro — é o que faz ler como esfera, e não como disco pintado.
+
+⛔ **O blur come opacidade perto da própria borda do que ele borra.** Cada
+disco-base tem folga generosa (r=340 dentro de um recorte de r=228, com σ=58):
+sem ela a borda direita sai desbotada. **Mexer no `stdDeviation` obriga a mexer
+no raio da base junto** — é a regra invisível do arquivo.
+
+⛔ **Os ids do SVG são únicos por instância (`useId`).** `url(#g-orbe1)` é global
+ao documento: com a miniatura da galeria e o fundo do site na mesma página, o
+segundo SVG passaria a usar os gradientes do primeiro — sem erro, sem aviso, só
+uma cor estranha que ninguém liga ao id.
+
+⚠️ **As cores NÃO são tokens.** Elas são a arte deste fundo, como a paleta de uma
+ilustração: trocar o acento do produto não pode repintar o céu. O que responde ao
+tema é a base atrás delas — e no escuro as orbes recuam para 55%, porque pastel
+pensado para papel branco vira letreiro sobre fundo quase preto.
+
+### O que acontece no site quando um fundo liga
+
+⭐ **O papel fica translúcido** (86% + `backdrop-filter`), senão o fundo não é
+fundo, é margem: um cartão opaco ocupando 80% da tela deixaria a composição
+aparecendo só numa faixa nas bordas.
+
+⛔ **A coluna lateral ganha superfície, contrariando a regra da casca — e por um
+motivo medido.** Sem fundo, ela não tem superfície nenhuma (duas camadas, mesa e
+papel). Mas essa regra pressupõe uma mesa LISA: sobre a orbe violeta, o texto de
+apoio da coluna mede **1,99:1** e o rótulo **3,25:1**. Com o mesmo vidro do
+cartão, o pior par sobe para **4,96:1** e o rótulo para **8,11:1**. Texto sobre
+ilustração sempre precisa de uma superfície entre os dois.
+
+⚠️ **86% de opacidade, não menos.** O desfoque borra o que passa por baixo mas
+não devolve contraste: abaixo disso as orbes começam a aparecer atrás do texto.
+
+⚠️ **Há reserva para quem não tem `backdrop-filter`**: opacidade cheia. Sem
+fundo aparecendo, mas com o texto legível — a troca certa quando só cabe uma das
+duas.
+
+### Um fundo novo
+
+Uma entrada em `catalogo.tsx`. A página de escolha, a camada do site e a
+persistência saem todas dessa lista — não há segunda lista para manter em dia.
+
 ## Decisões que valem para todo componente novo
 
 1. **Medir, não decretar.** Altura de painel é o espaço que sobra na janela;
@@ -851,6 +927,11 @@ src/
       CampoDeNome.tsx           ← renomear no lugar
       icones.tsx
       gerenciador.css
+    fundos/
+      FundoDeOrbes.tsx     ← a composição em SVG, ids únicos por instância
+      catalogo.tsx         ← ✏️  a lista de fundos + a camada do site
+      usar-fundo.ts        ← a escolha, numa loja externa (duas telas a compartilham)
+      fundos.css           ← a camada fixa e o vidro que o fundo exige
     casca/
       Casca.tsx            ← moldura + coluna + cartão
       NavegacaoLateral.tsx ← a pílula que desliza
@@ -866,6 +947,7 @@ src/
       menu-suspenso.tsx
       abas.tsx
       gerenciador-de-arquivos.tsx
+      fundos.tsx
 ```
 
 Os três hooks de `menu-suspenso/` **não são do menu**: são a base de qualquer
