@@ -204,11 +204,19 @@ quebrar linha no meio da animação. Um slot de `flex: 0 0 108px` com
 `justify-content: flex-end` resolve — o controle cresce para dentro do espaço que
 já era dele.
 
-⭐ **Quem recolhe o controle é a CONFIRMAÇÃO, não o clique.** É o mesmo
-`confirmado` que o resto do cartão espera: a alavanca vai para o lado escolhido,
-o contorno percorre a borda, e quando a volta fecha tudo se recolhe junto.
-Desfazer recolhe na hora — senão o controle ficaria aberto com a alavanca na
-cintura, o estado ambíguo que a forma fechada existe para eliminar.
+⭐ **Quem recolhe o controle é a CONFIRMAÇÃO, não o clique.** A alavanca vai
+para o lado escolhido, o contorno percorre a borda, e quando a volta fecha tudo
+se recolhe junto. Desfazer recolhe na hora — senão o controle ficaria aberto com
+a alavanca na cintura, o estado ambíguo que a forma fechada existe para eliminar.
+
+⛔ **`confirmado` é derivado de *qual* resultado foi confirmado, e não um
+booleano.** Com um booleano, trocar de lado num cartão já decidido mantinha o
+`true` do estado anterior durante a nova coreografia: o controle lia "já
+confirmou" no instante do clique e se recolhia na hora, sem a alavanca atravessar
+nem o contorno percorrer. E zerá-lo dentro do efeito não resolve — **efeitos de
+filho rodam antes dos do pai**, então o controle já teria lido o valor velho.
+Comparando *para qual resultado* a confirmação vale, ela dá `false` no mesmo
+render em que o novo resultado chega.
 
 ⭐ **É um `radiogroup`, não um `switch`.** Um switch tem dois estados e nenhum
 jeito de dizer "ainda não decidi"; um grupo de rádios tem exatamente isso —

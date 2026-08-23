@@ -79,7 +79,24 @@ export function CartaoDeDecisao({
      — e só o segundo merece a coreografia. */
   const veioDeGesto = useRef(false);
 
-  const [confirmado, setConfirmado] = useState(resultado !== null);
+  /*
+    ⭐ **`confirmado` é DERIVADO de qual resultado já foi confirmado — não é um
+    booleano próprio.** A diferença aparece ao trocar de lado com o cartão já
+    decidido.
+
+    Com um booleano, ele continuava `true` do estado anterior enquanto a nova
+    coreografia rodava: o interruptor via "já confirmou" no mesmo instante do
+    clique e se recolhia na hora, sem a alavanca atravessar nem o contorno
+    percorrer. A segunda decisão não tinha animação nenhuma.
+
+    ⛔ E zerá-lo dentro do efeito NÃO resolve: efeitos de FILHO rodam antes dos
+    do pai, então o interruptor já teria lido `true` e fechado antes de o cartão
+    corrigir. Guardando *para qual resultado* a confirmação vale, a comparação
+    dá `false` no MESMO render em que o novo resultado chega — sem intervalo em
+    que alguém possa ler o estado antigo.
+  */
+  const [confirmadoPara, setConfirmadoPara] = useState<Resultado | null>(resultado);
+  const confirmado = resultado !== null && confirmadoPara === resultado;
 
   function decidir(escolha: Resultado) {
     if (pendente) return;
@@ -94,7 +111,7 @@ export function CartaoDeDecisao({
 
     if (resultado === null) {
       veioDeGesto.current = false;
-      setConfirmado(false);
+      setConfirmadoPara(null);
       return;
     }
     if (!contorno) return;
@@ -102,7 +119,7 @@ export function CartaoDeDecisao({
     if (!veioDeGesto.current || preferemenosMovimento()) {
       utils.set(contorno, { strokeDashoffset: 0 });
       if (malha) utils.set(malha, { opacity: 1 });
-      setConfirmado(true);
+      setConfirmadoPara(resultado);
       return;
     }
 
@@ -127,8 +144,9 @@ export function CartaoDeDecisao({
       strokeDashoffset: [100, 0],
       duration: tempos.desenhoDoContorno,
       ease: curva(curvas.percurso),
-      /* Os botões só confirmam quando a volta fecha — ver a nota de `confirmado`. */
-      onComplete: () => setConfirmado(true),
+      /* Os controles só confirmam quando a volta fecha — ver a nota de
+         `confirmadoPara`. */
+      onComplete: () => setConfirmadoPara(resultado),
     });
   }, [resultado]);
 

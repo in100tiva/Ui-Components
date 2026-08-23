@@ -360,11 +360,30 @@ checar("reprovar tinge o cartão de vermelho", cartoes()[2]?.dataset.resultado =
 checar("a malha apareceu", Number(parte(2, ".cui-decisao__malha")?.style.opacity) === 1);
 checar("o rodapé anuncia a decisão por escrito", Boolean(parte(2, ".cui-decisao__rodape")));
 
-/* Trocar de lado, e depois desfazer — reabrindo o controle a cada vez. */
+/*
+  ⭐ **Trocar de lado com o cartão JÁ decidido tem de animar como a primeira
+  vez.** Este é o caso que falhava: `confirmado` continuava `true` do estado
+  anterior enquanto a nova coreografia rodava, o interruptor lia "já confirmou" no
+  instante do clique e se recolhia na hora. A segunda decisão não tinha animação
+  nenhuma — e nada quebrava.
+*/
 await abrirInterruptor(2);
 await clicar(botao(2, "aprovada"));
+checar(
+  "⭐ trocar de lado NÃO recolhe o controle na hora",
+  Boolean(botao(2, "aprovada")) && !fechado(2),
+);
+checar(
+  "…e a cor do novo lado ainda aguarda a volta fechar",
+  botao(2, "aprovada")?.getAttribute("data-aceso") === "false",
+);
+
 await esperar(900);
 checar("trocar de lado troca o tom", cartoes()[2]?.dataset.resultado === "aprovada");
+checar(
+  "…e só então o controle se recolhe no novo resultado",
+  fechado(2)?.dataset.resultado === "aprovada",
+);
 checar("o botão fechado agora carrega o outro resultado", fechado(2)?.dataset.resultado === "aprovada");
 
 await abrirInterruptor(2);
