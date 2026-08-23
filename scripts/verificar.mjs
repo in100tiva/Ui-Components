@@ -121,6 +121,17 @@ const vite = await createServer({
 const React = await import("react");
 const { createRoot } = await import("react-dom/client");
 const {
+  Abas,
+  GerenciadorDeArquivos,
+  criarRepositorioEmMemoria,
+  montarArvore,
+  caminhoAte,
+  podeMoverPasta,
+  subarvoreDe,
+  contarArquivos,
+  buscar,
+  nomeDisponivel,
+  formatarTamanho,
   MenuSuspenso,
   CartaoDeDecisao,
   InterruptorDeDecisao,
@@ -134,6 +145,11 @@ const doc = w.document;
 const clicar = async (el) => {
   await act(async () => {
     el.dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
+  });
+};
+const teclar = async (el, key) => {
+  await act(async () => {
+    el.dispatchEvent(new w.KeyboardEvent("keydown", { key, bubbles: true }));
   });
 };
 const esperar = async (ms) => {
@@ -452,6 +468,528 @@ checar("desfazer remove contorno, malha e lavagem",
     css.includes('[data-tipo="reprovada"] svg {') &&
       css.includes("left: calc(var(--cui-interruptor-altura) / 2)") &&
       css.includes("right: calc(var(--cui-interruptor-altura) / 2)"),
+  );
+}
+
+/* --- Abas ---------------------------------------------------------------- */
+
+console.log("\nAbas");
+
+const SECOES = [
+  { valor: "resumo", rotulo: "Resumo" },
+  { valor: "andamentos", rotulo: "Andamentos", selo: "12" },
+  { valor: "partes", rotulo: "Partes e advogados" },
+  { valor: "financeiro", rotulo: "Financeiro", desabilitada: true },
+];
+
+function Secoes() {
+  const [secao, setSecao] = React.useState("resumo");
+  return React.createElement(
+    Abas,
+    { abas: SECOES, valor: secao, aoTrocar: setSecao, rotulo: "Seções" },
+    React.createElement("p", { className: "demo-abas__texto" }, `conteúdo de ${secao}`),
+  );
+}
+
+await act(async () => {
+  raiz.render(React.createElement(Secoes));
+});
+await esperar(60);
+
+const trilho = () => doc.querySelector(".cui-abas__trilho");
+const tabs = () => [...doc.querySelectorAll('[role="tab"]')];
+const tabPor = (rotulo) => tabs().find((t) => t.textContent?.includes(rotulo));
+const ativa = () => tabs().find((t) => t.getAttribute("aria-selected") === "true");
+const painelDaAba = () => doc.querySelector('[role="tabpanel"]');
+
+checar("desenha um tablist com uma aba por entrada", tabs().length === SECOES.length);
+checar("abre com a aba do valor selecionada", ativa()?.textContent?.includes("Resumo"));
+
+/*
+  Foco itinerante: só a aba aberta está na ordem de tabulação. Sem isso, o Tab
+  percorre todas as abas antes de chegar ao conteúdo — o defeito clássico de
+  tablist feito com botões soltos, e que nada em tipo ou layout acusa.
+*/
+checar(
+  "só a aba aberta está na ordem de tabulação",
+  tabs().filter((t) => t.tabIndex === 0).length === 1 &&
+    ativa()?.tabIndex === 0,
+  tabs().map((t) => t.tabIndex).join(","),
+);
+
+checar(
+  "o painel é rotulado pela aba aberta e ela o aponta de volta",
+  painelDaAba()?.getAttribute("aria-labelledby") === ativa()?.id &&
+    ativa()?.getAttribute("aria-controls") === painelDaAba()?.id,
+);
+checar(
+  "as abas fechadas NÃO apontam um painel que não existe",
+  tabs()
+    .filter((t) => t !== ativa())
+    .every((t) => !t.hasAttribute("aria-controls")),
+);
+
+/*
+  ⭐ **A cópia invertida tem de ser a barra INTEIRA, item por item.** Ela é o que
+  se vê dentro da pílula; se sair de sincronia com a lista real — um selo que só
+  existe de um lado, uma aba a menos — o texto de dentro da janela deixa de
+  cair sobre o de fora, e o desalinhamento só aparece no meio de uma viagem. Nem
+  o tipo nem o jsdom (que não faz layout) veriam isso.
+*/
+const camada = () => doc.querySelector(".cui-abas__invertida");
+const rotulosReais = () => tabs().map((t) => t.textContent);
+const rotulosDaCopia = () =>
+  [...(camada()?.querySelectorAll(".cui-abas__aba") ?? [])].map((e) => e.textContent);
+
+checar(
+  "a camada invertida existe e pede o tema oposto",
+  camada()?.hasAttribute("data-tema-invertido") === true,
+);
+checar(
+  "…e some para o leitor de tela, em vez de ler a barra duas vezes",
+  camada()?.getAttribute("aria-hidden") === "true",
+);
+checar(
+  "a cópia repete a barra rótulo por rótulo",
+  rotulosDaCopia().length === rotulosReais().length &&
+    rotulosDaCopia().every((r, i) => r === rotulosReais()[i]),
+  `real=[${rotulosReais().join("|")}] cópia=[${rotulosDaCopia().join("|")}]`,
+);
+
+/*
+  A posição da pílula é escrita pelo JavaScript em custom properties. jsdom não
+  faz layout, então os valores são zero — mas eles têm de EXISTIR: vazios
+  significam que a medição não rodou, e no navegador a janela do recorte ficaria
+  fechada em cima da primeira aba para sempre.
+*/
+checar(
+  "a medição é escrita no trilho como custom property",
+  trilho()?.style.getPropertyValue("--cui-aba-x") !== "" &&
+    trilho()?.style.getPropertyValue("--cui-aba-largura") !== "",
+  `x="${trilho()?.style.getPropertyValue("--cui-aba-x")}" largura="${trilho()?.style.getPropertyValue("--cui-aba-largura")}"`,
+);
+
+/* --- Troca por clique e direção da entrada -------------------------------- */
+
+await clicar(tabPor("Partes"));
+await esperar(60);
+checar("clicar troca a aba aberta", ativa()?.textContent?.includes("Partes"));
+checar("…e o painel troca junto", painelDaAba()?.textContent === "conteúdo de partes");
+
+/*
+  ⭐ **A direção da entrada é medida, não decorativa.** Ir para uma aba à direita
+  traz o conteúdo pela direita; voltar, pela esquerda. Um lado fixo faria metade
+  das trocas empurrar o conteúdo contra o gesto — e nada quebraria.
+*/
+checar("ir para a direita traz o painel da direita", painelDaAba()?.dataset.direcao === "frente");
+
+await clicar(tabPor("Resumo"));
+await esperar(60);
+checar("voltar traz o painel da esquerda", painelDaAba()?.dataset.direcao === "tras");
+
+/* --- Teclado -------------------------------------------------------------- */
+
+await teclar(ativa(), "ArrowRight");
+await esperar(60);
+checar("→ abre a próxima aba", ativa()?.textContent?.includes("Andamentos"));
+checar("…e leva o foco junto", doc.activeElement === ativa());
+
+await teclar(ativa(), "ArrowLeft");
+await esperar(60);
+checar("← volta", ativa()?.textContent?.includes("Resumo"));
+
+/*
+  ⛔ **End vai à última aba HABILITADA, não à última do array.** Uma aba
+  desabilitada não é uma parada: pousar nela deixaria o teclado num beco — ela
+  não pode ser aberta, e a próxima seta partiria de um lugar que a pessoa não
+  escolheu.
+*/
+await teclar(ativa(), "End");
+await esperar(60);
+checar("End para na última aba habilitada, pulando a desabilitada", ativa()?.textContent?.includes("Partes"));
+
+await teclar(ativa(), "ArrowRight");
+await esperar(60);
+checar("→ na última dá a volta pulando a desabilitada", ativa()?.textContent?.includes("Resumo"));
+
+await teclar(ativa(), "Home");
+await esperar(60);
+checar("Home volta à primeira", ativa()?.textContent?.includes("Resumo"));
+
+checar(
+  "a aba desabilitada nunca é aberta pelo teclado",
+  tabPor("Financeiro")?.getAttribute("aria-selected") === "false" &&
+    tabPor("Financeiro")?.disabled === true,
+);
+
+/* --- Guardas de CSS e de tokens ------------------------------------------- */
+
+{
+  const css = readFileSync("src/lib/abas/abas.css", "utf8");
+
+  /*
+    O recorte é o componente inteiro: sem as duas custom properties dentro do
+    clip-path, a pílula não existe. Trocar isso por um bloco posicionado quebra
+    a inversão do texto no meio da viagem — e passa em tipo, em build e em DOM.
+  */
+  checar(
+    "a pestana continua sendo um recorte da cópia, e não um bloco",
+    css.includes("clip-path: inset(") &&
+      css.includes("var(--cui-aba-x, 0px)") &&
+      css.includes("var(--cui-aba-largura, 0px)"),
+  );
+  checar(
+    "a camada invertida não intercepta clique",
+    /\.cui-abas__invertida \{[^}]*pointer-events: none/s.test(css),
+  );
+
+  /*
+    ⛔ O peso da fonte não pode mudar com a seleção: peso muda a largura do
+    rótulo, e a cópia invertida deixaria de cair sobre o texto real no meio da
+    viagem — além de empurrar as abas vizinhas no instante do clique.
+  */
+  checar(
+    "a seleção não mexe no peso da fonte (a cópia deixaria de coincidir)",
+    !/aria-selected="true"[^}]*font-weight/s.test(css),
+  );
+
+  /*
+    ⛔ **Os PÉS são a diferença entre pestana e retângulo.** São curvas CÔNCAVAS
+    — o negativo de um raio de canto —, e por isso saem de um radial-gradient e
+    não de border-radius. Trocar por um raio comum deixa a aba pousada sobre a
+    linha em vez de nascer dela, e nada em tipo, DOM ou build acusa: continua
+    sendo uma aba, só que outra.
+  */
+  checar(
+    "os pés da pestana são curvas côncavas, e não raios de canto",
+    /\.cui-abas__pe--esquerdo \{[^}]*radial-gradient/s.test(css) &&
+      /\.cui-abas__pe--direito \{[^}]*radial-gradient/s.test(css),
+  );
+  checar(
+    "…e as duas curvas leem as mesmas medidas do corpo",
+    css.includes("left: calc(var(--cui-aba-x, 0px) - var(--cui-aba-pe-atual, var(--cui-aba-pe)))") &&
+      css.includes("left: calc(var(--cui-aba-x, 0px) + var(--cui-aba-largura, 0px))"),
+  );
+
+  /*
+    O tema invertido é o que pinta a pílula, e ele é GERADO. Os dois guardas
+    abaixo protegem as duas metades da regra: os seletores existirem, e os
+    derivados por transparência serem REDECLARADOS dentro deles — um var() de
+    custom property é resolvido onde ela é declarada, então alfas herdados da
+    raiz chegariam ao bloco invertido com a cor do tema de origem.
+  */
+  const tokens = readFileSync("src/estilos/tokens.css", "utf8");
+  checar(
+    "o tokens.css gerado traz os dois blocos de tema invertido",
+    tokens.includes(':root:not([data-tema="escuro"]) [data-tema-invertido]') &&
+      tokens.includes('[data-tema="escuro"] [data-tema-invertido]'),
+  );
+  const blocoInvertido = tokens.slice(
+    tokens.indexOf('[data-tema="escuro"] [data-tema-invertido]'),
+  );
+  checar(
+    "…e redeclara os derivados do acento dentro deles",
+    blocoInvertido.slice(0, blocoInvertido.indexOf("\n}")).includes("--cui-acento-9:"),
+  );
+}
+
+/*
+  ⭐ **A prova de que a pestana ANIMA.** Este é o teste que faltava quando a
+  animação parou de rodar sem ninguém perceber: a aba trocava, o painel trocava,
+  o `aria-selected` mudava — e a forma saltava para o destino, seca. Tudo isso
+  passa num teste de presença.
+
+  ⚠️ jsdom não faz layout, então `offsetLeft` é sempre zero e a POSIÇÃO não tem
+  caminho para percorrer. Quem prova o movimento aqui é o assentamento dos pés:
+  ele vai de 35% a 100% por tempo, não por medida, e portanto anima igual sem
+  layout nenhum. Se a mola deixar de rodar, esta amostra vira um valor só.
+*/
+{
+  const trilhoDaAba = () => doc.querySelector(".cui-abas__trilho");
+  const pe = () => trilhoDaAba()?.style.getPropertyValue("--cui-aba-pe-atual");
+
+  const outraAba = tabs().find((t) => t.getAttribute("aria-selected") === "false");
+  await clicar(outraAba);
+
+  const amostras = [];
+  for (let i = 0; i < 10; i++) {
+    await esperar(35);
+    amostras.push(pe());
+  }
+  const distintos = new Set(amostras.filter(Boolean));
+
+  checar(
+    "⭐ a pestana ANIMA ao trocar de aba (não salta para o destino)",
+    distintos.size >= 3,
+    `${distintos.size} valores no caminho: ${[...distintos].slice(0, 4).join(" → ")}`,
+  );
+
+  await esperar(500);
+  const parado = parseFloat(pe() ?? "0");
+  checar(
+    "…e os pés terminam ESPALHADOS, no valor cheio do token",
+    Math.abs(parado - 16) < 0.6,
+    `${pe()} (o token vale 16px)`,
+  );
+}
+
+/* --- Gerenciador de Arquivos --------------------------------------------- */
+
+console.log("\nGerenciador de Arquivos");
+
+/*
+  ⭐ **As regras primeiro, como CONTA.** Elas são puras de propósito: mover uma
+  pasta para dentro de si mesma desliga o ramo inteiro da raiz — ele continua no
+  banco e some da tela —, e não existe clique que produza isso de propósito para
+  conferir na mão. Testar a função é o único jeito honesto.
+*/
+const ACERVO_BASE = {
+  pastas: [
+    { id: "raiz-a", nome: "Contratos", paiId: null },
+    { id: "filha", nome: "Modelos", paiId: "raiz-a" },
+    { id: "neta", nome: "Antigos", paiId: "filha" },
+    { id: "raiz-b", nome: "Órgãos públicos", paiId: null },
+  ],
+  arquivos: [
+    { id: "f1", nome: "Contrato.docx", pastaId: "raiz-a", adicionadoPor: { nome: "Ana", email: "a@x.com" }, adicionadoEm: "2026-08-01T10:00:00Z", tamanho: 2048, etiquetas: ["jurídico"] },
+    { id: "f2", nome: "Modelo.docx", pastaId: "filha", adicionadoPor: { nome: "Bia", email: "b@x.com" }, adicionadoEm: "2026-08-02T10:00:00Z" },
+    { id: "f3", nome: "Antigo.pdf", pastaId: "neta", adicionadoPor: { nome: "Ana", email: "a@x.com" }, adicionadoEm: "2026-08-03T10:00:00Z" },
+    { id: "f4", nome: "Solto.pdf", pastaId: null, adicionadoPor: { nome: "Ana", email: "a@x.com" }, adicionadoEm: "2026-08-04T10:00:00Z" },
+  ],
+};
+
+{
+  const p = ACERVO_BASE.pastas;
+
+  const arvore = montarArvore(p);
+  checar(
+    "a árvore sai da lista plana, com os níveis certos",
+    arvore.length === 2 &&
+      arvore[0].filhos[0]?.pasta.id === "filha" &&
+      arvore[0].filhos[0]?.filhos[0]?.pasta.id === "neta" &&
+      arvore[0].filhos[0]?.filhos[0]?.nivel === 2,
+  );
+
+  checar(
+    "o caminho até a neta atravessa os três degraus",
+    caminhoAte(p, "neta").map((x) => x.nome).join(" / ") === "Contratos / Modelos / Antigos",
+  );
+  checar("o caminho da raiz é vazio", caminhoAte(p, null).length === 0);
+
+  /* ⛔ As quatro recusas que impedem a árvore de se comer. */
+  checar("⛔ mover uma pasta para dentro DELA MESMA é recusado", !podeMoverPasta(p, "raiz-a", "raiz-a"));
+  checar("⛔ mover uma pasta para dentro da FILHA é recusado", !podeMoverPasta(p, "raiz-a", "filha"));
+  checar("⛔ …e para dentro da NETA também", !podeMoverPasta(p, "raiz-a", "neta"));
+  checar("mover para onde já está não é operação", !podeMoverPasta(p, "filha", "raiz-a"));
+  checar("mover para outro ramo é permitido", podeMoverPasta(p, "filha", "raiz-b"));
+  checar("mover para a raiz é permitido", podeMoverPasta(p, "neta", null));
+
+  checar("a subárvore inclui a própria pasta e os netos",
+    [...subarvoreDe(p, "raiz-a")].sort().join(",") === "filha,neta,raiz-a");
+
+  /*
+    ⚠️ A contagem é DIRETA. Se um dia alguém "melhorar" isto para somar os
+    descendentes, a pasta passa a prometer arquivos que a lista não mostra.
+  */
+  checar("a contagem é direta, não recursiva", contarArquivos(ACERVO_BASE.arquivos, "raiz-a") === 1);
+  checar("a raiz conta só o que está solto nela", contarArquivos(ACERVO_BASE.arquivos, null) === 1);
+
+  const achado = buscar(ACERVO_BASE, "orgaos");
+  checar("a busca ignora acento", achado.pastas.some((x) => x.id === "raiz-b"), `${achado.pastas.length} pasta(s)`);
+  const porArquivo = buscar(ACERVO_BASE, "antigo");
+  checar(
+    "achar um arquivo traz junto a pasta onde ele está",
+    porArquivo.arquivos.length === 1 && porArquivo.pastas.some((x) => x.id === "neta"),
+  );
+  const porEtiqueta = buscar(ACERVO_BASE, "jurídico");
+  checar("a busca também varre as etiquetas", porEtiqueta.arquivos.some((a) => a.id === "f1"));
+
+  checar(
+    "o nome novo não colide com os irmãos",
+    nomeDisponivel([...p, { id: "x", nome: "Nova pasta", paiId: null }], null, "Nova pasta") ===
+      "Nova pasta 2",
+  );
+  checar("tamanho sem valor vira travessão, não '0 B'", formatarTamanho(undefined) === "—");
+  checar("tamanho em KB", formatarTamanho(2048) === "2.0 KB", formatarTamanho(2048));
+}
+
+/* --- O repositório em memória -------------------------------------------- */
+
+{
+  const repositorio = criarRepositorioEmMemoria(ACERVO_BASE);
+  const antes = await repositorio.listar();
+
+  await repositorio.excluirPasta("raiz-a");
+  const depois = await repositorio.listar();
+
+  checar(
+    "excluir uma pasta leva junto as subpastas",
+    depois.pastas.length === 1 && depois.pastas[0].id === "raiz-b",
+    depois.pastas.map((x) => x.id).join(","),
+  );
+  checar(
+    "…e os arquivos que estavam dentro delas",
+    depois.arquivos.map((a) => a.id).sort().join(",") === "f4",
+    depois.arquivos.map((a) => a.id).join(","),
+  );
+
+  /*
+    ⛔ O acervo que chega por parâmetro costuma ser uma constante de módulo.
+    Mutá-lo faria a SEGUNDA montagem da página começar do estado da primeira —
+    um defeito que só aparece quando alguém navega para outra tela e volta.
+  */
+  checar(
+    "o repositório não muta o acervo que recebeu",
+    ACERVO_BASE.pastas.length === 4 && antes.pastas.length === 4,
+    `${ACERVO_BASE.pastas.length} pastas na constante`,
+  );
+}
+
+/* --- A página montada ----------------------------------------------------- */
+
+const repoDaPagina = criarRepositorioEmMemoria(ACERVO_BASE);
+
+await act(async () => {
+  raiz.render(
+    React.createElement(GerenciadorDeArquivos, {
+      repositorio: repoDaPagina,
+      titulo: "Acervo",
+    }),
+  );
+});
+await esperar(120);
+
+const noArvore = () => [...doc.querySelectorAll('[role="treeitem"]')];
+const cartaoArq = () => [...doc.querySelectorAll(".cui-arq__cartao")];
+const linhaArq = () => [...doc.querySelectorAll(".cui-arq__linha")];
+
+checar("a página monta a árvore, a grade e a lista",
+  noArvore().length > 0 && cartaoArq().length === 2 && linhaArq().length === 1,
+  `${noArvore().length} nós, ${cartaoArq().length} cartões, ${linhaArq().length} linha`);
+
+checar(
+  "a árvore se anuncia como árvore, com nível e seleção",
+  Boolean(doc.querySelector('[role="tree"]')) &&
+    noArvore()[0]?.getAttribute("aria-level") === "1" &&
+    noArvore()[0]?.hasAttribute("aria-selected"),
+);
+checar(
+  "a lista é uma tabela de verdade, com cabeçalhos de coluna",
+  doc.querySelectorAll('.cui-arq__tabela th[scope="col"]').length === 5,
+);
+
+/*
+  ⭐ **A alternativa ACESSÍVEL ao arrasto.** Arrastar não existe para quem navega
+  por teclado; se "Mover para" quebrar, mover um arquivo vira função exclusiva de
+  quem usa mouse — e nada na tela denuncia isso.
+*/
+{
+  const acoesDaLinha = doc.querySelector(".cui-arq__linha-acoes");
+  await clicar(acoesDaLinha);
+  await esperar(120);
+
+  const itens = () => [...doc.querySelectorAll('[role="menuitem"]')];
+  const mover = itens().find((i) => i.textContent?.includes("Mover para"));
+  checar("a linha oferece 'Mover para' no menu", Boolean(mover), itens().map((i) => i.textContent).join(" | "));
+
+  await clicar(mover);
+  await esperar(120);
+  const destinos = itens();
+  checar(
+    "o submenu é um NÍVEL do mesmo painel, com volta",
+    destinos.some((i) => i.textContent?.includes("Contratos / Modelos")) &&
+      Boolean(doc.querySelector(".cui-arq__menu-voltar")),
+    destinos.map((i) => i.textContent).join(" | "),
+  );
+
+  const paraModelos = destinos.find((i) => i.textContent === "Contratos / Modelos");
+  await clicar(paraModelos);
+  await esperar(400);
+
+  const acervo = await repoDaPagina.listar();
+  checar(
+    "escolher o destino move o arquivo de verdade",
+    acervo.arquivos.find((a) => a.id === "f4")?.pastaId === "filha",
+    `f4 está em ${acervo.arquivos.find((a) => a.id === "f4")?.pastaId}`,
+  );
+  checar("…e o menu fecha depois de agir", itens().length === 0);
+}
+
+/*
+  ⭐ **O caminho de ERRO da camada otimista.** A tela muda antes da resposta; se
+  o servidor recusar, ela precisa voltar ao que era E dizer o que houve. Sem
+  este teste, a falha aparece como um estado que ficou na tela e não existe no
+  banco — a pior divergência possível num gerenciador de arquivos.
+*/
+{
+  const repoQueFalha = criarRepositorioEmMemoria(ACERVO_BASE, {
+    simularFalha: (operacao) => operacao === "excluirPasta",
+  });
+
+  await act(async () => {
+    raiz.render(
+      React.createElement(GerenciadorDeArquivos, { repositorio: repoQueFalha, titulo: "Acervo" }),
+    );
+  });
+  await esperar(120);
+
+  const antesDoErro = doc.querySelectorAll(".cui-arq__cartao").length;
+  const acoes = doc.querySelector(".cui-arq__cartao-acoes");
+  await clicar(acoes);
+  await esperar(120);
+  const excluir = [...doc.querySelectorAll('[role="menuitem"]')].find((i) =>
+    i.textContent?.includes("Excluir"),
+  );
+  await clicar(excluir);
+  await esperar(80);
+  const confirmar = [...doc.querySelectorAll('[role="menuitem"]')].find((i) =>
+    i.textContent?.includes("Excluir a pasta"),
+  );
+  await clicar(confirmar);
+  await esperar(400);
+
+  checar(
+    "a falha do servidor DESFAZ a exclusão otimista",
+    doc.querySelectorAll(".cui-arq__cartao").length === antesDoErro,
+    `${antesDoErro} → ${doc.querySelectorAll(".cui-arq__cartao").length}`,
+  );
+  checar(
+    "…e o erro é anunciado, não engolido",
+    Boolean(doc.querySelector('[role="alert"]')),
+    doc.querySelector('[role="alert"]')?.textContent ?? "sem alerta",
+  );
+}
+
+/* --- Guardas de CSS ------------------------------------------------------- */
+
+{
+  const css = readFileSync("src/lib/gerenciador-de-arquivos/gerenciador.css", "utf8");
+
+  /*
+    ⛔ O padrão promete ser copiável: a pasta com os .tsx e o .css, e nada mais.
+    Herdar o box-sizing do reset do projeto quebra essa promessa em silêncio — a
+    frente da pasta soma o padding à altura, sobe 14px e cobre os papéis. O
+    desenho continua aparecendo, só que errado.
+  */
+  checar(
+    "o CSS declara o próprio box-sizing (não depende do reset do projeto)",
+    /\.cui-arq \*,[^{]*\{[^}]*box-sizing: border-box/s.test(css),
+  );
+  /* Um display vindo de classe vence o hidden que o navegador aplica. */
+  checar(
+    "a trilha respeita o atributo hidden",
+    css.includes(".cui-arq__trilha[hidden]"),
+  );
+  /* ⛔ Sem isto o fantasma vira o alvo de elementFromPoint e nada acende. */
+  checar(
+    "o fantasma do arrasto não intercepta o ponteiro",
+    /\.cui-arq__fantasma \{[^}]*pointer-events: none/s.test(css),
+  );
+  /* Sem touch-action none, o arrasto no celular vira rolagem. */
+  checar(
+    "os itens arrastáveis desligam o gesto de rolagem do toque",
+    /\.cui-arq__linha \{[^}]*touch-action: none/s.test(css) &&
+      /\.cui-arq__cartao-alvo \{[^}]*touch-action: none/s.test(css),
   );
 }
 
