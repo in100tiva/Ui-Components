@@ -192,6 +192,18 @@ aparecem quando alguém vai usá-las.
 cintura e o segundo lobo entram em cena. Não são duas formas trocando de lugar: é
 uma sendo revelada.
 
+⭐ **`ancora` escolhe de que borda a forma se abre**, e a escolha é pelo lado do
+cartão em que o controle vive. Com ele à direita (`ancora="fim"`), o espaço para
+crescer está à esquerda: o desenho ancora na borda direita e o segundo lobo entra
+pela esquerda, com o primeiro parado exatamente onde o dedo tocou. Com a âncora
+errada, o lobo que estava sob o dedo *viaja para longe dele* durante a expansão.
+
+⚠️ **Reserve a largura expandida no layout.** O controle mede 44px fechado e
+108px aberto; deixado no fluxo sem reserva, abrir empurra o texto e o título pode
+quebrar linha no meio da animação. Um slot de `flex: 0 0 108px` com
+`justify-content: flex-end` resolve — o controle cresce para dentro do espaço que
+já era dele.
+
 ⭐ **Quem recolhe o controle é a CONFIRMAÇÃO, não o clique.** É o mesmo
 `confirmado` que o resto do cartão espera: a alavanca vai para o lado escolhido,
 o contorno percorre a borda, e quando a volta fecha tudo se recolhe junto.

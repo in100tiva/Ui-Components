@@ -55,7 +55,22 @@ export function paradasDe(elemento: Pick<HTMLElement, "clientWidth" | "clientHei
  * escolhido, o contorno percorre a borda e, quando a volta fecha, o interruptor
  * se recolhe mostrando o resultado. A sequência inteira termina junto.
  */
-export function InterruptorDeDecisao({ className }: { className?: string }) {
+export function InterruptorDeDecisao({
+  ancora = "inicio",
+  className,
+}: {
+  /**
+   * De que borda a forma se abre.
+   *
+   * ⭐ **Escolha pelo LADO do cartão em que o controle vive.** Com o controle à
+   * direita, o espaço para crescer está à esquerda: `"fim"` ancora o desenho na
+   * borda direita, e o segundo lobo entra pela esquerda enquanto o primeiro fica
+   * parado exatamente onde o dedo tocou. Com `"inicio"` num controle à direita, o
+   * lobo que estava sob o dedo VIAJA para longe dele durante a expansão.
+   */
+  ancora?: "inicio" | "fim";
+  className?: string;
+}) {
   const { resultado, confirmado, pendente, decidir } = usarCartao();
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -138,6 +153,7 @@ export function InterruptorDeDecisao({ className }: { className?: string }) {
       ref={containerRef}
       data-resultado={resultado ?? "aberta"}
       data-expandido={expandido ? "true" : "false"}
+      data-ancora={ancora}
       className={["cui-interruptor", className].filter(Boolean).join(" ")}
       onKeyDown={(evento) => {
         if (evento.key === "Escape" && aberto) {
@@ -150,15 +166,21 @@ export function InterruptorDeDecisao({ className }: { className?: string }) {
       }}
     >
       {/*
-        ⭐ **Uma forma só, revelada.** `xMinYMid slice` mantém a proporção e
-        ancora no canto esquerdo: em 44px de largura, o que cabe no quadro é o
-        lobo esquerdo inteiro — um círculo perfeito. A largura crescendo traz a
-        cintura e o segundo lobo para dentro.
+        ⭐ **Uma forma só, revelada.** O `slice` mantém a proporção e recorta: em
+        44px de largura, o que cabe no quadro é um lobo inteiro — um círculo
+        perfeito. A largura crescendo traz a cintura e o segundo lobo para
+        dentro.
+
+        A âncora (`xMin` ou `xMax`) escolhe QUAL lobo fica parado. É o que
+        permite ao controle à direita do cartão abrir para a esquerda sem que o
+        alvo fuja de debaixo do dedo — ver a prop `ancora`.
       */}
       <svg
         aria-hidden="true"
         viewBox="0 0 108 44"
-        preserveAspectRatio="xMinYMid slice"
+        preserveAspectRatio={
+          ancora === "fim" ? "xMaxYMid slice" : "xMinYMid slice"
+        }
         className="cui-interruptor__trilho"
       >
         <path d="M22 0C36 0 42 9 54 9C66 9 72 0 86 0A22 22 0 0 1 86 44C72 44 66 35 54 35C42 35 36 44 22 44A22 22 0 0 1 22 0Z" />

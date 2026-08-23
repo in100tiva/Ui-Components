@@ -461,9 +461,26 @@
 
 .demo-cartao-texto {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 3px;
   min-width: 0;
+}
+
+/*
+  ⭐ **O slot reserva a largura EXPANDIDA do controle, mesmo com ele fechado.**
+
+  O interruptor mede 44px fechado e 108px aberto. Deixado no fluxo sem reserva,
+  abrir empurra o texto e o título pode quebrar linha no meio da animação —
+  refluxo é a coisa mais cara que uma animação pode causar, e a mais visível.
+
+  Com o slot fixo e `justify-content: flex-end`, o controle cresce para dentro do
+  espaço que já era dele, encostado na borda direita. O layout não se mexe.
+*/
+.demo-cartao-acao {
+  display: flex;
+  flex: 0 0 var(--cui-interruptor-largura);
+  justify-content: flex-end;
 }
 
 .demo-cartao-texto strong {

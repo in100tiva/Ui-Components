@@ -70,10 +70,12 @@ export function DemoDoCartaoDeDecisao() {
               detalhe={tarefa.detalhe ?? null}
             >
               <div className="demo-cartao-linha">
-                <InterruptorDeDecisao />
                 <div className="demo-cartao-texto">
                   <strong>{tarefa.titulo}</strong>
                   <span>{tarefa.apoio}</span>
+                </div>
+                <div className="demo-cartao-acao">
+                  <InterruptorDeDecisao ancora="fim" />
                 </div>
               </div>
               <RodapeDaDecisao>
@@ -100,10 +102,12 @@ function CartaoLongo() {
   return (
     <CartaoDeDecisao resultado={resultado} aoDecidir={setResultado}>
       <div className="demo-cartao-linha">
-        <InterruptorDeDecisao />
         <div className="demo-cartao-texto">
           <strong>Levantamento de alvará</strong>
           <span>Processo 0008123-45.2025.8.26.0053</span>
+        </div>
+        <div className="demo-cartao-acao">
+          <InterruptorDeDecisao ancora="fim" />
         </div>
       </div>
       <p className="demo-cartao-corpo">

@@ -274,6 +274,13 @@
   fill: var(--cui-trilho);
 }
 
+/* Ancorado no fim, o desenho encosta na borda direita e o quadro revela o resto
+   para a esquerda — ver a prop `ancora`. */
+.cui-interruptor[data-ancora="fim"] .cui-interruptor__trilho {
+  left: auto;
+  right: 0;
+}
+
 /*
   A alavanca.
 
