@@ -101,9 +101,17 @@
   padding-bottom: 30px;
 }
 
+/*
+  ⛔ `acento-texto`, e não `acento`. O acento puro sobre a superfície mede
+  3,81:1 — abaixo do piso de 4,5:1 para texto pequeno, e este rótulo tem 11px.
+  O defeito já existia antes de haver fundo nenhum, e apareceu numa varredura
+  feita por outro motivo: `acento` é token de PREENCHIMENTO (pílula, chevron,
+  anel); quem serve de texto sobre superfície é `acento-texto`, com 8,08:1. É
+  exatamente para isso que ele existe.
+*/
 .galeria__olho {
   margin: 0;
-  color: var(--cui-acento);
+  color: var(--cui-acento-texto);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.14em;
