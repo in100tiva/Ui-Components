@@ -1,0 +1,1186 @@
+/* ==========================================================================
+   Gerenciador de Arquivos — a página inteira.
+   Nenhuma cor, medida ou tempo escrito aqui: tudo vem de `estilos/tokens.css`.
+   Prefixo `cui-arq__` para o padrão inteiro caber num arquivo sem colidir.
+   ========================================================================== */
+
+/*
+  ⛔ **O `box-sizing` é declarado AQUI, e não herdado do reset do projeto.**
+  Este arquivo precisa funcionar sozinho — é a promessa do padrão: copiar a
+  pasta e usar. Sem esta regra, num projeto sem reset a frente da pasta soma o
+  padding à altura e sobe 14px, cobrindo os papéis; o desenho continua
+  aparecendo, só que errado, o que é o pior jeito de falhar.
+*/
+.cui-arq,
+.cui-arq *,
+.cui-arq *::before,
+.cui-arq *::after {
+  box-sizing: border-box;
+}
+
+.cui-arq {
+  display: flex;
+  min-height: 540px;
+  border: 1px solid var(--cui-borda);
+  border-radius: var(--cui-raio-casca);
+  background: var(--cui-superficie);
+  color: var(--cui-texto);
+  /* O recorte é o que faz a coluna recolhida sumir de verdade, em vez de
+     escorregar por baixo do conteúdo. */
+  overflow: hidden;
+}
+
+/* Alvo de toque e foco padrão de tudo que é clicável aqui. */
+.cui-arq button {
+  font: inherit;
+  cursor: pointer;
+  outline: none;
+}
+
+.cui-arq button:focus-visible,
+.cui-arq input:focus-visible,
+.cui-arq [role="treeitem"] > * > button:focus-visible {
+  box-shadow: 0 0 0 3px var(--cui-anel-foco);
+}
+
+/* Só para leitor de tela: o cabeçalho da coluna de ações da tabela. */
+.cui-arq__so-leitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --- Botões genéricos ---------------------------------------------------- */
+
+.cui-arq__botao {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--cui-borda);
+  border-radius: var(--cui-raio-item);
+  background: var(--cui-superficie);
+  color: var(--cui-texto-rotulo);
+  font-size: var(--cui-texto-corpo);
+  font-weight: var(--cui-peso-medio);
+  transition:
+    background-color var(--cui-transicao-estado) ease,
+    border-color var(--cui-transicao-estado) ease;
+}
+
+.cui-arq__botao:hover {
+  background: var(--cui-realce);
+  border-color: var(--cui-acento-60);
+}
+
+.cui-arq__botao-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--cui-raio-item);
+  background: none;
+  color: var(--cui-texto-suave);
+  transition:
+    background-color var(--cui-transicao-estado) ease,
+    color var(--cui-transicao-estado) ease;
+}
+
+.cui-arq__botao-icone:hover {
+  background: var(--cui-realce);
+  color: var(--cui-texto);
+}
+
+/* ==========================================================================
+   Coluna do acervo
+   ========================================================================== */
+
+.cui-arq__coluna {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 10px;
+  width: var(--cui-arquivos-lateral-largura);
+  padding: 14px;
+  border-right: 1px solid var(--cui-borda);
+  /*
+    ⚠️ A largura é o que anima, e não `display`. Uma coluna que some com
+    `display: none` pisca; animar largura mantém o conteúdo escorregando para
+    fora, que é o que o olho entende como "recolher".
+  */
+  transition:
+    width var(--cui-deslize-pilula) var(--cui-mola),
+    padding var(--cui-deslize-pilula) var(--cui-mola),
+    opacity var(--cui-transicao-estado) ease;
+}
+
+.cui-arq__coluna[data-aberta="false"] {
+  width: 0;
+  padding-inline: 0;
+  border-right-color: transparent;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cui-arq__coluna-topo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cui-arq__coluna-titulo {
+  flex: 1;
+  margin: 0;
+  color: var(--cui-texto);
+  font-size: 15px;
+  font-weight: var(--cui-peso-forte);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+/* --- Busca --------------------------------------------------------------- */
+
+/*
+  ⭐ O campo não desenha a própria caixa: quem desenha é a LINHA de baixo, e ela
+  é também o indicador de foco. É a mesma decisão da busca do menu suspenso —
+  moldura dentro de moldura é ruído, e um anel de foco num campo que quase sempre
+  está em uso vira a aparência padrão do componente.
+*/
+.cui-arq__busca {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--cui-altura-busca);
+  padding-inline: 4px;
+  border-bottom: 1px solid var(--cui-borda);
+  color: var(--cui-texto-tenue);
+  transition: border-color var(--cui-transicao-estado) ease;
+}
+
+.cui-arq__busca:has(.cui-arq__busca-campo:focus) {
+  border-bottom-color: var(--cui-acento);
+}
+
+.cui-arq__busca-campo {
+  width: 100%;
+  border: none;
+  background: none;
+  color: var(--cui-texto);
+  font: inherit;
+  font-size: var(--cui-texto-corpo);
+  outline: none;
+}
+
+.cui-arq__busca-campo::placeholder {
+  color: var(--cui-texto-tenue);
+  font-weight: var(--cui-peso-leve);
+}
+
+/* O "x" nativo do `type=search` some: ele muda de forma entre navegadores e não
+   aceita os tokens — a busca se apaga selecionando o texto. */
+.cui-arq__busca-campo::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.cui-arq__coluna-corpo {
+  flex: 1;
+  margin-inline: -6px;
+  padding-inline: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* --- Árvore -------------------------------------------------------------- */
+
+.cui-arq__arvore {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.cui-arq__raiz,
+.cui-arq__no-linha {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: 34px;
+  padding-right: 6px;
+  border: none;
+  border-radius: var(--cui-raio-item);
+  background: none;
+  color: var(--cui-texto-rotulo);
+  font-size: 13.5px;
+  font-weight: var(--cui-peso-medio);
+  text-align: left;
+  transition:
+    background-color var(--cui-transicao-item) ease,
+    color var(--cui-transicao-item) ease,
+    box-shadow var(--cui-transicao-estado) ease;
+}
+
+.cui-arq__raiz {
+  padding-left: 8px;
+  margin-bottom: 2px;
+}
+
+/* O recuo por nível — uma variável, não uma classe por profundidade. */
+.cui-arq__no-linha {
+  padding-left: calc(6px + var(--cui-arq-nivel, 0) * 16px);
+}
+
+.cui-arq__raiz:hover,
+.cui-arq__no-linha:hover {
+  background: var(--cui-realce);
+}
+
+.cui-arq__raiz[data-atual="true"],
+.cui-arq__no-linha[data-atual="true"] {
+  background: var(--cui-acento-9);
+  color: var(--cui-acento-texto);
+}
+
+/*
+  ⭐ O alvo de arrasto ACESO é um anel interno, não um fundo mais forte: fundo
+  se confunde com o estado "selecionado" que já existe ao lado, e durante um
+  arrasto a pergunta é outra — "é aqui que vai cair?".
+*/
+.cui-arq__raiz[data-aceso="true"],
+.cui-arq__no-linha[data-aceso="true"] {
+  background: var(--cui-acento-14);
+  box-shadow: inset 0 0 0 2px var(--cui-acento);
+  color: var(--cui-acento-texto);
+}
+
+.cui-arq__no-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--cui-texto-tenue);
+  transition: transform var(--cui-giro-chevron, 200ms) var(--cui-mola);
+}
+
+.cui-arq__no-chevron[data-aberta="true"] {
+  transform: rotate(90deg);
+}
+
+.cui-arq__no-chevron--vazio {
+  /* Mantém o alinhamento das folhas com os nós que têm chevron. */
+  visibility: hidden;
+}
+
+.cui-arq__no-alvo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: var(--cui-raio-item);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  /* ⛔ Sem isto, arrastar no toque rola a coluna em vez de mover o item. */
+  touch-action: none;
+}
+
+.cui-arq__no-icone {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--cui-texto-tenue);
+}
+
+.cui-arq__no-linha[data-atual="true"] .cui-arq__no-icone,
+.cui-arq__no-linha[data-aceso="true"] .cui-arq__no-icone {
+  color: currentColor;
+}
+
+.cui-arq__no-nome,
+.cui-arq__raiz-nome {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cui-arq__no-contagem {
+  flex-shrink: 0;
+  min-width: 22px;
+  padding: 1px 6px;
+  border-radius: var(--cui-raio-pilula);
+  background: var(--cui-abafado);
+  color: var(--cui-texto-tenue);
+  font-size: 11px;
+  font-weight: var(--cui-peso-medio);
+  text-align: center;
+}
+
+/*
+  As ações aparecem no ponteiro — e no FOCO. Sem `:focus-within`, o botão existe
+  só para quem usa mouse: quem chega pelo teclado tabula para um alvo invisível.
+*/
+.cui-arq__no-acoes,
+.cui-arq__cartao-acoes,
+.cui-arq__linha-acoes {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--cui-texto-tenue);
+  opacity: 0;
+  transition:
+    opacity var(--cui-transicao-item) ease,
+    background-color var(--cui-transicao-item) ease;
+}
+
+.cui-arq__no-linha:hover .cui-arq__no-acoes,
+.cui-arq__no-linha:focus-within .cui-arq__no-acoes,
+.cui-arq__no-acoes[aria-expanded="true"],
+.cui-arq__cartao:hover .cui-arq__cartao-acoes,
+.cui-arq__cartao:focus-within .cui-arq__cartao-acoes,
+.cui-arq__cartao-acoes[aria-expanded="true"],
+.cui-arq__linha:hover .cui-arq__linha-acoes,
+.cui-arq__linha:focus-within .cui-arq__linha-acoes,
+.cui-arq__linha-acoes[aria-expanded="true"] {
+  opacity: 1;
+}
+
+.cui-arq__no-acoes:hover,
+.cui-arq__cartao-acoes:hover,
+.cui-arq__linha-acoes:hover {
+  background: var(--cui-realce);
+  color: var(--cui-texto);
+}
+
+/* --- Etiquetas ----------------------------------------------------------- */
+
+.cui-arq__etiquetas {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cui-arq__etiqueta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 32px;
+  padding-inline: 8px;
+  border: none;
+  border-radius: var(--cui-raio-item);
+  background: none;
+  color: var(--cui-texto-rotulo);
+  font-size: 13.5px;
+  font-weight: var(--cui-peso-medio);
+  text-align: left;
+  transition: background-color var(--cui-transicao-item) ease;
+}
+
+.cui-arq__etiqueta:hover {
+  background: var(--cui-realce);
+}
+
+.cui-arq__etiqueta[data-atual="true"] {
+  background: var(--cui-acento-9);
+  color: var(--cui-acento-texto);
+}
+
+.cui-arq__etiqueta-nome {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Conteúdo
+   ========================================================================== */
+
+.cui-arq__conteudo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.cui-arq__conteudo-topo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 52px;
+  padding-inline: var(--cui-respiro-pagina);
+  border-bottom: 1px solid var(--cui-borda);
+}
+
+.cui-arq__alternar-coluna svg {
+  transition: transform var(--cui-transicao-estado) ease;
+}
+
+.cui-arq__alternar-coluna[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+/* --- Trilha -------------------------------------------------------------- */
+
+.cui-arq__trilha {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  /* A trilha rola quando o caminho é fundo; a barra some porque ela mede 3px de
+     altura e apareceria por cima do texto. */
+  scrollbar-width: none;
+}
+
+.cui-arq__trilha::-webkit-scrollbar {
+  display: none;
+}
+
+/* ⛔ `display: flex` numa classe vence o `display: none` que o atributo `hidden`
+   traz do navegador. Sem esta linha, `hidden` no JSX não esconde nada — o
+   defeito silencioso mais comum de quem estiliza um elemento que às vezes some. */
+.cui-arq__trilha[hidden] {
+  display: none;
+}
+
+.cui-arq__trilha-passo {
+  display: inline-flex;
+  align-items: center;
+}
+
+.cui-arq__trilha-seta {
+  flex-shrink: 0;
+  color: var(--cui-texto-tenue);
+}
+
+.cui-arq__trilha-item {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--cui-texto-suave);
+  font-size: 13px;
+  font-weight: var(--cui-peso-medio);
+  white-space: nowrap;
+  transition:
+    background-color var(--cui-transicao-item) ease,
+    color var(--cui-transicao-item) ease;
+}
+
+.cui-arq__trilha-item:hover {
+  background: var(--cui-realce);
+  color: var(--cui-texto);
+}
+
+.cui-arq__trilha-item[aria-current="page"] {
+  color: var(--cui-texto);
+}
+
+/* A trilha é destino de arrasto: é como se sobe um arquivo de nível. */
+.cui-arq__trilha-item[data-aceso="true"] {
+  background: var(--cui-acento-14);
+  box-shadow: inset 0 0 0 2px var(--cui-acento);
+  color: var(--cui-acento-texto);
+}
+
+/* --- Título -------------------------------------------------------------- */
+
+.cui-arq__titulo-linha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px var(--cui-respiro-pagina) 4px;
+}
+
+.cui-arq__titulo-gatilho {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  margin-left: -8px;
+  border: none;
+  border-radius: var(--cui-raio-item);
+  background: none;
+  color: var(--cui-texto);
+  transition: background-color var(--cui-transicao-item) ease;
+}
+
+.cui-arq__titulo-gatilho:hover {
+  background: var(--cui-realce);
+}
+
+.cui-arq__titulo {
+  margin: 0;
+  font-size: 19px;
+  font-weight: var(--cui-peso-forte);
+  letter-spacing: -0.015em;
+}
+
+.cui-arq__titulo-seta {
+  color: var(--cui-texto-tenue);
+  transform: rotate(90deg);
+  transition: transform var(--cui-giro-chevron, 200ms) var(--cui-chevron, ease);
+}
+
+.cui-arq__titulo-gatilho[aria-expanded="true"] .cui-arq__titulo-seta {
+  transform: rotate(-90deg);
+}
+
+.cui-arq__painel {
+  flex: 1;
+  padding: 8px var(--cui-respiro-pagina) var(--cui-respiro-pagina);
+  overflow-y: auto;
+}
+
+.cui-arq__secao + .cui-arq__secao {
+  margin-top: 22px;
+}
+
+.cui-arq__secao-titulo {
+  margin: 0 0 12px;
+  color: var(--cui-texto);
+  font-size: 15px;
+  font-weight: var(--cui-peso-forte);
+}
+
+/* ==========================================================================
+   Grade de pastas
+   ========================================================================== */
+
+.cui-arq__grade {
+  display: grid;
+  /* `auto-fill` com a largura da pasta: a grade se reflui sozinha em qualquer
+     largura, sem media query e sem contar colunas na mão. */
+  grid-template-columns: repeat(auto-fill, minmax(var(--cui-pasta-largura), 1fr));
+  gap: 10px;
+}
+
+.cui-arq__cartao {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 12px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--cui-raio-cartao);
+  transition:
+    background-color var(--cui-transicao-item) ease,
+    border-color var(--cui-transicao-item) ease;
+}
+
+.cui-arq__cartao:hover,
+.cui-arq__cartao:focus-within {
+  background: var(--cui-realce);
+}
+
+.cui-arq__cartao[data-aceso="true"] {
+  background: var(--cui-acento-9);
+  border-color: var(--cui-acento);
+}
+
+.cui-arq__cartao-alvo {
+  display: flex;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: var(--cui-raio-item);
+  background: none;
+  touch-action: none;
+}
+
+.cui-arq__cartao-rodape {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cui-arq__cartao-nome {
+  overflow: hidden;
+  color: var(--cui-texto);
+  font-size: var(--cui-texto-corpo);
+  font-weight: var(--cui-peso-medio);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cui-arq__cartao-contagem {
+  color: var(--cui-texto-tenue);
+  font-size: var(--cui-texto-apoio);
+}
+
+.cui-arq__cartao-acoes {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+/* --- O desenho da pasta -------------------------------------------------- */
+
+/*
+  ⭐ **Três camadas: costas, papéis, frente.** O que aparece entre a frente e as
+  costas é conteúdo — e uma pasta vazia não tem papel nenhum, o que já é
+  informação antes de qualquer número ser lido.
+*/
+.cui-arq__pasta {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: var(--cui-pasta-largura);
+  height: var(--cui-pasta-altura);
+}
+
+/*
+  As costas e a aba do topo, numa peça só.
+
+  ⭐ A ABA é um RECORTE, não um retângulo extra colado por cima: o degrau sai de
+  um `clip-path` que sobe à esquerda e desce depois de 44% da largura. Com dois
+  elementos empilhados, a emenda entre eles vira um fio visível — que some, mas
+  só depois de meia hora de ajuste em pixel, e volta no primeiro zoom.
+*/
+.cui-arq__pasta-costas {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--cui-raio-pasta);
+  background: var(--cui-pasta-fundo);
+  box-shadow: inset 0 0 0 1px var(--cui-pasta-borda);
+  clip-path: polygon(0% 0%, 42% 0%, 47% 13%, 100% 13%, 100% 100%, 0% 100%);
+}
+
+.cui-arq__pasta-papeis {
+  position: absolute;
+  top: 17%;
+  right: 8%;
+  left: 8%;
+  height: 56%;
+}
+
+.cui-arq__papel {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px 3px 2px 2px;
+  background: var(--cui-papel);
+  box-shadow: 0 1px 2px var(--cui-papel-borda);
+  /* O giro parte da base: é lá que a folha encosta no fundo da pasta, e girar
+     pelo centro faria a ponta de baixo atravessar a frente. */
+  transform-origin: bottom center;
+  transition: transform var(--cui-abrir-pasta) var(--cui-mola);
+}
+
+/*
+  Um leque: cada folha é um pouco MENOR e mais girada que a de trás. A ordem
+  importa — folha de trás maior que a da frente é o que dá o desalinho que se lê
+  como pilha; todas do mesmo tamanho viram um retângulo branco só.
+*/
+/*
+  ⭐ **Em repouso a pasta é quase fechada** — sobra uma lasca de papel, o
+  bastante para dizer que há algo dentro. Numa grade de vinte pastas, vinte
+  leques abertos viram ruído branco: o desenho deixa de identificar a pasta e
+  passa a ser textura repetida. Quem diz "tem conteúdo aqui" em repouso são os
+  selos e o número; o leque é resposta ao ponteiro.
+*/
+.cui-arq__papel[data-indice="0"] {
+  transform: translateY(22%) rotate(-2.5deg);
+}
+
+.cui-arq__papel[data-indice="1"] {
+  right: 5%;
+  left: 5%;
+  transform: translateY(24%) rotate(1.5deg);
+}
+
+.cui-arq__papel[data-indice="2"] {
+  right: 10%;
+  left: 10%;
+  transform: translateY(26%) rotate(4deg);
+}
+
+/* A frente cobre a parte de baixo — é o que faz o papel parecer DENTRO. */
+.cui-arq__pasta-frente {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 64%;
+  padding: 8px;
+  border-radius: 4px 4px var(--cui-raio-pasta) var(--cui-raio-pasta);
+  background: linear-gradient(
+    170deg,
+    var(--cui-pasta) 0%,
+    color-mix(in oklab, var(--cui-pasta) 92%, black) 100%
+  );
+  box-shadow: inset 0 0 0 1px var(--cui-pasta-borda);
+}
+
+.cui-arq__pasta-selos {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/*
+  Ao passar o ponteiro, os papéis assomam. Ao arrastar algo sobre a pasta, eles
+  assomam MAIS: o segundo estado responde "é aqui que vai cair", e responde com
+  o próprio objeto em vez de um contorno genérico.
+*/
+.cui-arq__cartao:hover .cui-arq__papel[data-indice="0"],
+.cui-arq__cartao:focus-within .cui-arq__papel[data-indice="0"] {
+  transform: translateY(-13%) rotate(-3deg);
+}
+
+.cui-arq__cartao:hover .cui-arq__papel[data-indice="1"],
+.cui-arq__cartao:focus-within .cui-arq__papel[data-indice="1"] {
+  transform: translateY(-18%) rotate(3deg);
+}
+
+.cui-arq__cartao:hover .cui-arq__papel[data-indice="2"],
+.cui-arq__cartao:focus-within .cui-arq__papel[data-indice="2"] {
+  transform: translateY(-23%) rotate(7deg);
+}
+
+.cui-arq__cartao[data-aceso="true"] .cui-arq__papel[data-indice="0"] {
+  transform: translateY(-22%) rotate(-4deg);
+}
+
+.cui-arq__cartao[data-aceso="true"] .cui-arq__papel[data-indice="1"] {
+  transform: translateY(-30%) rotate(5deg);
+}
+
+.cui-arq__cartao[data-aceso="true"] .cui-arq__papel[data-indice="2"] {
+  transform: translateY(-38%) rotate(11deg);
+}
+
+/* --- Selos de origem ----------------------------------------------------- */
+
+.cui-arq__selo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 5px;
+  font-weight: var(--cui-peso-forte);
+  line-height: 1;
+  /* O anel na cor do papel separa selos vizinhos e o selo do fundo da pasta,
+     nos dois temas — sem ele os quadrados escuros se fundem no tema escuro. */
+  box-shadow: 0 0 0 1.5px var(--cui-papel);
+}
+
+/* ==========================================================================
+   Tabela de arquivos
+   ========================================================================== */
+
+.cui-arq__tabela-caixa {
+  border: 1px solid var(--cui-borda);
+  border-radius: var(--cui-raio-cartao);
+  overflow-x: auto;
+}
+
+.cui-arq__tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--cui-texto-corpo);
+}
+
+.cui-arq__tabela th {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--cui-borda);
+  color: var(--cui-texto-suave);
+  font-size: var(--cui-texto-apoio);
+  font-weight: var(--cui-peso-medio);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.cui-arq__tabela td {
+  padding: 0 14px;
+  height: var(--cui-altura-linha);
+  color: var(--cui-texto-rotulo);
+  vertical-align: middle;
+}
+
+.cui-arq__linha {
+  transition: background-color var(--cui-transicao-item) ease;
+  /* ⛔ O arrasto de linha precisa disto no toque, senão o gesto vira rolagem. */
+  touch-action: none;
+}
+
+.cui-arq__linha + .cui-arq__linha td {
+  border-top: 1px solid var(--cui-borda);
+}
+
+.cui-arq__linha:hover {
+  background: var(--cui-realce);
+}
+
+.cui-arq__arquivo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.cui-arq__arquivo-icone {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--cui-texto-tenue);
+}
+
+.cui-arq__arquivo-nome {
+  overflow: hidden;
+  color: var(--cui-texto);
+  font-weight: var(--cui-peso-medio);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cui-arq__autor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cui-arq__autor-email {
+  overflow: hidden;
+  color: var(--cui-texto-suave);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cui-arq__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--cui-raio-pilula);
+  object-fit: cover;
+}
+
+.cui-arq__avatar--inicial {
+  /* Texto escuro sobre o círculo claro: a matiz varia, a luminosidade não —
+     é o que mantém a inicial legível em qualquer nome. */
+  color: oklch(0.25 0.02 264);
+  font-size: 11px;
+  font-weight: var(--cui-peso-forte);
+}
+
+/* Números alinhados pela unidade: tabelas de tamanho se leem na vertical. */
+.cui-arq__numero {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.cui-arq__col-acoes {
+  width: 44px;
+  text-align: right;
+}
+
+/* --- Campo de renomear --------------------------------------------------- */
+
+.cui-arq__campo-nome {
+  width: 100%;
+  min-width: 80px;
+  padding: 3px 6px;
+  border: 1px solid var(--cui-acento);
+  border-radius: 7px;
+  background: var(--cui-superficie);
+  color: var(--cui-texto);
+  font: inherit;
+  font-size: inherit;
+  font-weight: var(--cui-peso-medio);
+  outline: none;
+}
+
+/* ==========================================================================
+   Menu de ações
+   ========================================================================== */
+
+.cui-arq__menu {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 208px;
+  max-width: min(320px, calc(100vw - var(--cui-margem-da-janela) * 2));
+  padding: var(--cui-painel-respiro);
+  border: 1px solid var(--cui-borda);
+  border-radius: var(--cui-raio-painel);
+  background: var(--cui-flutuante);
+  box-shadow: var(--cui-sombra-painel);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: cui-arq-menu-entra var(--cui-transicao-item) var(--cui-mola) both;
+}
+
+@keyframes cui-arq-menu-entra {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.985);
+  }
+}
+
+.cui-arq__menu-item,
+.cui-arq__menu-voltar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: var(--cui-item-respiro-y) var(--cui-item-respiro-x);
+  border: none;
+  border-radius: var(--cui-raio-item);
+  background: none;
+  color: var(--cui-texto-rotulo);
+  font-size: var(--cui-texto-corpo);
+  font-weight: var(--cui-peso-medio);
+  text-align: left;
+  transition: background-color var(--cui-transicao-item) ease;
+}
+
+.cui-arq__menu-item:hover:not(:disabled),
+.cui-arq__menu-item:focus-visible,
+.cui-arq__menu-voltar:hover {
+  background: var(--cui-acento-9);
+}
+
+.cui-arq__menu-item:disabled {
+  color: var(--cui-texto-tenue);
+  cursor: not-allowed;
+}
+
+.cui-arq__menu-item[data-perigosa="true"] {
+  color: var(--cui-perigo-texto);
+}
+
+.cui-arq__menu-item[data-perigosa="true"]:hover,
+.cui-arq__menu-item[data-perigosa="true"]:focus-visible {
+  background: var(--cui-perigo-superficie);
+}
+
+.cui-arq__menu-icone {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--cui-texto-tenue);
+}
+
+.cui-arq__menu-item[data-perigosa="true"] .cui-arq__menu-icone {
+  color: currentColor;
+}
+
+.cui-arq__menu-rotulo {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cui-arq__menu-seta {
+  flex-shrink: 0;
+  color: var(--cui-texto-tenue);
+}
+
+.cui-arq__menu-voltar {
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--cui-borda);
+  border-radius: var(--cui-raio-item) var(--cui-raio-item) 0 0;
+  color: var(--cui-texto-suave);
+  font-size: var(--cui-texto-apoio);
+}
+
+.cui-arq__menu-voltar-seta {
+  transform: rotate(180deg);
+}
+
+.cui-arq__menu-vazio {
+  margin: 0;
+  padding: var(--cui-item-respiro-y) var(--cui-item-respiro-x);
+  color: var(--cui-texto-tenue);
+  font-size: var(--cui-texto-apoio);
+}
+
+/* ==========================================================================
+   Fantasma do arrasto
+   ========================================================================== */
+
+/*
+  ⭐ Ele fica montado o tempo todo e apenas invisível: montar no início do gesto
+  o faria aparecer um quadro atrasado, na posição antiga, e o primeiro movimento
+  seria um salto.
+*/
+.cui-arq__fantasma {
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  max-width: 260px;
+  padding: 7px 12px;
+  border: 1px solid var(--cui-borda);
+  border-radius: var(--cui-raio-item);
+  background: var(--cui-flutuante);
+  box-shadow: var(--cui-sombra-painel);
+  color: var(--cui-texto);
+  font-size: var(--cui-texto-corpo);
+  font-weight: var(--cui-peso-medio);
+  /* ⛔ Sem isto o fantasma vira o alvo de `elementFromPoint` e nenhuma pasta
+     acende: ele estaria sempre entre o ponteiro e a página. */
+  pointer-events: none;
+}
+
+.cui-arq__fantasma[data-visivel="true"] {
+  display: flex;
+}
+
+/* Com um destino válido sob o ponteiro, o próprio fantasma muda de cor — a
+   confirmação chega onde o olho já está, e não só na pasta lá embaixo. */
+.cui-arq__fantasma[data-alvo="true"] {
+  border-color: var(--cui-acento);
+  box-shadow:
+    var(--cui-sombra-painel),
+    0 0 0 3px var(--cui-acento-14);
+}
+
+.cui-arq__fantasma-rotulo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Estados
+   ========================================================================== */
+
+.cui-arq__aviso {
+  margin: 0;
+  color: var(--cui-texto-suave);
+  font-size: var(--cui-texto-apoio);
+  line-height: 1.6;
+}
+
+.cui-arq__arvore-vazia {
+  padding: 10px 6px;
+}
+
+.cui-arq__erro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 var(--cui-respiro-pagina);
+  padding: 10px 14px;
+  border: 1px solid var(--cui-perigo-borda);
+  border-radius: var(--cui-raio-item);
+  background: var(--cui-perigo-superficie);
+  color: var(--cui-perigo-texto);
+  font-size: var(--cui-texto-corpo);
+}
+
+.cui-arq__filtro {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+  color: var(--cui-texto-suave);
+  font-size: var(--cui-texto-corpo);
+}
+
+.cui-arq__vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 48px 20px;
+  color: var(--cui-texto-tenue);
+  text-align: center;
+}
+
+.cui-arq__vazio-titulo {
+  margin: 0;
+  color: var(--cui-texto);
+  font-size: var(--cui-texto-corpo);
+  font-weight: var(--cui-peso-forte);
+}
+
+/* ==========================================================================
+   Estreito
+   ========================================================================== */
+
+/*
+  ⚠️ `container` e não `media`: esta página vive DENTRO de um cartão, e a largura
+  que importa é a do cartão — não a da janela. Com media query, encaixar o
+  gerenciador numa coluna estreita de uma tela larga manteria o layout de duas
+  colunas, espremido.
+*/
+.cui-arq {
+  container-type: inline-size;
+  container-name: gerenciador;
+}
+
+@container gerenciador (max-width: 720px) {
+  .cui-arq__coluna {
+    position: absolute;
+    z-index: 2;
+    height: 100%;
+    background: var(--cui-superficie);
+    box-shadow: var(--cui-sombra-painel);
+  }
+
+  .cui-arq__col-tamanho,
+  .cui-arq__col-data {
+    display: none;
+  }
+}
+
+@container gerenciador (max-width: 520px) {
+  .cui-arq__col-autor {
+    display: none;
+  }
+}
+
+/* A coluna sobreposta precisa de um pai posicionado. */
+.cui-arq {
+  position: relative;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cui-arq__coluna,
+  .cui-arq__papel,
+  .cui-arq__no-chevron,
+  .cui-arq__titulo-seta,
+  .cui-arq__alternar-coluna svg {
+    transition-duration: 1ms;
+  }
+
+  .cui-arq__menu {
+    animation-duration: 1ms;
+  }
+}
