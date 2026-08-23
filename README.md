@@ -300,6 +300,21 @@ sobre o nada. ⛔ A animação pertence ao **gesto**: cartão que já chega deci
 renderiza tudo pronto, senão uma lista de vinte e cinco dispara vinte e cinco
 coreografias em coro.
 
+⚠️ **O traço tem 1,5px — e são justamente as duas camadas que exigem isso.** O
+trilho de 1px já está tingido com o tom da decisão; somado a um traço de 3px, o
+conjunto lia como uma faixa de 4px em volta do conteúdo, grossa demais para um
+sistema cujo vocabulário de borda é 1px. Em 1,5px o traço continua sendo o
+elemento mais forte da moldura — é ele que percorre o cartão — sem virar
+contorno de destaque. Ele rende **4,61:1** (aprovada) e **5,33:1** (reprovada)
+contra a superfície, acima dos 3:1 de elemento gráfico, e o estado nunca depende
+só dele: o rodapé escreve quem decidiu e quando.
+
+⛔ **Espessura, inset e raio andam juntos.** O stroke é centrado no caminho:
+mudar a espessura sem mudar o `x`/`y` (metade dela) joga metade do traço para
+fora, e o `overflow: hidden` do cartão corta essa metade — o traço fica com
+aparência de meia espessura em cima e inteira nas laterais. O `rx` é o raio do
+cartão menos o mesmo inset.
+
 Contraste medido (mínimo 3:1 gráfico, 4,5:1 texto):
 
 | | claro | escuro |

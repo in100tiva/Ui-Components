@@ -320,6 +320,35 @@ checar(
     cartoes()[1]?.dataset.resultado === "reprovada",
 );
 checar("cartão decidido tem contorno pronto", parte(0, "rect")?.style.strokeDashoffset === "0");
+
+/*
+  ⛔ **Espessura, inset e raio do contorno andam JUNTOS.** O stroke é centrado no
+  caminho: mudar a espessura sem mudar o `x`/`y` (metade dela) joga metade do
+  traço para fora da caixa, e o `overflow: hidden` do cartão corta essa metade —
+  o traço passa a ter meia espessura em cima e inteira nas laterais. Nada
+  quebra; ele só fica torto, e só se percebe olhando de perto.
+
+  A espessura também tem teto: o trilho de 1px em CSS já está tingido com o tom
+  da decisão, e um traço grosso somado a ele lê como uma faixa em volta do
+  conteúdo — grossa demais para um sistema cujo vocabulário de borda é 1px.
+*/
+{
+  const traco = parte(0, "rect");
+  const espessura = Number(traco?.getAttribute("stroke-width"));
+  const inset = Number(traco?.getAttribute("x"));
+  checar("o traço do contorno é fino como o resto do sistema", espessura <= 2, `${espessura}px`);
+  checar(
+    "…e o inset é exatamente metade da espessura",
+    Math.abs(inset - espessura / 2) < 0.01 &&
+      Math.abs(Number(traco?.getAttribute("y")) - espessura / 2) < 0.01,
+    `x=${inset} para stroke ${espessura}`,
+  );
+  checar(
+    "…e o raio acompanha: o do cartão menos o inset",
+    Math.abs(Number(traco?.getAttribute("rx")) - (16 - espessura / 2)) < 0.01,
+    `rx=${traco?.getAttribute("rx")}`,
+  );
+}
 checar("cartão decidido tem malha e lavagem", Boolean(parte(1, ".cui-decisao__malha") && parte(1, ".cui-decisao__vidro")));
 checar("cartão em aberto não tem camada nenhuma", !parte(2, ".cui-decisao__contorno") && !parte(2, ".cui-decisao__malha"));
 

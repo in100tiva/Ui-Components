@@ -185,18 +185,32 @@ export function CartaoDeDecisao({
                real; sem isto o SVG manteria proporção e o traço sairia oval. */
             preserveAspectRatio="none"
           >
-            {/* O inset de metade da espessura mantém o traço INTEIRO dentro da
-                caixa — um stroke é centrado no caminho. O `rx` é o raio do
-                cartão menos esse mesmo inset. */}
+            {/*
+              O inset de metade da espessura mantém o traço INTEIRO dentro da
+              caixa — um stroke é centrado no caminho. O `rx` é o raio do cartão
+              (16) menos esse mesmo inset.
+
+              ⚠️ **1,5px, e não 3.** O traço não é a única cor na borda: o cartão
+              decidido já tinge o próprio `border` de 1px com `--tom-borda`, e
+              as duas somadas liam como uma faixa de 4px em volta do conteúdo —
+              grossa demais para um sistema cujo vocabulário de borda é 1px. Com
+              1,5px o traço continua sendo o elemento mais forte da moldura (é
+              ele que percorre o cartão), sem virar contorno de destaque.
+
+              ⛔ Os quatro números andam juntos: mudar a espessura sem mudar o
+              inset joga metade do traço para fora da caixa, e o `overflow:
+              hidden` do cartão corta essa metade — o traço fica com aparência
+              de 0,75px em cima e 1,5px no meio das laterais.
+            */}
             <rect
               ref={contornoRef}
-              x="1.5"
-              y="1.5"
-              rx="14.5"
-              style={{ width: "calc(100% - 3px)", height: "calc(100% - 3px)" }}
+              x="0.75"
+              y="0.75"
+              rx="15.25"
+              style={{ width: "calc(100% - 1.5px)", height: "calc(100% - 1.5px)" }}
               fill="none"
               stroke="currentColor"
-              strokeWidth="3"
+              strokeWidth="1.5"
               strokeLinecap="round"
               pathLength={100}
               strokeDasharray={100}
